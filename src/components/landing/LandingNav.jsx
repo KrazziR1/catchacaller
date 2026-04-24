@@ -26,7 +26,7 @@ export default function LandingNav() {
           <Link to="/dashboard">
             <Button variant="ghost" size="sm">Log In</Button>
           </Link>
-          <Link to="/dashboard">
+          <Link to="/onboarding">
             <Button size="sm" className="rounded-lg">Start Free Trial</Button>
           </Link>
         </div>

@@ -1,0 +1,47 @@
+{
+  "name": "WaitlistEntry",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Business name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "hvac",
+        "plumbing",
+        "roofing",
+        "med_spa",
+        "legal",
+        "other"
+      ],
+      "default": "hvac"
+    },
+    "monthly_calls": {
+      "type": "string",
+      "enum": [
+        "under_50",
+        "50_200",
+        "200_500",
+        "500_plus"
+      ],
+      "description": "Estimated monthly call volume"
+    },
+    "source": {
+      "type": "string",
+      "description": "How they found us"
+    }
+  },
+  "required": [
+    "email"
+  ]
+}

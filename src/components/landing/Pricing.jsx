@@ -109,7 +109,7 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/dashboard">
+              <Link to="/onboarding">
                 <Button
                   className={`w-full h-12 rounded-xl font-semibold ${
                     plan.highlighted

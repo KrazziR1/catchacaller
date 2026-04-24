@@ -4,6 +4,7 @@ import Stats from "@/components/landing/Stats";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Features from "@/components/landing/Features";
 import Pricing from "@/components/landing/Pricing";
+import WaitlistSection from "@/components/landing/WaitlistSection";
 import Footer from "@/components/landing/Footer";
 
 export default function Landing() {
@@ -21,6 +22,7 @@ export default function Landing() {
       <div id="pricing">
         <Pricing />
       </div>
+      <WaitlistSection />
       <Footer />
     </div>
   );

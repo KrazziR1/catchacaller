@@ -13,6 +13,7 @@ import Conversations from '@/pages/Conversations';
 import Templates from '@/pages/Templates';
 import Settings from '@/pages/Settings';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import Onboarding from '@/pages/Onboarding';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -37,6 +38,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/missed-calls" element={<MissedCalls />} />
