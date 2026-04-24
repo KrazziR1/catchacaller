@@ -196,7 +196,6 @@ export default function Settings() {
                 <SelectContent>
                   <SelectItem value="professional">Professional</SelectItem>
                   <SelectItem value="friendly">Friendly</SelectItem>
-                  <SelectItem value="casual">Casual</SelectItem>
                 </SelectContent>
               </Select>
             </div>

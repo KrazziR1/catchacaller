@@ -217,7 +217,6 @@ export default function Onboarding() {
                     {[
                       { value: "professional", label: "Professional", desc: "Formal, polished, business-like tone" },
                       { value: "friendly", label: "Friendly", desc: "Warm, approachable, conversational — most popular" },
-                      { value: "casual", label: "Casual", desc: "Relaxed, like texting a friend" },
                     ].map((opt) => (
                       <button
                         key={opt.value}
