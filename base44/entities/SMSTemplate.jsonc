@@ -1,0 +1,50 @@
+{
+  "name": "SMSTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "initial_response",
+        "follow_up",
+        "booking",
+        "qualification",
+        "custom"
+      ],
+      "default": "initial_response"
+    },
+    "message_body": {
+      "type": "string",
+      "description": "SMS template text with placeholders like {business_name}, {caller_name}"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "hvac",
+        "plumbing",
+        "roofing",
+        "med_spa",
+        "legal",
+        "general"
+      ],
+      "default": "general"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "send_delay_seconds": {
+      "type": "number",
+      "default": 0,
+      "description": "Delay before sending in seconds"
+    }
+  },
+  "required": [
+    "name",
+    "message_body"
+  ]
+}

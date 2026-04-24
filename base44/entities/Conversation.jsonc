@@ -1,0 +1,91 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "missed_call_id": {
+      "type": "string",
+      "description": "Reference to the missed call"
+    },
+    "caller_phone": {
+      "type": "string",
+      "description": "Phone number of the lead"
+    },
+    "caller_name": {
+      "type": "string",
+      "description": "Name of the lead"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "booked",
+        "qualified",
+        "unresponsive",
+        "lost",
+        "manual_takeover"
+      ],
+      "default": "active",
+      "description": "Conversation status"
+    },
+    "messages": {
+      "type": "array",
+      "description": "Array of message objects",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sender": {
+            "type": "string",
+            "enum": [
+              "ai",
+              "lead",
+              "human"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "service_type": {
+      "type": "string",
+      "description": "Type of service requested"
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "emergency"
+      ],
+      "default": "medium"
+    },
+    "booking_link_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "booked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "estimated_value": {
+      "type": "number"
+    },
+    "follow_up_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "caller_phone"
+  ]
+}

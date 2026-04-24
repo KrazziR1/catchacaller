@@ -1,0 +1,64 @@
+{
+  "name": "MissedCall",
+  "type": "object",
+  "properties": {
+    "caller_phone": {
+      "type": "string",
+      "description": "Phone number of the caller"
+    },
+    "caller_name": {
+      "type": "string",
+      "description": "Name of the caller if known"
+    },
+    "call_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the call was missed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "sms_sent",
+        "replied",
+        "booked",
+        "lost"
+      ],
+      "default": "new",
+      "description": "Current status of this missed call lead"
+    },
+    "sms_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the auto-SMS was sent"
+    },
+    "response_time_seconds": {
+      "type": "number",
+      "description": "Time in seconds between missed call and SMS sent"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "google_ads",
+        "organic",
+        "referral",
+        "direct",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Lead source"
+    },
+    "estimated_value": {
+      "type": "number",
+      "description": "Estimated revenue value of this lead"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes"
+    }
+  },
+  "required": [
+    "caller_phone",
+    "call_time"
+  ]
+}

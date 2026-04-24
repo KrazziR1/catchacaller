@@ -1,0 +1,236 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save } from "lucide-react";
+import { toast } from "sonner";
+
+export default function Settings() {
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState({
+    business_name: "",
+    industry: "hvac",
+    phone_number: "",
+    booking_url: "",
+    website: "",
+    timezone: "America/New_York",
+    business_hours: "Mon-Fri 8am-6pm",
+    auto_response_enabled: true,
+    ai_personality: "friendly",
+    average_job_value: 500,
+  });
+
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["business-profile"],
+    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
+  });
+
+  const profile = profiles[0];
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        business_name: profile.business_name || "",
+        industry: profile.industry || "hvac",
+        phone_number: profile.phone_number || "",
+        booking_url: profile.booking_url || "",
+        website: profile.website || "",
+        timezone: profile.timezone || "America/New_York",
+        business_hours: profile.business_hours || "Mon-Fri 8am-6pm",
+        auto_response_enabled: profile.auto_response_enabled !== false,
+        ai_personality: profile.ai_personality || "friendly",
+        average_job_value: profile.average_job_value || 500,
+      });
+    }
+  }, [profile]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
+      if (profile) {
+        return base44.entities.BusinessProfile.update(profile.id, data);
+      } else {
+        return base44.entities.BusinessProfile.create(data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["business-profile"] });
+      toast.success("Settings saved successfully");
+    },
+  });
+
+  const handleSave = () => saveMutation.mutate(formData);
+
+  return (
+    <div className="p-6 lg:p-8 max-w-3xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground mt-1">Configure your business profile and AI behavior</p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Business Info */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Business Information</CardTitle>
+                <CardDescription>Your company details for SMS personalization</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Business Name</Label>
+                <Input
+                  value={formData.business_name}
+                  onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                  placeholder="Acme HVAC Services"
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label>Industry</Label>
+                <Select value={formData.industry} onValueChange={(v) => setFormData({ ...formData, industry: v })}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hvac">HVAC</SelectItem>
+                    <SelectItem value="plumbing">Plumbing</SelectItem>
+                    <SelectItem value="roofing">Roofing</SelectItem>
+                    <SelectItem value="med_spa">Med Spa</SelectItem>
+                    <SelectItem value="legal">Legal</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> Phone Number</Label>
+                <Input
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  placeholder="(555) 123-4567"
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Website</Label>
+                <Input
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  placeholder="https://acmehvac.com"
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> Booking URL</Label>
+              <Input
+                value={formData.booking_url}
+                onChange={(e) => setFormData({ ...formData, booking_url: e.target.value })}
+                placeholder="https://calendly.com/your-business"
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <Label>Business Hours</Label>
+              <Input
+                value={formData.business_hours}
+                onChange={(e) => setFormData({ ...formData, business_hours: e.target.value })}
+                placeholder="Mon-Fri 8am-6pm"
+                className="mt-1.5"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* AI Settings */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">AI Configuration</CardTitle>
+                <CardDescription>Control how the AI responds to leads</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium">Auto-Response</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Automatically send SMS when a call is missed</p>
+              </div>
+              <Switch
+                checked={formData.auto_response_enabled}
+                onCheckedChange={(v) => setFormData({ ...formData, auto_response_enabled: v })}
+              />
+            </div>
+            <div>
+              <Label>AI Personality</Label>
+              <Select value={formData.ai_personality} onValueChange={(v) => setFormData({ ...formData, ai_personality: v })}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="professional">Professional</SelectItem>
+                  <SelectItem value="friendly">Friendly</SelectItem>
+                  <SelectItem value="casual">Casual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* Revenue Settings */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-chart-4" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Revenue Tracking</CardTitle>
+                <CardDescription>Set your average job value for ROI calculations</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label>Average Job Value ($)</Label>
+              <Input
+                type="number"
+                value={formData.average_job_value}
+                onChange={(e) => setFormData({ ...formData, average_job_value: parseFloat(e.target.value) || 0 })}
+                placeholder="500"
+                className="mt-1.5 w-40"
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">Used to estimate recovered revenue per booking</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end pt-4">
+          <Button onClick={handleSave} className="rounded-xl h-12 px-8" disabled={saveMutation.isPending}>
+            <Save className="w-4 h-4 mr-2" />
+            Save Settings
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
