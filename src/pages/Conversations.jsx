@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { MessageSquare, Phone, Send, Search, Inbox, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import ConversationDetail from '@/components/conversations/ConversationDetail';

@@ -96,6 +96,36 @@ const features = [
     description: "AI-powered urgency scoring based on engagement, recency, and value.",
     tier: "growth",
   },
+  {
+    icon: Clock,
+    title: "Delivery Status Tracking (All)",
+    description: "Real-time SMS delivery status - see exactly when messages reach leads.",
+    tier: "all",
+  },
+  {
+    icon: TrendingUp,
+    title: "Setup Progress (All)",
+    description: "Guided onboarding checklist to get you operational in minutes.",
+    tier: "all",
+  },
+  {
+    icon: Zap,
+    title: "Auto Follow-ups (Growth+)",
+    description: "Customizable automated follow-up rules with templates and schedules.",
+    tier: "growth",
+  },
+  {
+    icon: BarChart3,
+    title: "CSV Export (All)",
+    description: "Export all conversations and pipeline data for analysis and reporting.",
+    tier: "all",
+  },
+  {
+    icon: Clock,
+    title: "Live Updates (All)",
+    description: "Real-time conversation sync - see lead replies instantly.",
+    tier: "all",
+  },
 ];
 
 export default function Features() {
