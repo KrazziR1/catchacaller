@@ -10,6 +10,7 @@ import RecentCallsTable from "@/components/dashboard/RecentCallsTable";
 import ConversionChart from "@/components/dashboard/ConversionChart";
 import LeadPipeline from "@/components/dashboard/LeadPipeline";
 import CalendarBookingWidget from "@/components/dashboard/CalendarBookingWidget";
+import PipelineAnalytics from "@/components/dashboard/PipelineAnalytics";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -116,6 +117,12 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-1 gap-6 mb-8">
         <ConversionChart />
       </div>
+
+      {subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name) && (
+        <div className="mb-8">
+          <PipelineAnalytics user={user} subscription={subscription} />
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
         <LeadPipeline user={user} subscription={subscription} />
