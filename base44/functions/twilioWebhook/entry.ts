@@ -37,9 +37,9 @@ Deno.serve(async (req) => {
       notes: `CallSid: ${callSid} | Status: ${callStatus}`,
     });
 
-    // Fetch business profile for personalization
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list();
-    const profile = profiles[0];
+    // Fetch the business profile that owns this phone number
+    const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ phone_number: calledPhone });
+    const profile = profiles[0] || (await base44.asServiceRole.entities.BusinessProfile.list("-created_date", 1))[0];
 
     // Fetch the best active initial response template
     const templates = await base44.asServiceRole.entities.SMSTemplate.filter({
@@ -67,6 +67,9 @@ Deno.serve(async (req) => {
     const smsSentAt = new Date().toISOString();
     const responseTimeSeconds = 3; // near-instant
 
+    // Use the number that was called (calledPhone) if available, else fall back to env var
+    const smsFrom = calledPhone || fromNumber;
+
     const twilioRes = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
       {
@@ -76,7 +79,7 @@ Deno.serve(async (req) => {
           Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
         },
         body: new URLSearchParams({
-          From: fromNumber,
+          From: smsFrom,
           To: callerPhone,
           Body: messageBody,
         }),

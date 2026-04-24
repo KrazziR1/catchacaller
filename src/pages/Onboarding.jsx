@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +43,13 @@ const steps = [
 export default function Onboarding() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    base44.auth.isAuthenticated().then((authed) => {
+      if (!authed) base44.auth.redirectToLogin("/onboarding");
+    });
+  }, []);
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState({
     business_name: "",

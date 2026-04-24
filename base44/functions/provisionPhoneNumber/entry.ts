@@ -2,7 +2,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
-const BASE_URL = "https://catchacaller.com/functions";
 
 const twilioFetch = (path, method = "GET", body = null) => {
   const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
@@ -26,6 +25,10 @@ Deno.serve(async (req) => {
     }
 
     const { area_code } = await req.json().catch(() => ({}));
+
+    // Derive the base URL from the incoming request host
+    const reqUrl = new URL(req.url);
+    const BASE_URL = `${reqUrl.protocol}//${reqUrl.host}/functions`;
 
     // Step 1: Search for an available toll-free number
     const searchParams = new URLSearchParams({ TollFree: "true", Limit: "1" });

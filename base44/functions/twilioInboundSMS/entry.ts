@@ -44,9 +44,12 @@ Deno.serve(async (req) => {
       timestamp: now,
     });
 
-    // Generate an AI reply
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list();
-    const profile = profiles[0];
+    // Fetch the business profile that owns the number that received this SMS
+    const receivingNumber = params.get("To");
+    const profiles = receivingNumber
+      ? await base44.asServiceRole.entities.BusinessProfile.filter({ phone_number: receivingNumber })
+      : [];
+    const profile = profiles[0] || (await base44.asServiceRole.entities.BusinessProfile.list("-created_date", 1))[0];
 
     const aiReply = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are a friendly, professional AI assistant for ${profile?.business_name || "a service business"} (${profile?.industry || "general"} industry).
@@ -84,7 +87,8 @@ Tone: ${profile?.ai_personality || "friendly"}. Do NOT use emojis excessively. K
     // Send the AI reply via Twilio
     const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER");
+    // Use the number that received the inbound message (the "To" field from Twilio)
+    const toNumber = params.get("To") || Deno.env.get("TWILIO_PHONE_NUMBER");
 
     await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
@@ -95,7 +99,7 @@ Tone: ${profile?.ai_personality || "friendly"}. Do NOT use emojis excessively. K
           Authorization: `Basic ${btoa(`${accountSid}:${authToken}`)}`,
         },
         body: new URLSearchParams({
-          From: fromNumber,
+          From: toNumber,
           To: from,
           Body: aiReply,
         }),

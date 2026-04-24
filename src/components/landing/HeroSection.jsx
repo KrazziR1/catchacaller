@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PhoneMissed, MessageSquare, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
 export default function HeroSection() {
   return (
@@ -34,12 +34,14 @@ export default function HeroSection() {
           </p>
           
           <div className="flex flex-wrap gap-4 mt-10">
-            <Link to="/onboarding">
-              <Button size="lg" className="h-14 px-8 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
-                Start Free Trial
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              className="h-14 px-8 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+              onClick={() => base44.auth.redirectToLogin("/onboarding")}
+            >
+              Start Free Trial
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-base font-semibold rounded-xl">
               Watch Demo
             </Button>

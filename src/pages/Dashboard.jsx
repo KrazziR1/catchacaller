@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { PhoneMissed, MessageSquare, CalendarCheck, DollarSign } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
@@ -6,6 +8,20 @@ import RecentCallsTable from "@/components/dashboard/RecentCallsTable";
 import ConversionChart from "@/components/dashboard/ConversionChart";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
+  const { data: profiles = [], isSuccess: profileLoaded } = useQuery({
+    queryKey: ["business-profile"],
+    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
+  });
+
+  // Gate: redirect to onboarding if no profile set up
+  useEffect(() => {
+    if (profileLoaded && profiles.length === 0) {
+      navigate("/onboarding");
+    }
+  }, [profileLoaded, profiles, navigate]);
+
   const { data: calls = [] } = useQuery({
     queryKey: ["missed-calls"],
     queryFn: () => base44.entities.MissedCall.list("-call_time", 50),
