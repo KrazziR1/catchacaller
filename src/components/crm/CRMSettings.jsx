@@ -57,6 +57,10 @@ export default function CRMSettings({ profile, subscription }) {
   });
 
   const handleAddIntegration = () => {
+    if (!profile?.id) {
+      toast.error('Profile not loaded');
+      return;
+    }
     createMutation.mutate({
       account_id: profile.id,
       platform: selectedPlatform,

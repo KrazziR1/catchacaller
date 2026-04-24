@@ -11,6 +11,7 @@ export default function CalendarBookingWidget({ user, subscription }) {
   const { data: bookings = [] } = useQuery({
     queryKey: ['calendar-bookings'],
     queryFn: () => base44.entities.CalendarBooking.filter({ status: 'scheduled' }),
+    enabled: isPlanAllowed,
   });
 
   useEffect(() => {

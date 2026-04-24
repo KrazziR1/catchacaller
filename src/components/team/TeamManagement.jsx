@@ -42,6 +42,9 @@ export default function TeamManagement({ profile, subscription, user }) {
       setShowInvite(false);
       toast.success('Team member invited');
     },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to invite team member');
+    },
   });
 
   const removeMutation = useMutation({

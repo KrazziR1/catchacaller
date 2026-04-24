@@ -20,6 +20,7 @@ export default function LeadPipeline({ user, subscription }) {
   const { data: conversations = [] } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => base44.entities.Conversation.list('-created_date', 100),
+    enabled: isPlanAllowed,
   });
 
   useEffect(() => {
