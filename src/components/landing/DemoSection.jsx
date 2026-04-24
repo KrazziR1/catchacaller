@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import InteractiveDemo from './InteractiveDemo';
+import DemoFeatures from './DemoFeatures';
 
 export default function DemoSection() {
   return (
@@ -33,6 +34,8 @@ export default function DemoSection() {
             💡 <span className="font-semibold text-foreground">Pro tip:</span> Most users see first booking within 24 hours of activation
           </p>
         </motion.div>
+
+        <DemoFeatures />
       </div>
     </section>
   );

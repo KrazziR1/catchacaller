@@ -57,7 +57,7 @@ export default function InteractiveDemo() {
       } else {
         setStep(currentStep);
       }
-    }, 2500);
+    }, 4500);
   };
 
   const currentStep = steps[step];
@@ -161,17 +161,21 @@ export default function InteractiveDemo() {
         </div>
 
         {/* Bottom info - better contrast */}
-        <div className="mt-8 pt-6 border-t border-slate-700 grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+        <div className="mt-8 pt-6 border-t border-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs">
           <div>
-            <p className="text-xs font-semibold text-blue-400 mb-1">Recovery Rate</p>
+            <p className="font-semibold text-blue-400 mb-1">Recovery</p>
             <p className="text-lg font-bold text-white">73%</p>
           </div>
           <div>
-            <p className="text-xs font-semibold text-green-400 mb-1">Avg Response</p>
-            <p className="text-lg font-bold text-white">2 min</p>
+            <p className="font-semibold text-green-400 mb-1">Response</p>
+            <p className="text-lg font-bold text-white">2 sec</p>
           </div>
-          <div className="col-span-2 sm:col-span-1">
-            <p className="text-xs font-semibold text-amber-400 mb-1">Revenue/Lead</p>
+          <div>
+            <p className="font-semibold text-purple-400 mb-1">AI Qualified</p>
+            <p className="text-lg font-bold text-white">89%</p>
+          </div>
+          <div>
+            <p className="font-semibold text-amber-400 mb-1">Avg Value</p>
             <p className="text-lg font-bold text-white">$850</p>
           </div>
         </div>
