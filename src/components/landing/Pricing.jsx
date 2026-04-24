@@ -98,7 +98,10 @@ export default function Pricing() {
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, i) => (
+          <div className="text-center mb-8">
+          <p className="text-sm text-muted-foreground">💳 Month-to-month billing. <span className="font-semibold">Cancel anytime.</span> No contracts.</p>
+        </div>
+        {plans.map((plan, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }}
