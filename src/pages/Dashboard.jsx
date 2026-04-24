@@ -11,6 +11,7 @@ import ConversionChart from "@/components/dashboard/ConversionChart";
 import LeadPipeline from "@/components/dashboard/LeadPipeline";
 import CalendarBookingWidget from "@/components/dashboard/CalendarBookingWidget";
 import PipelineAnalytics from "@/components/dashboard/PipelineAnalytics";
+import TrialStatus from "@/components/TrialStatus";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -48,9 +49,9 @@ export default function Dashboard() {
     }
   }, [profileLoaded, profiles, navigate]);
 
-  // Gate: check subscription status
+  // Gate: check subscription status (allow active or trialing)
   const subscription = subscriptions[0];
-  if (user && profileLoaded && subscription && subscription.status !== "active") {
+  if (user && profileLoaded && subscription && !["active", "trialing"].includes(subscription.status)) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
         <Card className="max-w-md p-8 text-center">
@@ -74,7 +75,9 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
-      <div className="mb-8">
+      {user && subscription && <TrialStatus userEmail={user.email} />}
+      
+      <div className="mb-8 mt-6">
         <h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Your call recovery performance at a glance</p>
       </div>

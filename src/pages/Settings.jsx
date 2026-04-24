@@ -12,6 +12,7 @@ import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save, CreditCard, E
 import PhoneProvision from "@/components/PhoneProvision";
 import TeamManagement from "@/components/team/TeamManagement";
 import CRMSettings from "@/components/crm/CRMSettings";
+import TrialStatus from "@/components/TrialStatus";
 import { toast } from "sonner";
 
 export default function Settings() {
@@ -93,7 +94,9 @@ export default function Settings() {
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl mx-auto">
-      <div className="mb-8">
+      {user && subscription && <TrialStatus userEmail={user.email} />}
+      
+      <div className="mb-8 mt-6">
         <h1 className="text-3xl font-extrabold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-1">Configure your business profile and AI behavior</p>
       </div>
