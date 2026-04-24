@@ -1,0 +1,59 @@
+{
+  "name": "AutomationRule",
+  "type": "object",
+  "properties": {
+    "business_profile_id": {
+      "type": "string",
+      "description": "Reference to the business profile"
+    },
+    "rule_type": {
+      "type": "string",
+      "enum": [
+        "first_followup",
+        "reminder",
+        "qualification",
+        "custom"
+      ],
+      "description": "Type of automation"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-friendly name for the rule"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this rule is active"
+    },
+    "trigger_condition": {
+      "type": "string",
+      "enum": [
+        "no_response_hours",
+        "manual"
+      ],
+      "description": "What triggers this rule"
+    },
+    "hours_delay": {
+      "type": "number",
+      "description": "Hours to wait before sending (for no_response_hours trigger)"
+    },
+    "sms_template_id": {
+      "type": "string",
+      "description": "Reference to SMS template to send"
+    },
+    "custom_message": {
+      "type": "string",
+      "description": "Custom message body (if not using template)"
+    },
+    "send_delay_seconds": {
+      "type": "number",
+      "default": 0,
+      "description": "Additional delay in seconds before sending"
+    }
+  },
+  "required": [
+    "business_profile_id",
+    "rule_type",
+    "is_enabled"
+  ]
+}

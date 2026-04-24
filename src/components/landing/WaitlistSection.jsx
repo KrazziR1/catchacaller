@@ -26,6 +26,11 @@ export default function WaitlistSection() {
   const handleSubmit = async () => {
     setLoading(true);
     await base44.entities.WaitlistEntry.create(form);
+    // Send confirmation email
+    await base44.functions.invoke('sendWaitlistConfirmationEmail', {
+      email: form.email,
+      business_name: form.business_name,
+    });
     setLoading(false);
     setDone(true);
   };

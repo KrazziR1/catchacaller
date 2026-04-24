@@ -13,6 +13,8 @@ import SMSInbox from '@/components/conversations/SMSInbox';
 import SendTemplatedSMSDialog from '@/components/conversations/SendTemplatedSMSDialog';
 import PipelineAnalytics from '@/components/dashboard/PipelineAnalytics';
 import LeadScoring from '@/components/dashboard/LeadScoring';
+import AutomationRuleManager from '@/components/conversations/AutomationRuleManager';
+import { Download } from 'lucide-react';
 
 export default function Conversations() {
   const [selectedId, setSelectedId] = useState(null);
@@ -67,7 +69,7 @@ export default function Conversations() {
           <h1 className="text-3xl font-extrabold tracking-tight">Conversations</h1>
           <p className="text-muted-foreground mt-1">Manage leads and their messages</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant={view === 'conversations' ? 'default' : 'outline'}
             onClick={() => setView('conversations')}
@@ -93,6 +95,22 @@ export default function Conversations() {
               Analytics
             </Button>
           )}
+          <Button
+            onClick={async () => {
+              const res = await base44.functions.invoke('exportConversations', {});
+              const blob = new Blob([res.data], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `conversations-${new Date().toISOString().split('T')[0]}.csv`;
+              a.click();
+            }}
+            variant="outline"
+            className="rounded-lg"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
         </div>
       </div>
 
@@ -103,6 +121,7 @@ export default function Conversations() {
       {view === 'analytics' && isGrowthPlus && (
         <div className="space-y-6">
           <PipelineAnalytics user={user} subscription={subscriptions[0]} />
+          <AutomationRuleManager profile={profiles[0]} />
         </div>
       )}
 

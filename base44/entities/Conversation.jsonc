@@ -47,6 +47,15 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          },
+          "sms_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sent",
+              "delivered",
+              "failed"
+            ]
           }
         }
       }
@@ -83,6 +92,11 @@
     "last_message_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "last_inbound_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last message from lead"
     },
     "pipeline_stage": {
       "type": "string",

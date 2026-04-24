@@ -12,6 +12,7 @@ import LeadPipeline from "@/components/dashboard/LeadPipeline";
 import CalendarBookingWidget from "@/components/dashboard/CalendarBookingWidget";
 import PipelineAnalytics from "@/components/dashboard/PipelineAnalytics";
 import TrialStatus from "@/components/TrialStatus";
+import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -40,6 +41,11 @@ export default function Dashboard() {
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => base44.entities.Conversation.list("-created_date", 50),
+  });
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ["templates"],
+    queryFn: () => base44.entities.SMSTemplate.list("-created_date", 100),
   });
 
   // Gate: redirect to onboarding if no profile set up
@@ -81,6 +87,8 @@ export default function Dashboard() {
         <h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Your call recovery performance at a glance</p>
       </div>
+
+      <OnboardingChecklist profile={profiles[0]} templates={templates} conversations={conversations} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard

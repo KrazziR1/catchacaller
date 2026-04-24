@@ -5,18 +5,29 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageSquare, Send, Copy, Calendar, Zap } from 'lucide-react';
+import { Phone, MessageSquare, Send, Copy, Calendar, Zap, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import PipelineStageSelector from './PipelineStageSelector';
 import AssignmentSelector from './AssignmentSelector';
 import ConversationNotes from './ConversationNotes';
+import ConversationMessageStatus from './ConversationMessageStatus';
 import CreateBookingDialog from './CreateBookingDialog';
 
 export default function ConversationDetail({ conversation, profile, subscription, user }) {
   const queryClient = useQueryClient();
   const [reply, setReply] = useState('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+
+  // Real-time subscription to conversation updates
+  useEffect(() => {
+    const unsubscribe = base44.entities.Conversation.subscribe((event) => {
+      if (event.id === conversation.id && event.type === 'update') {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      }
+    });
+    return unsubscribe;
+  }, [conversation.id, queryClient]);
 
   const syncMutation = useMutation({
     mutationFn: () => base44.functions.invoke('manualSyncToCRM', { conversation_id: conversation.id }),
@@ -25,6 +36,17 @@ export default function ConversationDetail({ conversation, profile, subscription
     },
     onError: (error) => {
       toast.error('Sync failed: ' + error.message);
+    },
+  });
+
+  const autoFollowupMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('autoFollowUp', { conversation_id: conversation.id }),
+    onSuccess: () => {
+      toast.success('Follow-up scheduled');
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    },
+    onError: (error) => {
+      toast.error('Failed: ' + error.message);
     },
   });
 
@@ -131,6 +153,7 @@ export default function ConversationDetail({ conversation, profile, subscription
                 }`}>
                   {format(new Date(msg.timestamp), 'h:mm a')}
                 </p>
+                {msg.sender === 'human' && <ConversationMessageStatus smsStatus={msg.sms_status} />}
               </div>
             </div>
           ))
@@ -161,6 +184,18 @@ export default function ConversationDetail({ conversation, profile, subscription
            >
              <Calendar className="w-3 h-3 mr-1" />
              Create Booking
+           </Button>
+         )}
+         {isGrowthPlus && (
+           <Button
+             onClick={() => autoFollowupMutation.mutate()}
+             disabled={autoFollowupMutation.isPending}
+             variant="outline"
+             size="sm"
+             className="flex-1 rounded-lg text-xs"
+           >
+             <Clock className="w-3 h-3 mr-1" />
+             {autoFollowupMutation.isPending ? 'Sending...' : 'Send Follow-up'}
            </Button>
          )}
          <Button
