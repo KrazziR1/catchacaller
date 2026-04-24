@@ -38,7 +38,7 @@ export default function Settings() {
     if (profile) {
       setFormData({
         business_name: profile.business_name || "",
-        industry: profile.industry || "hvac",
+        industry: profile.industry || "general",
         phone_number: profile.phone_number || "",
         booking_url: profile.booking_url || "",
         website: profile.website || "",
@@ -104,12 +104,18 @@ export default function Settings() {
                 <Select value={formData.industry} onValueChange={(v) => setFormData({ ...formData, industry: v })}>
                   <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="general">General / Other</SelectItem>
                     <SelectItem value="hvac">HVAC</SelectItem>
                     <SelectItem value="plumbing">Plumbing</SelectItem>
                     <SelectItem value="roofing">Roofing</SelectItem>
-                    <SelectItem value="med_spa">Med Spa</SelectItem>
+                    <SelectItem value="med_spa">Med Spa / Aesthetics</SelectItem>
                     <SelectItem value="legal">Legal</SelectItem>
-                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="hospitality">Hospitality</SelectItem>
+                    <SelectItem value="marketing">Marketing / Agency</SelectItem>
+                    <SelectItem value="real_estate">Real Estate</SelectItem>
+                    <SelectItem value="dental">Dental / Healthcare</SelectItem>
+                    <SelectItem value="fitness">Fitness / Wellness</SelectItem>
+                    <SelectItem value="automotive">Automotive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

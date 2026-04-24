@@ -54,7 +54,7 @@ export default function HowItWorks() {
         >
           <p className="text-sm font-semibold text-primary tracking-wider uppercase mb-3">How It Works</p>
           <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight">
-            From missed call to booked job<br />in under 60 seconds
+            From missed call to booked appointment<br />in under 60 seconds
           </h2>
         </motion.div>
 

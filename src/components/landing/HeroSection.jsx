@@ -115,7 +115,7 @@ export default function HeroSection() {
                     transition={{ delay: 2.6 }}
                     className="ml-8 p-3 rounded-xl bg-muted"
                   >
-                    <p className="text-xs">"My AC is broken, need someone ASAP"</p>
+                    <p className="text-xs">"I need to book an appointment ASAP"</p>
                   </motion.div>
                   
                   {/* Booking */}
@@ -128,7 +128,7 @@ export default function HeroSection() {
                     <CalendarCheck className="w-5 h-5 text-accent" />
                     <div>
                       <p className="text-xs font-semibold text-accent">Appointment Booked!</p>
-                      <p className="text-xs text-muted-foreground">Today, 2:00 PM - AC Repair</p>
+                      <p className="text-xs text-muted-foreground">Today, 2:00 PM - Consultation</p>
                     </div>
                   </motion.div>
                 </div>

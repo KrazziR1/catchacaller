@@ -24,7 +24,7 @@ const defaultTemplate = {
   name: "",
   category: "initial_response",
   message_body: "",
-  industry: "hvac",
+  industry: "general",
   is_active: true,
   send_delay_seconds: 0,
 };
@@ -179,7 +179,7 @@ export default function Templates() {
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Initial HVAC Response"
+                placeholder="e.g., Initial Response"
                 className="mt-1.5"
               />
             </div>
@@ -202,12 +202,18 @@ export default function Templates() {
                 <Select value={formData.industry} onValueChange={(v) => setFormData({ ...formData, industry: v })}>
                   <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="general">General / Other</SelectItem>
                     <SelectItem value="hvac">HVAC</SelectItem>
                     <SelectItem value="plumbing">Plumbing</SelectItem>
                     <SelectItem value="roofing">Roofing</SelectItem>
-                    <SelectItem value="med_spa">Med Spa</SelectItem>
+                    <SelectItem value="med_spa">Med Spa / Aesthetics</SelectItem>
                     <SelectItem value="legal">Legal</SelectItem>
-                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="hospitality">Hospitality</SelectItem>
+                    <SelectItem value="marketing">Marketing / Agency</SelectItem>
+                    <SelectItem value="real_estate">Real Estate</SelectItem>
+                    <SelectItem value="dental">Dental / Healthcare</SelectItem>
+                    <SelectItem value="fitness">Fitness / Wellness</SelectItem>
+                    <SelectItem value="automotive">Automotive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

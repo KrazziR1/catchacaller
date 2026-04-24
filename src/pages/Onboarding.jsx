@@ -53,7 +53,7 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState({
     business_name: "",
-    industry: "hvac",
+    industry: "general",
     phone_number: "",
     business_hours: "Mon-Fri 8am-6pm",
     ai_personality: "friendly",
@@ -157,12 +157,18 @@ export default function Onboarding() {
                     <Select value={form.industry} onValueChange={(v) => setForm({ ...form, industry: v })}>
                       <SelectTrigger className="mt-1.5 h-12 rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="general">General / Other</SelectItem>
                         <SelectItem value="hvac">HVAC</SelectItem>
                         <SelectItem value="plumbing">Plumbing</SelectItem>
                         <SelectItem value="roofing">Roofing</SelectItem>
-                        <SelectItem value="med_spa">Med Spa</SelectItem>
+                        <SelectItem value="med_spa">Med Spa / Aesthetics</SelectItem>
                         <SelectItem value="legal">Legal</SelectItem>
-                        <SelectItem value="general">Other</SelectItem>
+                        <SelectItem value="hospitality">Hospitality</SelectItem>
+                        <SelectItem value="marketing">Marketing / Agency</SelectItem>
+                        <SelectItem value="real_estate">Real Estate</SelectItem>
+                        <SelectItem value="dental">Dental / Healthcare</SelectItem>
+                        <SelectItem value="fitness">Fitness / Wellness</SelectItem>
+                        <SelectItem value="automotive">Automotive</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

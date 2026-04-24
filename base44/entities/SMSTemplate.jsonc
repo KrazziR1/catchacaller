@@ -24,12 +24,18 @@
     "industry": {
       "type": "string",
       "enum": [
+        "general",
         "hvac",
         "plumbing",
         "roofing",
         "med_spa",
         "legal",
-        "general"
+        "hospitality",
+        "marketing",
+        "real_estate",
+        "dental",
+        "fitness",
+        "automotive"
       ],
       "default": "general"
     },

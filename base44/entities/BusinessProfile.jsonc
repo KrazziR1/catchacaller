@@ -8,14 +8,20 @@
     "industry": {
       "type": "string",
       "enum": [
+        "general",
         "hvac",
         "plumbing",
         "roofing",
         "med_spa",
         "legal",
-        "general"
+        "hospitality",
+        "marketing",
+        "real_estate",
+        "dental",
+        "fitness",
+        "automotive"
       ],
-      "default": "hvac"
+      "default": "general"
     },
     "phone_number": {
       "type": "string",
@@ -48,8 +54,7 @@
       "type": "string",
       "enum": [
         "professional",
-        "friendly",
-        "casual"
+        "friendly"
       ],
       "default": "friendly"
     },
