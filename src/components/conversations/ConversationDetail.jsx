@@ -1,17 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageSquare, BookOpen, Send, Copy, CheckCircle2 } from 'lucide-react';
+import { Phone, MessageSquare, Send, Copy, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import PipelineStageSelector from './PipelineStageSelector';
+import AssignmentSelector from './AssignmentSelector';
+import ConversationNotes from './ConversationNotes';
+import CreateBookingDialog from './CreateBookingDialog';
 
-export default function ConversationDetail({ conversation }) {
+export default function ConversationDetail({ conversation, profile, subscription, user }) {
   const queryClient = useQueryClient();
   const [reply, setReply] = useState('');
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Conversation.update(conversation.id, data),
@@ -44,33 +49,46 @@ export default function ConversationDetail({ conversation }) {
 
   const statusCfg = statusConfig[conversation.status] || statusConfig.active;
 
+  const isGrowthPlus = subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name);
+  const isPro = subscription?.plan_name === 'Pro';
+
   return (
-    <Card className="lg:col-span-2 rounded-2xl flex flex-col h-[600px]">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-bold text-lg">{conversation.caller_name || 'Unknown'}</h2>
-            <button
-              onClick={handleCopyPhone}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 mt-1"
-            >
-              <Phone className="w-3 h-3" />
-              {conversation.caller_phone}
-              <Copy className="w-3 h-3" />
-            </button>
+    <>
+      <Card className="lg:col-span-2 rounded-2xl flex flex-col h-auto">
+        {/* Header */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <h2 className="font-bold text-lg">{conversation.caller_name || 'Unknown'}</h2>
+              <button
+                onClick={handleCopyPhone}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 mt-1"
+              >
+                <Phone className="w-3 h-3" />
+                {conversation.caller_phone}
+                <Copy className="w-3 h-3" />
+              </button>
+            </div>
+            <Badge className={statusCfg.className}>{statusCfg.label}</Badge>
           </div>
-          <Badge className={statusCfg.className}>{statusCfg.label}</Badge>
+          {conversation.service_type && (
+            <p className="text-xs text-muted-foreground mb-3">
+              Service: <span className="font-medium">{conversation.service_type}</span>
+            </p>
+          )}
+          {isGrowthPlus && (
+            <div className="space-y-2">
+              <div className="text-xs font-medium mb-2">Pipeline Stage</div>
+              <PipelineStageSelector conversation={conversation} />
+              <div className="mt-2">
+                <AssignmentSelector conversation={conversation} profile={profile} />
+              </div>
+            </div>
+          )}
         </div>
-        {conversation.service_type && (
-          <p className="text-xs text-muted-foreground mt-2">
-            Service: <span className="font-medium">{conversation.service_type}</span>
-          </p>
-        )}
-      </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="overflow-y-auto p-4 space-y-4 max-h-[300px]">
         {(!conversation.messages || conversation.messages.length === 0) ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             No messages yet
@@ -101,40 +119,56 @@ export default function ConversationDetail({ conversation }) {
 
       {/* Input */}
       <div className="p-4 border-t border-border space-y-3">
-        <div className="flex gap-2">
-          <Input
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            placeholder="Type a message..."
-            onKeyDown={(e) => e.key === 'Enter' && handleAddMessage()}
-            className="rounded-xl"
-          />
-          <Button onClick={handleAddMessage} disabled={!reply.trim()} size="icon" className="rounded-xl">
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => updateMutation.mutate({ status: 'booked' })}
-            disabled={conversation.status === 'booked'}
-            variant="outline"
-            size="sm"
-            className="flex-1 rounded-lg text-xs"
-          >
-            <CheckCircle2 className="w-3 h-3 mr-1" />
-            Mark Booked
-          </Button>
-          <Button
-            onClick={() => updateMutation.mutate({ status: 'lost' })}
-            disabled={conversation.status === 'lost'}
-            variant="outline"
-            size="sm"
-            className="flex-1 rounded-lg text-xs"
-          >
-            Mark Lost
-          </Button>
-        </div>
+       <div className="flex gap-2">
+         <Input
+           value={reply}
+           onChange={(e) => setReply(e.target.value)}
+           placeholder="Type a message..."
+           onKeyDown={(e) => e.key === 'Enter' && handleAddMessage()}
+           className="rounded-xl text-sm"
+         />
+         <Button onClick={handleAddMessage} disabled={!reply.trim()} size="icon" className="rounded-xl">
+           <Send className="w-4 h-4" />
+         </Button>
+       </div>
+       <div className="flex gap-2">
+         {isPro && (
+           <Button
+             onClick={() => setShowBookingDialog(true)}
+             variant="outline"
+             size="sm"
+             className="flex-1 rounded-lg text-xs"
+           >
+             <Calendar className="w-3 h-3 mr-1" />
+             Create Booking
+           </Button>
+         )}
+         <Button
+           onClick={() => updateMutation.mutate({ status: 'lost' })}
+           disabled={conversation.status === 'lost'}
+           variant="outline"
+           size="sm"
+           className="flex-1 rounded-lg text-xs"
+         >
+           Mark Lost
+         </Button>
+       </div>
       </div>
-    </Card>
-  );
-}
+
+      {/* Notes Section - Growth+ */}
+      {isGrowthPlus && user && (
+       <div className="p-4 border-t border-border">
+         <ConversationNotes conversation={conversation} user={user} />
+       </div>
+      )}
+      </Card>
+
+      {/* Booking Dialog */}
+      <CreateBookingDialog
+      conversation={conversation}
+      open={showBookingDialog}
+      onOpenChange={setShowBookingDialog}
+      />
+      </>
+      );
+      }

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,22 @@ import ConversationDetail from '@/components/conversations/ConversationDetail';
 export default function Conversations() {
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState('');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
+
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['business-profile'],
+    queryFn: () => base44.entities.BusinessProfile.list('-created_date', 1),
+  });
+
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ['subscription', user?.email],
+    queryFn: () => base44.entities.Subscription.filter({ user_email: user.email }),
+    enabled: !!user?.email,
+  });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['conversations'],
@@ -84,7 +100,12 @@ export default function Conversations() {
 
         {/* Conversation Detail */}
         {selected ? (
-          <ConversationDetail conversation={selected} />
+          <ConversationDetail
+            conversation={selected}
+            profile={profiles[0]}
+            subscription={subscriptions[0]}
+            user={user}
+          />
         ) : (
           <Card className="lg:col-span-2 rounded-2xl flex items-center justify-center h-[600px]">
             <div className="text-center">
