@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
 const plans = [
   {
@@ -9,6 +10,7 @@ const plans = [
     price: "$49",
     period: "/month",
     description: "For solo operators getting started",
+    priceId: "price_1TPruHFsxP0HXZ0ANSkOGCp0",
     features: [
       "Missed call detection",
       "Instant SMS auto-response",
@@ -24,6 +26,7 @@ const plans = [
     price: "$149",
     period: "/month",
     description: "For growing businesses that need AI",
+    priceId: "price_1TPrvMFsxP0HXZ0Apho3zV1j",
     features: [
       "Everything in Starter",
       "AI conversation handling",
@@ -41,6 +44,7 @@ const plans = [
     price: "$297",
     period: "/month",
     description: "For multi-location operations",
+    priceId: "price_1TPrvzFsxP0HXZ0AP2nb21Ne",
     features: [
       "Everything in Growth",
       "Unlimited SMS",
@@ -50,14 +54,30 @@ const plans = [
       "CRM integrations",
       "Dedicated account manager",
     ],
-    cta: "Contact Sales",
+    cta: "Get Started",
     highlighted: false,
   },
 ];
 
 export default function Pricing() {
+  const [loadingPlan, setLoadingPlan] = useState(null);
+
+  const handleCheckout = async (plan) => {
+    setLoadingPlan(plan.name);
+    const isAuthed = await base44.auth.isAuthenticated();
+    if (!isAuthed) {
+      base44.auth.redirectToLogin("/#pricing");
+      return;
+    }
+    const res = await base44.functions.invoke("createCheckoutSession", { priceId: plan.priceId });
+    if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
+    setLoadingPlan(null);
+  };
+
   return (
-    <section className="py-24 lg:py-32 bg-background">
+    <section id="pricing" className="py-24 lg:py-32 bg-background">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -109,19 +129,23 @@ export default function Pricing() {
                   </li>
                 ))}
               </ul>
-              <Link to="/onboarding">
-                <Button
-                  className={`w-full h-12 rounded-xl font-semibold ${
-                    plan.highlighted
-                      ? "shadow-lg shadow-primary/25"
-                      : ""
-                  }`}
-                  variant={plan.highlighted ? "default" : "outline"}
-                >
-                  {plan.cta}
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
+              <Button
+                onClick={() => handleCheckout(plan)}
+                disabled={loadingPlan !== null}
+                className={`w-full h-12 rounded-xl font-semibold ${
+                  plan.highlighted ? "shadow-lg shadow-primary/25" : ""
+                }`}
+                variant={plan.highlighted ? "default" : "outline"}
+              >
+                {loadingPlan === plan.name ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    {plan.cta}
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </>
+                )}
+              </Button>
             </motion.div>
           ))}
         </div>
