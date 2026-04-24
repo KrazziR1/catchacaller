@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MessageSquare, Send, Copy, Calendar } from 'lucide-react';
+import { Phone, MessageSquare, Send, Copy, Calendar, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import PipelineStageSelector from './PipelineStageSelector';
@@ -17,6 +17,16 @@ export default function ConversationDetail({ conversation, profile, subscription
   const queryClient = useQueryClient();
   const [reply, setReply] = useState('');
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+
+  const syncMutation = useMutation({
+    mutationFn: () => base44.functions.invoke('manualSyncToCRM', { conversation_id: conversation.id }),
+    onSuccess: () => {
+      toast.success('Synced to CRM');
+    },
+    onError: (error) => {
+      toast.error('Sync failed: ' + error.message);
+    },
+  });
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Conversation.update(conversation.id, data),
@@ -83,6 +93,16 @@ export default function ConversationDetail({ conversation, profile, subscription
               <div className="mt-2">
                 <AssignmentSelector conversation={conversation} profile={profile} />
               </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => syncMutation.mutate()}
+                disabled={syncMutation.isPending}
+                className="w-full mt-2 rounded-lg text-xs"
+              >
+                <Zap className="w-3 h-3 mr-1" />
+                {syncMutation.isPending ? 'Syncing...' : 'Sync to CRM'}
+              </Button>
             </div>
           )}
         </div>
