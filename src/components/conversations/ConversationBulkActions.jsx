@@ -111,7 +111,7 @@ export default function ConversationBulkActions({ selectedIds, onClear, profiles
                     <>
                       <SelectItem value={null}>Unassigned</SelectItem>
                       {teamMembers.map(m => (
-                        <SelectItem key={m.id} value={m.user_email}>{m.user_email}</SelectItem>
+                        <SelectItem key={m.id} value={m.user_email}>{m.user_email.split('@')[0]}</SelectItem>
                       ))}
                     </>
                   )}

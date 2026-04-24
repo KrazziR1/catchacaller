@@ -31,9 +31,11 @@ const plans = [
       "Everything in Starter",
       "AI conversation handling",
       "500 SMS/month",
-      "Booking link integration",
-      "Multi-step follow-ups",
-      "Lead qualification",
+      "Pipeline management",
+      "Team collaboration",
+      "Templated SMS",
+      "Lead scoring",
+      "CRM integrations",
       "Priority support",
     ],
     cta: "Start Free Trial",
@@ -48,6 +50,7 @@ const plans = [
     features: [
       "Everything in Growth",
       "Unlimited SMS",
+      "Calendar booking & sync",
       "Multi-location support",
       "Advanced analytics",
       "Custom AI training",
@@ -73,7 +76,6 @@ export default function Pricing() {
     if (res.data?.url) {
       window.location.href = res.data.url;
     }
-    setLoadingPlan(null);
     setLoadingPlan(null);
   };
 

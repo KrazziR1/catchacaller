@@ -78,6 +78,24 @@ const features = [
     description: "Automated appointment scheduling and confirmation with your booking link.",
     tier: "pro",
   },
+  {
+    icon: BarChart3,
+    title: "Pipeline Analytics (Growth+)",
+    description: "Conversion funnel, win rates, and lead-stage distribution analytics.",
+    tier: "growth",
+  },
+  {
+    icon: Zap,
+    title: "Templated SMS (Growth+)",
+    description: "Save and send pre-written templates with bulk SMS functionality.",
+    tier: "growth",
+  },
+  {
+    icon: Smartphone,
+    title: "Lead Scoring (Growth+)",
+    description: "AI-powered urgency scoring based on engagement, recency, and value.",
+    tier: "growth",
+  },
 ];
 
 export default function Features() {
