@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const subscriptions = await base44.entities.Subscription.filter({ user_email: user.email });
+    const subscriptions = await base44.asServiceRole.entities.Subscription.filter({ user_email: user.email });
     const subscription = subscriptions[0];
     if (!subscription) {
       return Response.json({ error: 'No subscription found' }, { status: 404 });

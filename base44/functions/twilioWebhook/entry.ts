@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
       messageBody = t.message_body
         .replace("{business_name}", profile?.business_name || "us")
         .replace("{caller_name}", "")
+        .replace("{booking_url}", profile?.booking_url || "")
         .trim();
     } else {
       const businessName = profile?.business_name || "our team";

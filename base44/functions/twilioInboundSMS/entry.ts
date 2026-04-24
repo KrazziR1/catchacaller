@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       : [];
     const profile = profiles[0] || (await base44.asServiceRole.entities.BusinessProfile.list("-created_date", 1))[0];
 
-    const aiReply = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are a friendly, professional AI assistant for ${profile?.business_name || "a service business"} (${profile?.industry || "general"} industry).
 A potential customer just texted back: "${messageBody}"
 
@@ -62,6 +62,8 @@ Write a short, helpful SMS reply (max 2 sentences). Your goal is to understand t
 ${profile?.booking_url ? `If they seem ready to book, include this link: ${profile.booking_url}` : ""}
 Tone: ${profile?.ai_personality || "friendly"}. Do NOT use emojis excessively. Keep it concise.`,
     });
+
+    const aiReply = typeof aiResponse === 'string' ? aiResponse : aiResponse?.data || aiResponse?.message || '';
 
     // Append AI reply
     messages.push({
