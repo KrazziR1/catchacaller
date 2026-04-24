@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save } from "lucide-react";
+import PhoneProvision from "@/components/PhoneProvision";
 import { toast } from "sonner";
 
 export default function Settings() {
@@ -116,12 +117,20 @@ export default function Settings() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <Label className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> Phone Number</Label>
-                <Input
-                  value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                  placeholder="(555) 123-4567"
-                  className="mt-1.5"
-                />
+                {formData.phone_number ? (
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <Input value={formData.phone_number} onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })} />
+                  </div>
+                ) : (
+                  <div className="mt-1.5 space-y-3">
+                    <PhoneProvision onSuccess={(num) => setFormData({ ...formData, phone_number: num })} />
+                    <Input
+                      value={formData.phone_number}
+                      onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                      placeholder="Or enter existing number manually"
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <Label className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Website</Label>

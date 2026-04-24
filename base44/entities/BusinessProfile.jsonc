@@ -21,6 +21,10 @@
       "type": "string",
       "description": "Business phone number to monitor"
     },
+    "twilio_number_sid": {
+      "type": "string",
+      "description": "Twilio SID for the provisioned phone number"
+    },
     "booking_url": {
       "type": "string",
       "description": "Calendly or booking link"

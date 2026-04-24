@@ -11,6 +11,7 @@ import {
   PhoneCall, Building2, Bot, CalendarCheck, 
   CheckCircle2, ArrowRight, ArrowLeft, Zap 
 } from "lucide-react";
+import PhoneProvision from "@/components/PhoneProvision";
 
 const steps = [
   {
@@ -183,25 +184,21 @@ export default function Onboarding() {
 
               {currentStep === 1 && (
                 <>
+                  <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground">or enter manually</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
                   <div>
-                    <Label>Business Phone Number</Label>
+                    <Label>Enter Existing Phone Number</Label>
                     <Input
                       value={form.phone_number}
                       onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
                       placeholder="(555) 123-4567"
                       className="mt-1.5 h-12 rounded-xl"
-                      autoFocus
                     />
-                    <p className="text-xs text-muted-foreground mt-1.5">This is the number your customers call that we'll monitor for missed calls</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
-                    <Zap className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold">How it works</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        When a call to this number goes unanswered, our AI instantly sends an SMS to the caller to start a conversation.
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5">If you already have a number configured in Twilio</p>
                   </div>
                 </>
               )}
