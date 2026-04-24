@@ -50,7 +50,7 @@ export default function WaitlistSection() {
             </span>
           </h2>
           <p className="text-muted-foreground text-lg mb-10">
-            Join HVAC & service businesses recovering missed calls automatically. First 25 get 30 days free.
+            Join service businesses across every industry recovering missed calls automatically. First 25 get 30 days free.
           </p>
         </motion.div>
 
