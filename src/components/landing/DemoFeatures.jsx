@@ -1,104 +1,199 @@
 import { motion } from 'framer-motion';
 import { 
-  Zap, MessageSquare, BarChart3, 
-  Smartphone, Lock, Brain, 
-  Calendar, Zap as Integration 
+  Zap, Brain, MessageSquare, Calendar, 
+  BarChart3, Lock, Users, Workflow,
+  TrendingUp, CheckCircle2
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
-const features = [
+const capabilities = [
   {
+    tier: 'all',
     icon: Zap,
-    title: 'Instant Response',
-    description: 'SMS sent within 2-5 seconds',
-    color: 'from-blue-500 to-blue-600',
+    title: 'Instant 2-5 Second Response',
+    description: 'SMS sent automatically within seconds of missed call. Speed is the difference between conversion and lost lead.',
+    example: 'Call missed at 2:34 PM → SMS received at 2:34:03 PM',
   },
   {
+    tier: 'all',
     icon: Brain,
-    title: 'AI Qualification',
-    description: 'Naturally qualifies leads',
-    color: 'from-purple-500 to-purple-600',
+    title: 'AI Conversation Handling',
+    description: 'Natural, human-like SMS conversations that qualify leads, identify urgency, and move toward booking.',
+    example: 'AI asks about service type, urgency, and availability—all naturally conversational.',
   },
   {
-    icon: MessageSquare,
-    title: 'Natural Conversations',
-    description: 'Human-like SMS dialogue',
-    color: 'from-pink-500 to-pink-600',
-  },
-  {
-    icon: Calendar,
-    title: 'Auto Booking',
-    description: 'Direct calendar sync',
-    color: 'from-green-500 to-green-600',
-  },
-  {
+    tier: 'growth',
     icon: BarChart3,
-    title: 'ROI Tracking',
-    description: 'Measure every recovered call',
-    color: 'from-amber-500 to-amber-600',
+    title: 'Lead Scoring & Pipeline',
+    description: 'AI automatically scores leads 0-100. Track every conversation through your sales pipeline with visibility for your team.',
+    example: 'Sarah Martinez: 92/100 score, High urgency, $1,400 estimated value, marked "Contacted"',
   },
   {
+    tier: 'pro',
+    icon: Calendar,
+    title: 'Calendar Integration & Auto-Booking',
+    description: 'AI presents available slots from your calendar and books appointments directly. No manual confirmation needed.',
+    example: 'AI: "I have 3:30 PM today or 9 AM tomorrow open" → Customer books → Instant confirmation sent',
+  },
+  {
+    tier: 'growth',
+    icon: Users,
+    title: 'Team Collaboration',
+    description: 'Assign conversations to team members, set permissions, and manage roles. Perfect for multi-location or growing teams.',
+    example: 'Admin assigns Sarah\'s booking to "Mike Rodriguez (Owner)" automatically via pipeline stage change',
+  },
+  {
+    tier: 'growth',
+    icon: Workflow,
+    title: 'CRM Integrations',
+    description: 'Sync every lead to HubSpot, Salesforce, or Zapier. No manual data entry—everything flows automatically.',
+    example: 'Lead details, conversation history, booking time—all synced to your CRM in real-time',
+  },
+  {
+    tier: 'all',
+    icon: TrendingUp,
+    title: 'ROI Dashboard',
+    description: 'See exactly how many calls you recovered, bookings made, and revenue generated. Measure true impact.',
+    example: '73% of missed calls recovered, 68% booking rate, $1,400 average value per lead',
+  },
+  {
+    tier: 'all',
     icon: Lock,
     title: 'Compliance Ready',
-    description: 'A2P certified & opt-out handling',
-    color: 'from-red-500 to-red-600',
+    description: 'A2P certified SMS, automatic opt-out handling, message regulation compliance built-in.',
+    example: 'Never worry about compliance—all SMS messaging meets carrier and regulatory standards',
   },
 ];
 
 const integrations = [
-  { name: 'HubSpot', emoji: '🎯' },
-  { name: 'Salesforce', emoji: '☁️' },
-  { name: 'Zapier', emoji: '⚡' },
-  { name: 'Google Calendar', emoji: '📅' },
-  { name: 'Calendly', emoji: '📆' },
-  { name: 'Twilio', emoji: '📱' },
+  { name: 'HubSpot', tier: 'growth', emoji: '🎯' },
+  { name: 'Salesforce', tier: 'growth', emoji: '☁️' },
+  { name: 'Zapier', tier: 'growth', emoji: '⚡' },
+  { name: 'Google Calendar', tier: 'pro', emoji: '📅' },
+  { name: 'Calendly', tier: 'pro', emoji: '📆' },
+  { name: 'Twilio', tier: 'all', emoji: '📱' },
 ];
 
 export default function DemoFeatures() {
   return (
-    <div className="mt-12 space-y-12">
-      {/* Key Features */}
+    <div className="mt-16 space-y-16">
+      {/* Capabilities by Tier */}
       <div>
-        <h3 className="text-xl font-bold text-center mb-8">Built-in Capabilities</h3>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {features.map((feature, i) => {
-            const Icon = feature.icon;
+        <div className="mb-10">
+          <h3 className="text-2xl font-bold mb-3">Capabilities at Every Tier</h3>
+          <p className="text-muted-foreground">See what's included in Starter, Growth+, and Pro plans</p>
+        </div>
+
+        <div className="grid gap-6">
+          {capabilities.map((cap, i) => {
+            const Icon = cap.icon;
+            const tierColors = {
+              all: 'from-blue-500 to-blue-600',
+              growth: 'from-purple-500 to-purple-600',
+              pro: 'from-amber-500 to-amber-600',
+            };
+            const tierLabels = {
+              all: 'All Plans',
+              growth: 'Growth+',
+              pro: 'Pro',
+            };
+
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-slate-600 transition-all group"
+                transition={{ delay: i * 0.05 }}
+                className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 hover:border-primary/30 transition-all"
               >
-                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-5 h-5 text-white" />
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${tierColors[cap.tier]} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h4 className="font-bold text-lg">{cap.title}</h4>
+                      <Badge variant={cap.tier === 'all' ? 'secondary' : 'default'} className="shrink-0">
+                        {tierLabels[cap.tier]}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">{cap.description}</p>
+                    <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                      <p className="text-xs font-mono text-slate-400">
+                        💡 <span className="text-foreground font-semibold">Example:</span> {cap.example}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <h4 className="font-semibold text-white text-sm mb-1">{feature.title}</h4>
-                <p className="text-xs text-slate-400">{feature.description}</p>
               </motion.div>
             );
           })}
         </div>
       </div>
 
-      {/* Integrations */}
-      <div className="border-t border-slate-700 pt-8">
-        <h3 className="text-xl font-bold text-center mb-8">Integrations & Partners</h3>
-        <div className="flex flex-wrap justify-center gap-4">
-          {integrations.map((integration, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06 }}
-              className="px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 transition-all hover:bg-slate-800"
-            >
-              <span className="text-lg mr-2">{integration.emoji}</span>
-              <span className="text-sm font-medium text-slate-200">{integration.name}</span>
-            </motion.div>
-          ))}
+      {/* Integrations Grid */}
+      <div className="border-t border-border pt-12">
+        <div className="mb-10">
+          <h3 className="text-2xl font-bold mb-3">Integrations & Partnerships</h3>
+          <p className="text-muted-foreground">Connect your entire business ecosystem</p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {integrations.map((integration, i) => {
+            const tierColors = {
+              all: 'border-blue-200 bg-blue-50',
+              growth: 'border-purple-200 bg-purple-50',
+              pro: 'border-amber-200 bg-amber-50',
+            };
+            const tierLabels = {
+              all: 'All Plans',
+              growth: 'Growth+',
+              pro: 'Pro',
+            };
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className={`flex items-center gap-3 p-4 rounded-lg border ${tierColors[integration.tier]}`}
+              >
+                <span className="text-2xl">{integration.emoji}</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">{integration.name}</p>
+                  <p className="text-xs text-slate-600">{tierLabels[integration.tier]}</p>
+                </div>
+                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Value Proposition */}
+      <div className="border-t border-border pt-12 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 rounded-xl p-8">
+        <h3 className="text-xl font-bold mb-6">Why Businesses Choose CatchACaller</h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div>
+            <p className="text-3xl font-bold text-primary mb-2">73%</p>
+            <p className="text-sm text-muted-foreground">of missed calls recovered and converted</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-accent mb-2">2.8s</p>
+            <p className="text-sm text-muted-foreground">average response time from missed call</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-purple-500 mb-2">68%</p>
+            <p className="text-sm text-muted-foreground">of qualified leads book appointments</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-blue-500 mb-2">24h</p>
+            <p className="text-sm text-muted-foreground">most customers see their first booking</p>
+          </div>
         </div>
       </div>
     </div>
