@@ -1,0 +1,44 @@
+{
+  "name": "TeamMember",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the team member"
+    },
+    "account_id": {
+      "type": "string",
+      "description": "ID of the business account/profile they belong to"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "member"
+      ],
+      "default": "member",
+      "description": "User role in the account"
+    },
+    "can_view_conversations": {
+      "type": "boolean",
+      "default": true
+    },
+    "can_edit_templates": {
+      "type": "boolean",
+      "default": false
+    },
+    "can_manage_team": {
+      "type": "boolean",
+      "default": false
+    },
+    "joined_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the member joined the team"
+    }
+  },
+  "required": [
+    "user_email",
+    "account_id"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "name": "CRMIntegration",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "Reference to BusinessProfile"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "zapier",
+        "hubspot",
+        "salesforce"
+      ],
+      "description": "CRM platform"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "api_key": {
+      "type": "string",
+      "description": "API key or webhook URL for the integration"
+    },
+    "workspace_id": {
+      "type": "string",
+      "description": "Optional workspace/instance ID (for Salesforce)"
+    },
+    "field_mapping": {
+      "type": "object",
+      "description": "How to map conversation fields to CRM fields",
+      "default": {}
+    },
+    "sync_events": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "conversation_created",
+          "conversation_booked",
+          "conversation_qualified",
+          "booking_created"
+        ]
+      },
+      "description": "Which events trigger a sync",
+      "default": [
+        "conversation_created",
+        "conversation_booked"
+      ]
+    }
+  },
+  "required": [
+    "account_id",
+    "platform"
+  ]
+}

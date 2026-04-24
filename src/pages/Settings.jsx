@@ -10,10 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import PhoneProvision from "@/components/PhoneProvision";
+import TeamManagement from "@/components/team/TeamManagement";
+import CRMSettings from "@/components/crm/CRMSettings";
 import { toast } from "sonner";
 
 export default function Settings() {
   const queryClient = useQueryClient();
+  const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
     business_name: "",
     industry: "hvac",
@@ -36,6 +39,10 @@ export default function Settings() {
     queryKey: ["subscription"],
     queryFn: () => base44.entities.Subscription.list("-created_date", 1),
   });
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
 
   const profile = profiles[0];
   const subscription = subscriptions[0];
@@ -272,6 +279,14 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        <Separator />
+
+        <TeamManagement profile={profile} subscription={subscription} user={user} />
+
+        <Separator />
+
+        <CRMSettings profile={profile} subscription={subscription} />
 
         <Separator />
 

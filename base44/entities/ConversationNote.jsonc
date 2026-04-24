@@ -1,0 +1,28 @@
+{
+  "name": "ConversationNote",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to the conversation"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Email of the team member who wrote the note"
+    },
+    "content": {
+      "type": "string",
+      "description": "Note content"
+    },
+    "is_internal": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this is visible only to team or also to lead"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "author_email",
+    "content"
+  ]
+}
