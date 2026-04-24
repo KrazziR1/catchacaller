@@ -10,10 +10,10 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <PhoneCall className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-bold">CallRecover</span>
+              <span className="font-bold">CatchACaller</span>
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
-              AI-powered missed call recovery for service businesses. Turn every missed call into booked revenue.
+              AI-powered missed call recovery for service businesses. Turn every missed call into booked revenue. — catchacaller.com
             </p>
           </div>
           <div className="flex gap-16 text-sm">
@@ -44,7 +44,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-border text-sm text-muted-foreground text-center">
-          © 2026 CallRecover. All rights reserved.
+          © 2026 CatchACaller. All rights reserved.
         </div>
       </div>
     </footer>

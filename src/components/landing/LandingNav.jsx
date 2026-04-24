@@ -13,7 +13,7 @@ export default function LandingNav() {
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
             <PhoneCall className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold tracking-tight">CallRecover</span>
+          <span className="text-lg font-bold tracking-tight">CatchACaller</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm">

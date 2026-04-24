@@ -26,7 +26,7 @@ export default function Sidebar() {
           <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center shrink-0">
             <PhoneCall className="w-5 h-5 text-sidebar-primary-foreground" />
           </div>
-          {!collapsed && <span className="text-lg font-bold text-sidebar-foreground tracking-tight">CallRecover</span>}
+          {!collapsed && <span className="text-lg font-bold text-sidebar-foreground tracking-tight">CatchACaller</span>}
         </Link>
       </div>
 
