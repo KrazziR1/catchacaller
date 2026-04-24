@@ -17,6 +17,7 @@ import Onboarding from '@/pages/Onboarding';
 import WaitlistAdmin from '@/pages/WaitlistAdmin';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
+import CheckoutSuccess from '@/pages/CheckoutSuccess';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -42,6 +43,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/checkout-success" element={<CheckoutSuccess />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/missed-calls" element={<MissedCalls />} />

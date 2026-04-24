@@ -74,6 +74,7 @@ export default function Pricing() {
       window.location.href = res.data.url;
     }
     setLoadingPlan(null);
+    setLoadingPlan(null);
   };
 
   return (

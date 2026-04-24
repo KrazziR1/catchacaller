@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
     if (eventType === 'customer.subscription.created' || eventType === 'customer.subscription.updated') {
       const planName = data.items.data[0]?.price?.nickname || 'Unknown';
       const currentPeriodEnd = new Date(data.current_period_end * 1000).toISOString();
+      const trialEndDate = data.trial_end ? new Date(data.trial_end * 1000).toISOString() : null;
 
       // Find or create subscription record
       const existing = await base44.asServiceRole.entities.Subscription.filter({
@@ -34,6 +35,7 @@ Deno.serve(async (req) => {
           status: data.status,
           plan_name: planName,
           current_period_end: currentPeriodEnd,
+          trial_end_date: trialEndDate,
         });
       } else {
         await base44.asServiceRole.entities.Subscription.create({
@@ -43,6 +45,7 @@ Deno.serve(async (req) => {
           status: data.status,
           plan_name: planName,
           current_period_end: currentPeriodEnd,
+          trial_end_date: trialEndDate,
         });
       }
     } else if (eventType === 'customer.subscription.deleted') {

@@ -35,6 +35,11 @@
       "format": "date-time",
       "description": "When current billing period ends"
     },
+    "trial_end_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the trial ends"
+    },
     "canceled_at": {
       "type": "string",
       "format": "date-time",

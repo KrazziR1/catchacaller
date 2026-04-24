@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: user.email,
-      success_url: `${origin}/dashboard?checkout=success`,
+      success_url: `${origin}/checkout-success`,
       cancel_url: `${origin}/#pricing`,
     });
 

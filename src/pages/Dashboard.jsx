@@ -28,6 +28,16 @@ export default function Dashboard() {
     enabled: !!user?.email,
   });
 
+  const { data: calls = [] } = useQuery({
+    queryKey: ["missed-calls"],
+    queryFn: () => base44.entities.MissedCall.list("-call_time", 50),
+  });
+
+  const { data: conversations = [] } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => base44.entities.Conversation.list("-created_date", 50),
+  });
+
   // Gate: redirect to onboarding if no profile set up
   useEffect(() => {
     if (profileLoaded && profiles.length === 0) {
@@ -53,16 +63,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const { data: calls = [] } = useQuery({
-    queryKey: ["missed-calls"],
-    queryFn: () => base44.entities.MissedCall.list("-call_time", 50),
-  });
-
-  const { data: conversations = [] } = useQuery({
-    queryKey: ["conversations"],
-    queryFn: () => base44.entities.Conversation.list("-created_date", 50),
-  });
 
   const totalCalls = calls.length;
   const repliedCalls = calls.filter(c => ["replied", "booked"].includes(c.status)).length;
