@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import StatCard from "@/components/dashboard/StatCard";
 import RecentCallsTable from "@/components/dashboard/RecentCallsTable";
 import ConversionChart from "@/components/dashboard/ConversionChart";
+import LeadPipeline from "@/components/dashboard/LeadPipeline";
+import CalendarBookingWidget from "@/components/dashboard/CalendarBookingWidget";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -113,6 +115,11 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-1 gap-6 mb-8">
         <ConversionChart />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        <LeadPipeline user={user} subscription={subscription} />
+        <CalendarBookingWidget user={user} subscription={subscription} />
       </div>
 
       <RecentCallsTable calls={calls.slice(0, 10)} />

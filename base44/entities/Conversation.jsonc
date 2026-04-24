@@ -83,6 +83,23 @@
     "last_message_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "qualified",
+        "booked",
+        "won",
+        "lost"
+      ],
+      "default": "new",
+      "description": "CRM pipeline stage (Growth+ feature)"
+    },
+    "calendar_booking_id": {
+      "type": "string",
+      "description": "Reference to calendar booking if appointment scheduled (Pro feature)"
     }
   },
   "required": [

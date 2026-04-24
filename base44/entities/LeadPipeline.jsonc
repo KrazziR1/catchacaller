@@ -1,0 +1,39 @@
+{
+  "name": "LeadPipeline",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to the conversation"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "qualified",
+        "booked",
+        "won",
+        "lost"
+      ],
+      "default": "new",
+      "description": "Current pipeline stage"
+    },
+    "moved_to_stage_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the lead moved to current stage"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes on the lead"
+    },
+    "reason_lost": {
+      "type": "string",
+      "description": "If lost, why did the lead close"
+    }
+  },
+  "required": [
+    "conversation_id"
+  ]
+}

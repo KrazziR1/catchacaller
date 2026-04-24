@@ -1,0 +1,57 @@
+{
+  "name": "CalendarBooking",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to the conversation"
+    },
+    "caller_phone": {
+      "type": "string",
+      "description": "Caller's phone number"
+    },
+    "caller_name": {
+      "type": "string",
+      "description": "Caller's name"
+    },
+    "scheduled_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the appointment is scheduled"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 30,
+      "description": "Appointment duration in minutes"
+    },
+    "service_type": {
+      "type": "string",
+      "description": "Type of service booked"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "confirmed",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled",
+      "description": "Booking status"
+    },
+    "calendly_event_id": {
+      "type": "string",
+      "description": "External Calendly event ID if using Calendly"
+    },
+    "confirmation_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When confirmation SMS was sent"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "caller_phone",
+    "scheduled_time"
+  ]
+}
