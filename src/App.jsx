@@ -15,6 +15,7 @@ import Settings from '@/pages/Settings';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Onboarding from '@/pages/Onboarding';
 import WaitlistAdmin from '@/pages/WaitlistAdmin';
+import SubscriptionGate from '@/components/SubscriptionGate';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
 
@@ -43,11 +44,11 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route element={<DashboardLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/missed-calls" element={<MissedCalls />} />
-        <Route path="/conversations" element={<Conversations />} />
-        <Route path="/templates" element={<Templates />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/dashboard" element={<SubscriptionGate><Dashboard /></SubscriptionGate>} />
+        <Route path="/missed-calls" element={<SubscriptionGate><MissedCalls /></SubscriptionGate>} />
+        <Route path="/conversations" element={<SubscriptionGate><Conversations /></SubscriptionGate>} />
+        <Route path="/templates" element={<SubscriptionGate><Templates /></SubscriptionGate>} />
+        <Route path="/settings" element={<SubscriptionGate><Settings /></SubscriptionGate>} />
         <Route path="/waitlist" element={<WaitlistAdmin />} />
       </Route>
       <Route path="/privacy" element={<PrivacyPolicy />} />
