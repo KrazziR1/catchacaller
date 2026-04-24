@@ -1,0 +1,48 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the subscriber"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe customer ID"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription ID"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "past_due",
+        "canceled",
+        "incomplete",
+        "incomplete_expired"
+      ],
+      "default": "incomplete",
+      "description": "Current subscription status"
+    },
+    "plan_name": {
+      "type": "string",
+      "description": "Plan name (Starter, Growth, Pro)"
+    },
+    "current_period_end": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When current billing period ends"
+    },
+    "canceled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When subscription was canceled"
+    }
+  },
+  "required": [
+    "user_email",
+    "stripe_subscription_id"
+  ]
+}

@@ -1,18 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { PhoneMissed, MessageSquare, CalendarCheck, DollarSign } from "lucide-react";
+import { PhoneMissed, MessageSquare, CalendarCheck, DollarSign, AlertCircle } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import StatCard from "@/components/dashboard/StatCard";
 import RecentCallsTable from "@/components/dashboard/RecentCallsTable";
 import ConversionChart from "@/components/dashboard/ConversionChart";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
 
   const { data: profiles = [], isSuccess: profileLoaded } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
+  });
+
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ["subscription", user?.email],
+    queryFn: () => base44.entities.Subscription.filter({ user_email: user.email }),
+    enabled: !!user?.email,
   });
 
   // Gate: redirect to onboarding if no profile set up
@@ -21,6 +34,25 @@ export default function Dashboard() {
       navigate("/onboarding");
     }
   }, [profileLoaded, profiles, navigate]);
+
+  // Gate: check subscription status
+  const subscription = subscriptions[0];
+  if (user && profileLoaded && subscription && subscription.status !== "active") {
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <Card className="max-w-md p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h1 className="text-xl font-bold mb-2">Subscription Required</h1>
+          <p className="text-muted-foreground mb-6">
+            Your subscription is {subscription.status}. Please upgrade to continue.
+          </p>
+          <Button onClick={() => window.location.href = "/#pricing"} className="w-full">
+            View Plans
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   const { data: calls = [] } = useQuery({
     queryKey: ["missed-calls"],
