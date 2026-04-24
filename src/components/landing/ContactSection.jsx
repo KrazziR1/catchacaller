@@ -23,7 +23,7 @@ export default function ContactSection() {
 
         <div className="grid sm:grid-cols-2 gap-6">
           <motion.a
-            href="mailto:support@catchacaller.com"
+            href="mailto:contact@catchacaller.com"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -34,15 +34,13 @@ export default function ContactSection() {
             </div>
             <h3 className="font-bold mb-2">Email Us</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              support@catchacaller.com
+              contact@catchacaller.com
             </p>
             <p className="text-xs text-primary font-semibold">Response in &lt; 2 hours →</p>
           </motion.a>
 
           <motion.a
-            href="https://calendly.com/catchacaller/demo"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:contact@catchacaller.com?subject=I%20want%20to%20start%20a%20free%20trial"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -52,11 +50,11 @@ export default function ContactSection() {
             <div className="w-12 h-12 rounded-xl bg-accent/10 group-hover:bg-accent/20 flex items-center justify-center mb-4 transition-colors">
               <MessageCircle className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="font-bold mb-2">Schedule a Call</h3>
+            <h3 className="font-bold mb-2">Start Free Trial</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Book a personalized demo with our team
+              Get started with your 30-day free trial
             </p>
-            <p className="text-xs text-accent font-semibold">15-min demo →</p>
+            <p className="text-xs text-accent font-semibold">Email us to activate →</p>
           </motion.a>
         </div>
       </div>
