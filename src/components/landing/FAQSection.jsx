@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: 'How long does setup take?',
-    a: 'Most businesses are operational in 15-20 minutes. Claim your number, set your templates, and you\'re live.',
+    a: 'Most businesses are fully operational in 1-2 hours. This includes claiming your toll-free number (which requires carrier verification), setting up your templates, and testing. If you already have a number, it\'s just 15-20 minutes.',
   },
   {
     q: 'Can I cancel anytime?',

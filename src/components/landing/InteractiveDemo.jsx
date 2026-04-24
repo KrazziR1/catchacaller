@@ -344,20 +344,20 @@ export default function InteractiveDemo() {
       {/* Key Metrics */}
       <div className="grid grid-cols-4 gap-3 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
         <div className="text-center">
-          <p className="text-xs text-slate-400 mb-1">Recovery</p>
-          <p className="text-lg font-bold text-primary">73%</p>
+          <p className="text-xs font-semibold text-slate-300 mb-2">Recovery</p>
+          <p className="text-2xl font-bold text-primary">73%</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-slate-400 mb-1">Response</p>
-          <p className="text-lg font-bold text-green-400">2-5 sec</p>
+          <p className="text-xs font-semibold text-slate-300 mb-2">Response</p>
+          <p className="text-2xl font-bold text-green-400">2-5s</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-slate-400 mb-1">Close Rate</p>
-          <p className="text-lg font-bold text-accent">68%</p>
+          <p className="text-xs font-semibold text-slate-300 mb-2">Close Rate</p>
+          <p className="text-2xl font-bold text-accent">68%</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-slate-400 mb-1">Avg Value</p>
-          <p className="text-lg font-bold text-purple-400">$1.4K</p>
+          <p className="text-xs font-semibold text-slate-300 mb-2">Avg Value</p>
+          <p className="text-2xl font-bold text-purple-400">$1.4K</p>
         </div>
       </div>
     </div>
