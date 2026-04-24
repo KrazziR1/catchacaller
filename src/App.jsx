@@ -15,6 +15,8 @@ import Settings from '@/pages/Settings';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Onboarding from '@/pages/Onboarding';
 import WaitlistAdmin from '@/pages/WaitlistAdmin';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import Terms from '@/pages/Terms';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +50,8 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/waitlist" element={<WaitlistAdmin />} />
       </Route>
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
