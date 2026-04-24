@@ -14,6 +14,7 @@ import Templates from '@/pages/Templates';
 import Settings from '@/pages/Settings';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Onboarding from '@/pages/Onboarding';
+import WaitlistAdmin from '@/pages/WaitlistAdmin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -45,6 +46,7 @@ const AuthenticatedApp = () => {
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/waitlist" element={<WaitlistAdmin />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

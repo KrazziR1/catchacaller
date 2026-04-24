@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, PhoneMissed, MessageSquare, 
-  FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight
+  FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight, Users
 } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
@@ -12,6 +12,7 @@ const navItems = [
   { icon: MessageSquare, label: "Conversations", path: "/conversations" },
   { icon: FileText, label: "Templates", path: "/templates" },
   { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: Users, label: "Waitlist", path: "/waitlist" },
 ];
 
 export default function Sidebar() {
