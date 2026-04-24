@@ -12,6 +12,7 @@ import MissedCalls from '@/pages/MissedCalls';
 import Conversations from '@/pages/Conversations';
 import Templates from '@/pages/Templates';
 import Settings from '@/pages/Settings';
+import WebhookMonitor from '@/pages/WebhookMonitor';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Onboarding from '@/pages/Onboarding';
 import WaitlistAdmin from '@/pages/WaitlistAdmin';
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/webhooks" element={<WebhookMonitor />} />
         <Route path="/waitlist" element={<WaitlistAdmin />} />
       </Route>
       <Route path="/privacy" element={<PrivacyPolicy />} />

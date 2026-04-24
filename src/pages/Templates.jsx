@@ -9,8 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { FileText, Plus, Pencil, Trash2, MessageSquare } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Plus, Pencil, Trash2, MessageSquare, Sparkles, Copy } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import TemplateLibrary from "@/components/templates/TemplateLibrary";
 
 const categoryLabels = {
   initial_response: "Initial Response",
@@ -94,6 +97,20 @@ export default function Templates() {
     }
   };
 
+  const handleUseTemplate = (template) => {
+    setFormData({
+      name: template.name + " (Copy)",
+      category: template.category,
+      message_body: template.message_body,
+      industry: template.industry,
+      is_active: true,
+      send_delay_seconds: 0,
+    });
+    setEditingTemplate(null);
+    setShowForm(true);
+    toast.success("Template loaded");
+  };
+
   return (
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -107,66 +124,83 @@ export default function Templates() {
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : templates.length === 0 ? (
-        <div className="bg-card rounded-2xl border border-border p-12 text-center">
-          <FileText className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-          <p className="font-semibold text-muted-foreground">No templates yet</p>
-          <p className="text-sm text-muted-foreground/60 mt-1">Create your first SMS template to get started</p>
-          <Button onClick={openCreate} variant="outline" className="mt-4 rounded-xl">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Template
-          </Button>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((t, i) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="bg-card rounded-2xl border border-border p-5 hover:shadow-md hover:border-primary/20 transition-all group"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm">{t.name}</h3>
-                    <Badge variant="outline" className="text-[10px] mt-0.5">
-                      {categoryLabels[t.category] || t.category}
-                    </Badge>
-                  </div>
-                </div>
-                <div className={`w-2 h-2 rounded-full ${t.is_active !== false ? "bg-accent" : "bg-muted-foreground/30"}`} />
-              </div>
-              
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-4">
-                {t.message_body}
-              </p>
+      <Tabs defaultValue="templates" className="mb-8">
+        <TabsList className="grid w-full max-w-sm">
+          <TabsTrigger value="templates">Your Templates</TabsTrigger>
+          <TabsTrigger value="library" className="flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5" />
+            Library
+          </TabsTrigger>
+        </TabsList>
 
-              <div className="flex items-center justify-between">
-                <Badge variant="secondary" className="text-[10px]">
-                  {t.industry?.toUpperCase()}
-                </Badge>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(t)}>
-                    <Pencil className="w-3 h-3" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(t.id)}>
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
+        <TabsContent value="templates" className="mt-6">
+
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : templates.length === 0 ? (
+            <div className="bg-card rounded-2xl border border-border p-12 text-center">
+              <FileText className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="font-semibold text-muted-foreground">No templates yet</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Create your first SMS template to get started</p>
+              <Button onClick={openCreate} variant="outline" className="mt-4 rounded-xl">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Template
+              </Button>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map((t, i) => (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-card rounded-2xl border border-border p-5 hover:shadow-md hover:border-primary/20 transition-all group"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm">{t.name}</h3>
+                        <Badge variant="outline" className="text-[10px] mt-0.5">
+                          {categoryLabels[t.category] || t.category}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className={`w-2 h-2 rounded-full ${t.is_active !== false ? "bg-accent" : "bg-muted-foreground/30"}`} />
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-4">
+                    {t.message_body}
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-[10px]">
+                      {t.industry?.toUpperCase()}
+                    </Badge>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(t)}>
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(t.id)}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="library" className="mt-6">
+          <TemplateLibrary onUseTemplate={handleUseTemplate} />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-lg">
