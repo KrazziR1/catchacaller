@@ -97,10 +97,8 @@ export default function Pricing() {
           </p>
         </motion.div>
 
+        <p className="text-center text-sm text-muted-foreground mb-8">💳 Month-to-month billing. <span className="font-semibold">Cancel anytime.</span> No contracts.</p>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <div className="text-center mb-8">
-          <p className="text-sm text-muted-foreground">💳 Month-to-month billing. <span className="font-semibold">Cancel anytime.</span> No contracts.</p>
-        </div>
         {plans.map((plan, i) => (
             <motion.div
               key={i}
