@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save } from "lucide-react";
+import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import PhoneProvision from "@/components/PhoneProvision";
 import { toast } from "sonner";
 
@@ -32,7 +32,24 @@ export default function Settings() {
     queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
   });
 
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: () => base44.entities.Subscription.list("-created_date", 1),
+  });
+
   const profile = profiles[0];
+  const subscription = subscriptions[0];
+
+  const [loading, setLoading] = useState(false);
+
+  const handleManageBilling = async () => {
+    setLoading(true);
+    const res = await base44.functions.invoke("createPortalSession", {});
+    if (res.data?.url) {
+      window.location.href = res.data.url;
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (profile) {
@@ -75,6 +92,54 @@ export default function Settings() {
       </div>
 
       <div className="space-y-6">
+        {/* Subscription Management */}
+        {subscription && (
+          <Card className="rounded-2xl border-primary/20 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Subscription</CardTitle>
+                  <CardDescription>Manage your billing and plan</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Current Plan</p>
+                  <p className="text-lg font-semibold">{subscription.plan_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Status</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      subscription.status === 'active' ? 'bg-accent/20 text-accent' : 'bg-destructive/20 text-destructive'
+                    }`}>
+                      {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <Button 
+                onClick={handleManageBilling} 
+                disabled={loading}
+                variant="outline"
+                className="w-full rounded-xl"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                )}
+                Manage Billing
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Business Info */}
         <Card className="rounded-2xl">
           <CardHeader>
