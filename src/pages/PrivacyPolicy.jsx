@@ -59,14 +59,14 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-bold mb-3">7. Your Rights</h2>
             <p className="text-muted-foreground leading-relaxed">
-              You have the right to access, correct, or delete your personal data. To exercise these rights, contact us at privacy@catchacaller.com.
+              You have the right to access, correct, or delete your personal data. To exercise these rights, contact us at contact@catchacaller.com.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold mb-3">8. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
-              For privacy-related questions, contact us at: <a href="mailto:privacy@catchacaller.com" className="text-primary hover:underline">privacy@catchacaller.com</a>
+              For privacy-related questions, contact us at: <a href="mailto:contact@catchacaller.com" className="text-primary hover:underline">contact@catchacaller.com</a>
             </p>
           </section>
 

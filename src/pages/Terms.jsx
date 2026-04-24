@@ -77,7 +77,7 @@ export default function Terms() {
           <section>
             <h2 className="text-xl font-bold mb-3">10. Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
-              For questions about these Terms, contact us at: <a href="mailto:legal@catchacaller.com" className="text-primary hover:underline">legal@catchacaller.com</a>
+              For questions about these Terms, contact us at: <a href="mailto:contact@catchacaller.com" className="text-primary hover:underline">contact@catchacaller.com</a>
             </p>
           </section>
 
