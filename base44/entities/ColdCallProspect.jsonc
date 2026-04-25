@@ -105,6 +105,29 @@
       "type": "string",
       "description": "Reference to BusinessProfile if they converted"
     },
+    "lead_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Engagement score (0-100) based on interactions"
+    },
+    "engagement_metrics": {
+      "type": "object",
+      "description": "Tracks engagement for lead scoring",
+      "properties": {
+        "callback_rate": {
+          "type": "number",
+          "default": 0
+        },
+        "message_responses": {
+          "type": "number",
+          "default": 0
+        },
+        "booking_link_clicks": {
+          "type": "number",
+          "default": 0
+        }
+      }
+    },
     "date_contacted": {
       "type": "string",
       "format": "date-time",

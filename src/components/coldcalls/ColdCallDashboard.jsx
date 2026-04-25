@@ -10,12 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, MessageSquare, Edit2, Trash2, Send, Settings, Zap } from "lucide-react";
+import { Search, Plus, MessageSquare, Edit2, Trash2, Send, Settings, Zap, Link as LinkIcon, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import BulkSMSDialog from "./BulkSMSDialog";
 import EditBusinessDialog from "./EditBusinessDialog";
 import ProspectDetailModal from "./ProspectDetailModal";
 import ColdCallSMSDialog from "./ColdCallSMSDialog";
+import ConversionLinkModal from "./ConversionLinkModal";
 
 const statusColors = {
   contacted: "bg-blue-100 text-blue-800",
@@ -51,6 +52,7 @@ export default function ColdCallDashboard() {
   });
   const [dncCheckResult, setDncCheckResult] = useState(null);
   const [dncChecking, setDncChecking] = useState(false);
+  const [conversionModal, setConversionModal] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -350,6 +352,17 @@ export default function ColdCallDashboard() {
                           >
                             <Settings className="w-4 h-4" />
                           </Button>
+                          {prospect.status === "signed_up_trial" && !prospect.linked_business_profile_id && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-lg text-accent"
+                              onClick={() => setConversionModal(prospect)}
+                              title="Link to business profile"
+                            >
+                              <LinkIcon className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"
@@ -599,6 +612,14 @@ export default function ColdCallDashboard() {
         open={showBulkSMS}
         onOpenChange={setShowBulkSMS}
       />
+
+      {conversionModal && (
+        <ConversionLinkModal
+          prospect={conversionModal}
+          open={!!conversionModal}
+          onOpenChange={(open) => !open && setConversionModal(null)}
+        />
+      )}
     </div>
   );
 }

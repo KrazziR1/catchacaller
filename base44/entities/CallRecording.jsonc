@@ -1,0 +1,40 @@
+{
+  "name": "CallRecording",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to the conversation"
+    },
+    "caller_phone": {
+      "type": "string",
+      "description": "Caller's phone number"
+    },
+    "business_phone": {
+      "type": "string",
+      "description": "Business phone that received the call"
+    },
+    "recording_url": {
+      "type": "string",
+      "description": "Twilio recording URL"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "description": "Call duration in seconds"
+    },
+    "call_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the call occurred"
+    },
+    "transcription": {
+      "type": "string",
+      "description": "AI-generated call transcription"
+    }
+  },
+  "required": [
+    "caller_phone",
+    "business_phone",
+    "call_date"
+  ]
+}

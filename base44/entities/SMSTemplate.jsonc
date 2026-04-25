@@ -21,6 +21,41 @@
       "type": "string",
       "description": "SMS template text with placeholders like {business_name}, {caller_name}"
     },
+    "variant_a": {
+      "type": "string",
+      "description": "A/B test variant A"
+    },
+    "variant_b": {
+      "type": "string",
+      "description": "A/B test variant B"
+    },
+    "ab_test_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether A/B test is running"
+    },
+    "ab_test_results": {
+      "type": "object",
+      "description": "A/B test performance data",
+      "properties": {
+        "variant_a_sent": {
+          "type": "number",
+          "default": 0
+        },
+        "variant_a_responses": {
+          "type": "number",
+          "default": 0
+        },
+        "variant_b_sent": {
+          "type": "number",
+          "default": 0
+        },
+        "variant_b_responses": {
+          "type": "number",
+          "default": 0
+        }
+      }
+    },
     "industry": {
       "type": "string",
       "enum": [

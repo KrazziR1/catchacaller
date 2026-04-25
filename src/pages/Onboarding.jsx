@@ -150,9 +150,14 @@ export default function Onboarding() {
     if (currentStep === 1) {
       // Validate phone number format
       if (!form.phone_number) return false;
-      // Must be valid E.164 format: +1XXXXXXXXXX
+      // Must be valid E.164 format: +1XXXXXXXXXX (strict validation)
       const e164Regex = /^\+1\d{10}$/;
-      return e164Regex.test(form.phone_number);
+      const isValidFormat = e164Regex.test(form.phone_number);
+      
+      // Additional validation: reject common test numbers (555)
+      const isTestNumber = form.phone_number.includes('555');
+      
+      return isValidFormat && !isTestNumber;
     }
     if (currentStep === 3) {
       // Validate booking URL is a real URL
@@ -459,7 +464,7 @@ export default function Onboarding() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          Make sure webhooks are configured in Twilio to capture missed calls.
+                          Format: +1 (555) 123-4567. Must be valid E.164 format. Avoid 555 test numbers.
                         </p>
                       </div>
                     )}
