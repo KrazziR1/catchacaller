@@ -17,7 +17,7 @@ const plans = [
       "100 SMS/month",
       "Basic templates",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     highlighted: false,
   },
   {
@@ -37,7 +37,7 @@ const plans = [
       "CRM integrations",
       "Priority support",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     highlighted: true,
   },
   {
@@ -95,7 +95,7 @@ export default function Pricing() {
           </p>
         </motion.div>
 
-        <p className="text-center text-sm text-muted-foreground mb-8">🎉 <span className="font-semibold">7-Day Trial</span> — Just $2.99 provisioning fee to get started. Month-to-month billing after trial. Cancel anytime.</p>
+        <p className="text-center text-sm text-muted-foreground mb-8">🎉 <span className="font-semibold">$2.99 to Get Started</span> — 7-day trial with full access. Month-to-month billing after. Cancel anytime.</p>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {plans.map((plan, i) => (
             <motion.div

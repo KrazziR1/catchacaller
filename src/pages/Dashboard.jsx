@@ -90,7 +90,7 @@ export default function Dashboard() {
       new Date(subscription.trial_end_date) < new Date() &&
       subscription.status === 'trial';
 
-    const isSubscriptionBlocked = subscription && !["active", "trial"].includes(subscription.status) || trialExpired;
+    const isSubscriptionBlocked = (subscription && !["active", "trial"].includes(subscription.status)) || trialExpired;
 
     if (isSubscriptionBlocked) {
       return <TrialExpiredPaywall />;

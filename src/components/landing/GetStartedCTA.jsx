@@ -7,13 +7,14 @@ import { base44 } from "@/api/base44Client";
 export default function GetStartedCTA() {
   const navigate = useNavigate();
 
-  const handleGetStarted = async () => {
-    const isAuthed = await base44.auth.isAuthenticated();
-    if (!isAuthed) {
-      base44.auth.redirectToLogin("/onboarding");
-    } else {
-      navigate("/onboarding");
-    }
+  const handleGetStarted = () => {
+    base44.auth.isAuthenticated().then((isAuthed) => {
+      if (isAuthed) {
+        navigate("/onboarding");
+      } else {
+        base44.auth.redirectToLogin("/onboarding");
+      }
+    });
   };
 
   return (
@@ -38,7 +39,7 @@ export default function GetStartedCTA() {
           </h2>
 
           <p className="text-muted-foreground text-lg">
-            Set up in minutes. Your AI starts recovering missed calls the same day.
+            Set up in 15 minutes. Twilio activation takes 1-2 business days.
           </p>
 
           <Button

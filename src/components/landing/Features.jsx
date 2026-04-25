@@ -8,123 +8,33 @@ import {
 const features = [
   {
     icon: Zap,
-    title: "Instant Response",
-    description: "SMS sent within seconds of a missed call. Speed wins customers.",
-    tier: "all",
+    title: "Instant AI Response",
+    description: "SMS sent within 3 seconds of a missed call—24/7, no setup required.",
   },
   {
     icon: Brain,
-    title: "AI Conversations",
-    description: "Natural, human-like SMS conversations that qualify and convert leads.",
-    tier: "all",
-  },
-  {
-    icon: Clock,
-    title: "Smart Follow-ups",
-    description: "Automated multi-step follow-ups if the lead doesn't respond immediately.",
-    tier: "all",
+    title: "Smart Conversations",
+    description: "AI qualifies leads, schedules appointments, and converts on autopilot.",
   },
   {
     icon: BarChart3,
-    title: "Revenue Tracking",
-    description: "See exactly how much revenue your recovered calls generate.",
-    tier: "all",
+    title: "ROI Tracking",
+    description: "See exactly which calls were recovered and revenue generated.",
   },
   {
     icon: Shield,
-    title: "SMS Compliance",
-    description: "Built-in A2P compliance, opt-out handling, and message regulations.",
-    tier: "all",
-  },
-  {
-    icon: Smartphone,
-    title: "Manual Takeover",
-    description: "Jump into any conversation when the AI needs a human touch.",
-    tier: "all",
+    title: "Built-in Compliance",
+    description: "TCPA-compliant SMS, opt-out handling, state regulations enforced.",
   },
   {
     icon: Users,
-    title: "Lead Qualification",
-    description: "AI identifies service type, urgency, and value before you engage.",
-    tier: "all",
-  },
-  {
-    icon: TrendingUp,
-    title: "ROI Dashboard",
-    description: "Clear metrics on calls recovered, bookings made, and revenue earned.",
-    tier: "all",
-  },
-  {
-    icon: Workflow,
-    title: "CRM Pipeline (Growth+)",
-    description: "Track leads through sales stages: new → contacted → qualified → won.",
-    tier: "growth",
-  },
-  {
-    icon: Users,
-    title: "Team Collaboration (Growth+)",
-    description: "Invite team members, assign conversations, and manage permissions.",
-    tier: "growth",
-  },
-  {
-    icon: Workflow,
-    title: "CRM Integrations (Growth+)",
-    description: "Sync leads to HubSpot, Salesforce, or Zapier automatically.",
-    tier: "growth",
+    title: "Team Collaboration",
+    description: "Invite team members, assign conversations, manage from one dashboard.",
   },
   {
     icon: Calendar,
-    title: "Calendar Booking (Pro)",
-    description: "Automated appointment scheduling and confirmation with your booking link.",
-    tier: "pro",
-  },
-  {
-    icon: BarChart3,
-    title: "Pipeline Analytics (Growth+)",
-    description: "Conversion funnel, win rates, and lead-stage distribution analytics.",
-    tier: "growth",
-  },
-  {
-    icon: Zap,
-    title: "Templated SMS (Growth+)",
-    description: "Save and send pre-written templates with bulk SMS functionality.",
-    tier: "growth",
-  },
-  {
-    icon: Smartphone,
-    title: "Lead Scoring (Growth+)",
-    description: "AI-powered urgency scoring based on engagement, recency, and value.",
-    tier: "growth",
-  },
-  {
-    icon: Clock,
-    title: "Delivery Status Tracking (All)",
-    description: "Real-time SMS delivery status - see exactly when messages reach leads.",
-    tier: "all",
-  },
-  {
-    icon: TrendingUp,
-    title: "Setup Progress (All)",
-    description: "Guided onboarding checklist to get you operational in minutes.",
-    tier: "all",
-  },
-  {
-    icon: Zap,
-    title: "Auto Follow-ups (Growth+)",
-    description: "Customizable automated follow-up rules with templates and schedules.",
-    tier: "growth",
-  },
-  {
-    icon: BarChart3,
-    title: "CSV Export (All)",
-    description: "Export all conversations and pipeline data for analysis and reporting.",
-    tier: "all",
-  },
-  {
-    icon: Clock,
-    title: "Live Updates (All)",
-    description: "Real-time conversation sync - see lead replies instantly.",
-    tier: "all",
+    title: "Calendar Booking",
+    description: "Auto-integrate Calendly, Google Calendar, or Acuity Scheduling.",
   },
 ];
 
@@ -144,38 +54,20 @@ export default function Features() {
           </h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {features.map((feature, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className={`group p-6 rounded-2xl border transition-all duration-300 ${
-                feature.tier === "growth"
-                  ? "bg-blue-50/50 border-blue-200/50 hover:border-blue-300"
-                  : feature.tier === "pro"
-                  ? "bg-purple-50/50 border-purple-200/50 hover:border-purple-300"
-                  : "bg-card border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-              }`}
+              transition={{ delay: i * 0.1 }}
+              className="group p-6 rounded-2xl border bg-card border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${
-                feature.tier === "growth"
-                  ? "bg-blue-100 group-hover:bg-blue-200"
-                  : feature.tier === "pro"
-                  ? "bg-purple-100 group-hover:bg-purple-200"
-                  : "bg-primary/10 group-hover:bg-primary/20"
-              }`}>
-                <feature.icon className={`w-6 h-6 ${
-                  feature.tier === "growth"
-                    ? "text-blue-600"
-                    : feature.tier === "pro"
-                    ? "text-purple-600"
-                    : "text-primary"
-                }`} />
+              <div className="w-12 h-12 rounded-xl bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
+                <feature.icon className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-bold mb-2">{feature.title}</h3>
+              <h3 className="font-bold mb-2 text-lg">{feature.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}

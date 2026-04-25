@@ -22,7 +22,7 @@ export default function HeroSection() {
               <span className="text-sm font-medium text-primary">AI-Powered Call Recovery</span>
             </div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
-              <span className="text-sm font-medium text-accent">⚡ Live in 15 minutes</span>
+              <span className="text-sm font-medium text-accent">⚡ Connected in 15 minutes</span>
             </div>
           </div>
           
@@ -58,7 +58,7 @@ export default function HeroSection() {
              </span>
              <span className="flex items-center gap-2">
                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-               Setup in 15 minutes
+               1-2 day Twilio activation
              </span>
              <span className="flex items-center gap-2">
                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
