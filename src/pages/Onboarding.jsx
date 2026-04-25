@@ -51,6 +51,7 @@ export default function Onboarding() {
     is_high_risk_industry: false,
     industry_description: "",
     phone_number: "",
+    owner_phone_number: "",
     business_hours: "Mon-Fri 8am-6pm",
     ai_personality: "friendly",
     booking_url: "",
@@ -411,6 +412,34 @@ export default function Onboarding() {
                 <>
                   <div className="space-y-4">
                     <div>
+                      <Label>Your Cell Phone (for incoming calls)</Label>
+                      <div className="flex gap-2 mt-1.5">
+                        <Input
+                          value={form.owner_phone_number}
+                          onChange={(e) => {
+                            let val = e.target.value.replace(/\D/g, '');
+                            if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
+                            if (val && !val.startsWith('+')) val = '+' + val;
+                            setForm({ ...form, owner_phone_number: val });
+                          }}
+                          placeholder="+1 (555) 123-4567"
+                          className="h-12 rounded-xl"
+                          autoFocus
+                        />
+                        {form.owner_phone_number && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setForm({ ...form, owner_phone_number: '' })}
+                            className="rounded-xl h-12 px-3"
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1.5">Your personal number where missed calls will be forwarded. Format: +1 (555) 123-4567</p>
+                    </div>
+                    <div className="border-t border-border pt-4">
                       <p className="text-sm font-semibold mb-3">Do you have an existing Twilio account with a phone number?</p>
                       <div className="flex gap-3">
                         <button
@@ -481,11 +510,12 @@ export default function Onboarding() {
                         </p>
                       </div>
                     )}
-                  </div>
-                </>
-              )}
+                    </div>
+                    </div>
+                    </>
+                    )}
 
-              {/* STEP 2: AI Personality */}
+                    {/* STEP 2: AI Personality */}
               {currentStep === 2 && (
                 <>
                   <p className="text-sm text-muted-foreground -mt-2">Choose how your AI communicates with leads. You can change this anytime.</p>

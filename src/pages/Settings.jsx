@@ -23,6 +23,7 @@ export default function Settings() {
     business_name: "",
     industry: "hvac",
     phone_number: "",
+    owner_phone_number: "",
     booking_url: "",
     website: "",
     timezone: "America/New_York",
@@ -65,6 +66,7 @@ export default function Settings() {
         business_name: profile.business_name || "",
         industry: profile.industry || "general",
         phone_number: profile.phone_number || "",
+        owner_phone_number: profile.owner_phone_number || "",
         booking_url: profile.booking_url || "",
         website: profile.website || "",
         timezone: profile.timezone || "America/New_York",
@@ -200,22 +202,37 @@ export default function Settings() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <Label className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> Phone Number</Label>
-                {formData.phone_number ? (
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <Input value={formData.phone_number} onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })} />
-                  </div>
-                ) : (
-                  <div className="mt-1.5 space-y-3">
-                    <PhoneProvision onSuccess={(num) => setFormData({ ...formData, phone_number: num })} />
-                    <Input
-                      value={formData.phone_number}
-                      onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                      placeholder="Or enter existing number manually"
-                    />
-                  </div>
-                )}
-              </div>
+                <Label className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> Business Phone</Label>
+                  {formData.phone_number ? (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <Input value={formData.phone_number} onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })} />
+                    </div>
+                  ) : (
+                    <div className="mt-1.5 space-y-3">
+                      <PhoneProvision onSuccess={(num) => setFormData({ ...formData, phone_number: num })} />
+                      <Input
+                        value={formData.phone_number}
+                        onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                        placeholder="Or enter existing number manually"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> Your Cell Phone</Label>
+                  <Input
+                    value={formData.owner_phone_number}
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, '');
+                      if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
+                      if (val && !val.startsWith('+')) val = '+' + val;
+                      setFormData({ ...formData, owner_phone_number: val });
+                    }}
+                    placeholder="Your personal number for incoming calls"
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">Where missed calls will be forwarded</p>
+                </div>
               <div>
                 <Label className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Website</Label>
                 <Input

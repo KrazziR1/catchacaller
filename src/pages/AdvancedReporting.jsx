@@ -79,7 +79,10 @@ export default function AdvancedReporting() {
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight">Advanced Reporting</h1>
-        <p className="text-muted-foreground mt-1">Deep dive into your lead recovery performance</p>
+        <p className="text-muted-foreground mt-1">
+          Deep dive into your lead recovery performance
+          <span className="ml-3 inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-700 rounded">DEMO DATA</span>
+        </p>
       </div>
 
       {/* Time Range Selector */}

@@ -179,6 +179,25 @@ export default function Dashboard() {
         <StatCard title="Revenue Recovered" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} delay={0.15} />
       </div>
 
+      {/* Check if onboarding incomplete - prompt to start */}
+      {!profile?.phone_number && (
+        <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200 flex items-start gap-4 mb-8">
+          <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-blue-900 mb-2">Complete Your Setup</h3>
+            <p className="text-sm text-blue-800 mb-3">You haven't added a phone number yet. Let's finish setup so you can start capturing missed calls.</p>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate("/onboarding")} className="bg-blue-600 hover:bg-blue-700 rounded-lg text-sm">
+                Resume Onboarding
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/settings")} className="rounded-lg text-sm">
+                Go to Settings
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <p className="text-sm text-muted-foreground">Demo mode - no data loaded</p>
     </div>
   );
