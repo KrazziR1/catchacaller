@@ -20,17 +20,17 @@ export default function Footer() {
             <div>
               <h4 className="font-semibold mb-3">Product</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li>Features</li>
-                <li>Pricing</li>
-                <li>Integrations</li>
+                <li><a href="#features" onClick={(e) => { e.preventDefault(); document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Features</a></li>
+                <li><a href="#pricing" onClick={(e) => { e.preventDefault(); document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Pricing</a></li>
+                <li><a href="#integrations" onClick={(e) => { e.preventDefault(); document.querySelector('#integrations')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Integrations</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-3">Company</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li>About</li>
-                <li>Blog</li>
-                <li>Contact</li>
+                <li><a href="#contact" onClick={(e) => { e.preventDefault(); document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Contact</a></li>
+                <li><a href="#faq" onClick={(e) => { e.preventDefault(); document.querySelector('#faq')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">FAQ</a></li>
+                <li className="hover:text-foreground transition-colors cursor-pointer">Blog</li>
               </ul>
             </div>
             <div>

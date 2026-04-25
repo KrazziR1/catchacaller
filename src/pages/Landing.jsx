@@ -31,8 +31,15 @@ export default function Landing() {
       <div id="pricing">
         <Pricing />
       </div>
-      <FAQSection />
-      <ContactSection />
+      <div id="integrations">
+        <IntegrationsSection />
+      </div>
+      <div id="faq">
+        <FAQSection />
+      </div>
+      <div id="contact">
+        <ContactSection />
+      </div>
       <GetStartedCTA />
       <Footer />
     </div>

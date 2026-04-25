@@ -139,8 +139,23 @@ export default function Onboarding() {
 
   const isStepValid = () => {
     if (currentStep === 0) return !!form.business_name && smsComplianceAgreed;
-    if (currentStep === 1) return !!form.phone_number;
-    if (currentStep === 3) return !!form.booking_url;
+    if (currentStep === 1) {
+      // Validate phone number format
+      if (!form.phone_number) return false;
+      // Must be valid E.164 format: +1XXXXXXXXXX
+      const e164Regex = /^\+1\d{10}$/;
+      return e164Regex.test(form.phone_number);
+    }
+    if (currentStep === 3) {
+      // Validate booking URL is a real URL
+      if (!form.booking_url || form.booking_url.trim() === '') return false;
+      try {
+        new URL(form.booking_url);
+        return true;
+      } catch {
+        return false;
+      }
+    }
     return true;
   };
 
@@ -195,6 +210,14 @@ export default function Onboarding() {
   const getPreviewMessage = () => {
     const name = form.business_name || "your business";
     const stopInstruction = " Reply STOP to opt out of future messages.";
+    
+    // For strict states (CA/NY), show the opt-in message first
+    const isStrictState = true; // Show the stricter version for preview
+    
+    if (isStrictState) {
+      return `Hi! This is ${name}. Reply YES to receive SMS updates about your service request, or STOP if you prefer not to receive messages.`;
+    }
+    
     if (form.ai_personality === "professional") {
       return `Thank you for contacting ${name}. We missed your call and would be happy to assist you. What can we help you with today?${stopInstruction}`;
     }
@@ -530,39 +553,72 @@ export default function Onboarding() {
               {/* STEP 5: Test SMS */}
               {currentStep === 5 && (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground -mt-2">Send yourself a real SMS to see exactly what your leads experience.</p>
+                  <p className="text-sm text-muted-foreground -mt-2">Optional: Send yourself a test SMS to see exactly what your leads will experience.</p>
                   <div>
-                    <Label>Your Mobile Number</Label>
-                    <Input
-                      value={testPhone}
-                      onChange={(e) => setTestPhone(e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                      className="mt-1.5 h-12 rounded-xl"
-                      autoFocus
-                    />
-                    <p className="text-xs text-muted-foreground mt-1.5">Include country code, e.g. +1 for US</p>
+                    <Label>Your Mobile Number (optional)</Label>
+                    <div className="flex gap-2 mt-1.5">
+                      <Input
+                        value={testPhone}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/\D/g, '');
+                          if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
+                          if (val && !val.startsWith('+')) val = '+' + val;
+                          setTestPhone(val);
+                        }}
+                        placeholder="+1 (555) 123-4567"
+                        className="mt-0 h-12 rounded-xl flex-1"
+                        autoFocus
+                      />
+                      {testPhone && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setTestPhone('');
+                            setTestStatus('idle');
+                            setTestError(null);
+                          }}
+                          className="rounded-xl h-12 px-3 mt-0"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5">Format: +1 (555) 123-4567 — automatically formatted</p>
                   </div>
-                  <Button
-                    onClick={sendTestMutation}
-                    disabled={!testPhone || testStatus === "sending" || testStatus === "sent"}
-                    className="w-full rounded-xl h-11"
-                    variant={testStatus === "sent" ? "outline" : "default"}
-                  >
-                    {testStatus === "sending" && <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</>}
-                    {testStatus === "sent" && <><CheckCircle2 className="w-4 h-4 mr-2 text-accent" />Test SMS Sent!</>}
-                    {testStatus === "idle" && <><Send className="w-4 h-4 mr-2" />Send Test SMS</>}
-                    {testStatus === "error" && <><Send className="w-4 h-4 mr-2" />Retry Test SMS</>}
-                  </Button>
+                  {testPhone && (
+                    <Button
+                      onClick={sendTestMutation}
+                      disabled={testStatus === "sending" || testStatus === "sent"}
+                      className="w-full rounded-xl h-11"
+                      variant={testStatus === "sent" ? "outline" : "default"}
+                    >
+                      {testStatus === "sending" && <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</>}
+                      {testStatus === "sent" && <><CheckCircle2 className="w-4 h-4 mr-2 text-accent" />Test SMS Sent!</>}
+                      {testStatus === "idle" && <><Send className="w-4 h-4 mr-2" />Send Test SMS</>}
+                      {testStatus === "error" && <><Send className="w-4 h-4 mr-2" />Retry Test SMS</>}
+                    </Button>
+                  )}
                   {testStatus === "sent" && (
                     <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                       <p className="text-sm font-semibold text-accent">Check your phone! 📱</p>
-                      <p className="text-xs text-muted-foreground mt-1">You should receive the message within a few seconds. That's exactly what your leads will see.</p>
+                      <p className="text-xs text-muted-foreground mt-1">You should receive the message within a few seconds.</p>
                     </div>
                   )}
                   {testStatus === "error" && (
                     <p className="text-xs text-destructive">{testError}</p>
                   )}
-                  <p className="text-xs text-muted-foreground text-center">You can skip this step and test later from your dashboard.</p>
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                    <p className="text-sm font-semibold mb-2">Want to skip?</p>
+                    <p className="text-xs text-muted-foreground mb-3">That's fine! You can always test from your dashboard after launch.</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentStep(currentStep + 1)}
+                      className="w-full rounded-xl h-10"
+                    >
+                      Skip to Launch →
+                    </Button>
+                  </div>
                 </div>
               )}
 

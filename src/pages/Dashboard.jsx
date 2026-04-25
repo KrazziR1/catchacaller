@@ -85,6 +85,15 @@ export default function Dashboard() {
     return <TrialExpiredPaywall />;
   }
 
+  // Wait for subscription to load before rendering
+  if (!subscriptionLoaded) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   const totalCalls = calls.length;
   const repliedCalls = calls.filter(c => ["replied", "booked"].includes(c.status)).length;
   const bookedCalls = calls.filter(c => c.status === "booked").length;
