@@ -30,29 +30,33 @@ export default function Admin() {
     });
   }, [navigate]);
 
-  // Fetch actual data
+  // Fetch actual data (limited to 100 per query for performance)
   const { data: businesses = [] } = useQuery({
     queryKey: ["all-businesses"],
-    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 500),
+    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 100),
     enabled: !!user && user.role === "admin",
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["all-subscriptions"],
-    queryFn: () => base44.entities.Subscription.list("-created_date", 500),
+    queryFn: () => base44.entities.Subscription.list("-created_date", 100),
     enabled: !!user && user.role === "admin",
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: missedCalls = [] } = useQuery({
     queryKey: ["all-missed-calls"],
-    queryFn: () => base44.entities.MissedCall.list("-call_time", 500),
+    queryFn: () => base44.entities.MissedCall.list("-call_time", 100),
     enabled: !!user && user.role === "admin",
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: onboardingProgress = [] } = useQuery({
     queryKey: ["all-onboarding"],
-    queryFn: () => base44.entities.OnboardingProgress.list("-updated_date", 500),
+    queryFn: () => base44.entities.OnboardingProgress.list("-updated_date", 100),
     enabled: !!user && user.role === "admin",
+    staleTime: 5 * 60 * 1000,
   });
 
   // Don't wait for user, show page immediately

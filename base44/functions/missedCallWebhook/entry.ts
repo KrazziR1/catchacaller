@@ -9,6 +9,22 @@ async function parseFormBody(req) {
   return obj;
 }
 
+function verifyTwilioRequest(signature, url, params, authToken) {
+  try {
+    const crypto = require('crypto');
+    const sorted = Object.keys(params)
+      .sort()
+      .reduce((acc, key) => acc + key + params[key], '');
+    const hash = crypto
+      .createHmac('sha1', authToken)
+      .update(url + sorted)
+      .digest('Base64');
+    return hash === signature;
+  } catch {
+    return false;
+  }
+}
+
 // Normalize any phone format to E.164 (+1XXXXXXXXXX)
 function normalizePhone(phone) {
   if (!phone) return null;
@@ -20,8 +36,23 @@ function normalizePhone(phone) {
 
 Deno.serve(async (req) => {
   try {
+    // Validate environment variables
+    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+    if (!accountSid || !authToken) {
+      console.error('CRITICAL: Missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN');
+      return new Response('Config error', { status: 500, headers: { 'Content-Type': 'text/xml' } });
+    }
+
     const body = await parseFormBody(req);
     const { CallStatus, From, To, CallerName, DialCallStatus } = body;
+    const signature = req.headers.get('x-twilio-signature') || '';
+
+    // Verify Twilio signature
+    if (!verifyTwilioRequest(signature, req.url, body, authToken)) {
+      console.warn('Webhook signature verification failed - unauthorized');
+      return new Response('Unauthorized', { status: 401 });
+    }
 
     // Validate required fields
     if (!CallStatus || !From || !To) {
@@ -64,8 +95,8 @@ Deno.serve(async (req) => {
 
     // --- Load the correct business profile by the Twilio "To" number ---
     // This is critical for multi-tenant isolation: match on the number that was called
-    const allProfiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 500);
-    const profile = allProfiles.find(p => normalizePhone(p.phone_number) === toPhone);
+    const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ phone_number: toPhone });
+    const profile = profiles[0];
 
     if (!profile) {
       console.log(`No business profile found for number ${toPhone}`);
@@ -162,8 +193,6 @@ Deno.serve(async (req) => {
 
     if (requiresExplicitConsent && !consent.explicit_sms_consent) {
       // Send opt-in confirmation request FIRST
-      const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-      const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
       const fromPhone = toPhone;
       const client = twilio(accountSid, authToken);
 
@@ -176,6 +205,7 @@ Deno.serve(async (req) => {
       });
 
       console.log(`CA/NY opt-in confirmation sent to ${callerPhone}`);
+      // CRITICAL: MUST return here - do not send business message without explicit consent
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
@@ -191,8 +221,6 @@ Deno.serve(async (req) => {
       : `Hi! 👋 Sorry we missed your call — we're ${name}. We'd love to help! What can we do for you?${bookingLine}${stopInstruction}`;
 
     // --- Send SMS from the business's own Twilio number ---
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const fromPhone = toPhone; // Reply from the number they called
     const client = twilio(accountSid, authToken);
 
@@ -255,8 +283,8 @@ Deno.serve(async (req) => {
     // PRIVACY: Only send if they haven't explicitly disabled it
     try {
       // Find the user who created this profile
-      const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
-      const profileOwner = allUsers.find(u => u.email === profile.created_by);
+      const users = await base44.asServiceRole.entities.User.filter({ email: profile.created_by });
+      const profileOwner = users[0];
 
       if (profileOwner && profile.email_notifications_enabled) {
         await base44.asServiceRole.integrations.Core.SendEmail({
