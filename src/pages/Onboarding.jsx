@@ -126,6 +126,7 @@ export default function Onboarding() {
   const isStepValid = () => {
     if (currentStep === 0) return !!form.business_name && smsComplianceAgreed;
     if (currentStep === 1) return !!form.phone_number;
+    if (currentStep === 3) return !!form.booking_url;
     return true;
   };
 

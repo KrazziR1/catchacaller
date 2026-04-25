@@ -30,9 +30,6 @@ Deno.serve(async (req) => {
       customer_email: user.email,
       success_url: `${origin}/checkout-success`,
       cancel_url: `${origin}/#pricing`,
-      subscription_data: {
-        trial_period_days: 7,
-      },
     });
 
     return Response.json({ url: session.url });
