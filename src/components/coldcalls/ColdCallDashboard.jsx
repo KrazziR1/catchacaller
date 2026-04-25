@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, MessageSquare, Edit2, Trash2, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Search, Plus, MessageSquare, Edit2, Trash2, Send, Settings, Zap } from "lucide-react";
 import { toast } from "sonner";
-import ColdCallSMSDialog from "./ColdCallSMSDialog";
+import BulkSMSDialog from "./BulkSMSDialog";
+import EditBusinessDialog from "./EditBusinessDialog";
 import ProspectDetailModal from "./ProspectDetailModal";
+import ColdCallSMSDialog from "./ColdCallSMSDialog";
 
 const statusColors = {
   contacted: "bg-blue-100 text-blue-800",
@@ -31,8 +33,11 @@ export default function ColdCallDashboard() {
   const [filterCity, setFilterCity] = useState("");
   const [selectedProspect, setSelectedProspect] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showSMSDialog, setShowSMSDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showBulkSMS, setShowBulkSMS] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({ name: "", message_body: "" });
   const [formData, setFormData] = useState({
     business_name: "",
     phone_number: "",
@@ -49,16 +54,50 @@ export default function ColdCallDashboard() {
     queryFn: () => base44.entities.ColdCallProspect.list("-created_date", 100),
   });
 
-  const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.ColdCallProspect.create({
-      ...data,
-      date_contacted: new Date().toISOString(),
-    }),
+  const { data: templates = [] } = useQuery({
+    queryKey: ["cold-call-templates"],
+    queryFn: async () => {
+      try {
+        return await base44.entities.SMSTemplate.filter({ industry: "general" });
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const createProspectMutation = useMutation({
+    mutationFn: (data) =>
+      base44.entities.ColdCallProspect.create({
+        ...data,
+        date_contacted: new Date().toISOString(),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cold-call-prospects"] });
       setFormData({ business_name: "", phone_number: "", email: "", city: "", state: "", industry: "general" });
       setShowAddForm(false);
       toast.success("Prospect added");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add prospect");
+    },
+  });
+
+  const createTemplateMutation = useMutation({
+    mutationFn: (data) =>
+      base44.entities.SMSTemplate.create({
+        ...data,
+        category: "custom",
+        industry: "general",
+        is_active: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cold-call-templates"] });
+      setNewTemplate({ name: "", message_body: "" });
+      setShowTemplateForm(false);
+      toast.success("Template created");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create template");
     },
   });
 
@@ -67,6 +106,9 @@ export default function ColdCallDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cold-call-prospects"] });
       toast.success("Prospect deleted");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete");
     },
   });
 
@@ -83,70 +125,98 @@ export default function ColdCallDashboard() {
   const states = [...new Set(prospects.map((p) => p.state))].sort();
 
   return (
-    <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Cold Call Tracking</h1>
-          <p className="text-muted-foreground mt-1">Manage prospects and track conversion funnel</p>
+          <p className="text-muted-foreground mt-1">Manage prospects, send SMS templates, and track conversions</p>
         </div>
-        <Button onClick={() => setShowAddForm(true)} className="rounded-xl">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Prospect
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowTemplateForm(true)}
+            className="gap-2 rounded-xl"
+          >
+            <Settings className="w-4 h-4" />
+            Templates
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowBulkSMS(true)}
+            disabled={prospects.length === 0}
+            className="gap-2 rounded-xl"
+          >
+            <Send className="w-4 h-4" />
+            Bulk SMS
+          </Button>
+          <Button onClick={() => setShowAddForm(true)} className="gap-2 rounded-xl">
+            <Plus className="w-4 h-4" />
+            Add Prospect
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <div className="relative">
-          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
-          <Input
-            placeholder="Search by name or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger>
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="interested">Interested</SelectItem>
-            <SelectItem value="not_interested">Not Interested</SelectItem>
-            <SelectItem value="signed_up_trial">Signed Up (Trial)</SelectItem>
-            <SelectItem value="actively_using">Actively Using</SelectItem>
-            <SelectItem value="discontinued_trial">Discontinued Trial</SelectItem>
-            <SelectItem value="do_not_call">Do Not Call</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterState} onValueChange={setFilterState}>
-          <SelectTrigger>
-            <SelectValue placeholder="All States" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All States</SelectItem>
-            {states.map((state) => (
-              <SelectItem key={state} value={state}>
-                {state}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="Filter by city..."
-          value={filterCity}
-          onChange={(e) => setFilterCity(e.target.value)}
-        />
-      </div>
+      <Card className="rounded-2xl">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="relative lg:col-span-2">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
+              <Input
+                placeholder="Search by name or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 rounded-xl"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="interested">Interested</SelectItem>
+                <SelectItem value="not_interested">Not Interested</SelectItem>
+                <SelectItem value="signed_up_trial">Signed Up (Trial)</SelectItem>
+                <SelectItem value="actively_using">Actively Using</SelectItem>
+                <SelectItem value="discontinued_trial">Discontinued</SelectItem>
+                <SelectItem value="do_not_call">Do Not Call</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterState} onValueChange={setFilterState}>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="All States" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All States</SelectItem>
+                {states.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Filter by city..."
+              value={filterCity}
+              onChange={(e) => setFilterCity(e.target.value)}
+              className="rounded-xl"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Prospects Table */}
       <Card className="rounded-2xl overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle>Prospects ({filtered.length})</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="p-12 text-center">
-              <p className="text-muted-foreground">No prospects found</p>
+            <div className="p-12 text-center text-muted-foreground">
+              No prospects found. Add one to get started.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -158,12 +228,12 @@ export default function ColdCallDashboard() {
                     <th className="text-left py-3 px-4 font-semibold">Location</th>
                     <th className="text-left py-3 px-4 font-semibold">Status</th>
                     <th className="text-left py-3 px-4 font-semibold">Industry</th>
-                    <th className="text-left py-3 px-4 font-semibold">Actions</th>
+                    <th className="text-right py-3 px-4 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((prospect) => (
-                    <tr key={prospect.id} className="border-b border-border hover:bg-muted/50">
+                    <tr key={prospect.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4">
                         <p className="font-medium">{prospect.business_name}</p>
                       </td>
@@ -184,36 +254,39 @@ export default function ColdCallDashboard() {
                         <p className="text-xs capitalize">{prospect.industry}</p>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex gap-2">
+                        <div className="flex justify-end gap-2">
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7"
+                            className="h-8 w-8 rounded-lg"
+                            onClick={() => {
+                              setSelectedProspect(prospect);
+                              setShowEditDialog(true);
+                            }}
+                            title="Edit business info"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 rounded-lg"
                             onClick={() => {
                               setSelectedProspect(prospect);
                               setShowDetailModal(true);
                             }}
+                            title="View details & update status"
                           >
-                            <Edit2 className="w-3 h-3" />
+                            <Settings className="w-4 h-4" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7"
-                            onClick={() => {
-                              setSelectedProspect(prospect);
-                              setShowSMSDialog(true);
-                            }}
-                          >
-                            <MessageSquare className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-destructive"
+                            className="h-8 w-8 rounded-lg text-destructive"
                             onClick={() => deleteProspectMutation.mutate(prospect.id)}
+                            title="Delete"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>
@@ -234,57 +307,58 @@ export default function ColdCallDashboard() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>Business Name</Label>
+              <Label>Business Name *</Label>
               <Input
                 value={formData.business_name}
                 onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                className="mt-1.5"
+                className="mt-1.5 rounded-lg"
+                autoFocus
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Phone Number</Label>
+                <Label>Phone Number *</Label>
                 <Input
                   value={formData.phone_number}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                   placeholder="+1 (555) 123-4567"
-                  className="mt-1.5"
+                  className="mt-1.5 rounded-lg"
                 />
               </div>
               <div>
-                <Label>Email (optional)</Label>
+                <Label>Email</Label>
                 <Input
+                  type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  type="email"
-                  className="mt-1.5"
+                  className="mt-1.5 rounded-lg"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>City</Label>
+                <Label>City *</Label>
                 <Input
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="mt-1.5"
+                  className="mt-1.5 rounded-lg"
                 />
               </div>
               <div>
-                <Label>State</Label>
+                <Label>State *</Label>
                 <Input
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
                   placeholder="NY"
                   maxLength="2"
-                  className="mt-1.5"
+                  className="mt-1.5 rounded-lg"
                 />
               </div>
             </div>
             <div>
               <Label>Industry</Label>
               <Select value={formData.industry} onValueChange={(v) => setFormData({ ...formData, industry: v })}>
-                <SelectTrigger className="mt-1.5">
+                <SelectTrigger className="mt-1.5 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,8 +384,8 @@ export default function ColdCallDashboard() {
               Cancel
             </Button>
             <Button
-              onClick={() => createMutation.mutate(formData)}
-              disabled={!formData.business_name || !formData.phone_number}
+              onClick={() => createProspectMutation.mutate(formData)}
+              disabled={!formData.business_name || !formData.phone_number || !formData.city || !formData.state}
             >
               Add Prospect
             </Button>
@@ -319,20 +393,72 @@ export default function ColdCallDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Create Template Dialog */}
+      <Dialog open={showTemplateForm} onOpenChange={setShowTemplateForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create SMS Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Template Name</Label>
+              <Input
+                value={newTemplate.name}
+                onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                placeholder="Follow-up: Discount Offer"
+                className="mt-1.5 rounded-lg"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label>Message</Label>
+              <Textarea
+                value={newTemplate.message_body}
+                onChange={(e) => setNewTemplate({ ...newTemplate, message_body: e.target.value })}
+                placeholder="Type your SMS template..."
+                className="mt-1.5 rounded-lg min-h-[120px]"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {newTemplate.message_body.length} characters
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTemplateForm(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => createTemplateMutation.mutate(newTemplate)}
+              disabled={!newTemplate.name || !newTemplate.message_body}
+            >
+              Create Template
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modals */}
       {selectedProspect && (
         <>
+          <EditBusinessDialog
+            prospect={selectedProspect}
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+          />
           <ProspectDetailModal
             prospect={selectedProspect}
             open={showDetailModal}
             onOpenChange={setShowDetailModal}
           />
-          <ColdCallSMSDialog
-            prospect={selectedProspect}
-            open={showSMSDialog}
-            onOpenChange={setShowSMSDialog}
-          />
         </>
       )}
+
+      <BulkSMSDialog
+        prospects={prospects}
+        templates={templates}
+        open={showBulkSMS}
+        onOpenChange={setShowBulkSMS}
+      />
     </div>
   );
 }
