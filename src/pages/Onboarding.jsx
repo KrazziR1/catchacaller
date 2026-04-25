@@ -22,35 +22,7 @@ const stripePromise = typeof window !== 'undefined'
   ? window.Stripe(STRIPE_PUBLISHABLE_KEY) 
   : Promise.resolve(null);
 
-const plans = [
-  {
-    name: "Starter",
-    price: "$49/mo",
-    priceId: "price_1TPruHFsxP0HXZ0ANSkOGCp0",
-    description: "Solo operators",
-    features: ["Missed call detection", "Instant SMS auto-response", "100 SMS/month"],
-    highlighted: false,
-  },
-  {
-    name: "Growth",
-    price: "$149/mo",
-    priceId: "price_1TPrvMFsxP0HXZ0Apho3zV1j",
-    description: "Growing businesses",
-    features: ["AI conversation handling", "500 SMS/month", "Pipeline & lead scoring", "CRM integrations"],
-    highlighted: true,
-  },
-  {
-    name: "Pro",
-    price: "$297/mo",
-    priceId: "price_1TPrvzFsxP0HXZ0AP2nb21Ne",
-    description: "Multi-location",
-    features: ["Unlimited SMS", "Calendar booking & sync", "Multi-location", "Dedicated account manager"],
-    highlighted: false,
-  },
-];
-
 const steps = [
-  { key: "plan", icon: CreditCard, title: "Choose Your Plan", subtitle: "You'll start your 7-day free trial after onboarding" },
   { key: "business", icon: Building2, title: "Your Business", subtitle: "Let's get your profile set up" },
   { key: "phone", icon: PhoneCall, title: "Your Phone Number", subtitle: "The number you want to monitor for missed calls" },
   { key: "ai", icon: Bot, title: "AI Personality", subtitle: "How should your AI respond to leads?" },
@@ -66,7 +38,6 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedPlan, setSelectedPlan] = useState("Growth");
   const [testPhone, setTestPhone] = useState("");
   const [testStatus, setTestStatus] = useState("idle"); // idle | sending | sent | error
   const [testError, setTestError] = useState(null);
@@ -107,6 +78,7 @@ export default function Onboarding() {
       if (!profileId) setProfileId(data.id);
       queryClient.invalidateQueries({ queryKey: ["business-profile"] });
       await configureWebhooksIfNeeded();
+      await createTrialSubscription();
       await sendConfirmationEmail(data);
     },
     onError: (error) => {
@@ -114,14 +86,15 @@ export default function Onboarding() {
     },
   });
 
-  const checkoutMutation = useMutation({
-    mutationFn: (priceId) => base44.functions.invoke("createCheckoutSession", { priceId }),
-    onSuccess: (res) => {
-      if (res.data?.url) window.location.href = res.data.url;
-    },
-  });
-
   const [webhookConfigStatus, setWebhookConfigStatus] = useState("idle"); // idle | loading | done | error
+
+  const createTrialSubscription = async () => {
+    try {
+      await base44.functions.invoke("createTrialSubscription", {});
+    } catch (e) {
+      console.error("Trial subscription creation failed (non-critical):", e);
+    }
+  };
 
   const testSmsMutation = useMutation({
     mutationFn: () =>
@@ -151,9 +124,8 @@ export default function Onboarding() {
   };
 
   const isStepValid = () => {
-    if (currentStep === 0) return !!selectedPlan;
-    if (currentStep === 1) return !!form.business_name && smsComplianceAgreed;
-    if (currentStep === 2) return !!form.phone_number;
+    if (currentStep === 0) return !!form.business_name && smsComplianceAgreed;
+    if (currentStep === 1) return !!form.phone_number;
     return true;
   };
 
@@ -176,7 +148,6 @@ export default function Onboarding() {
         business_name: profileData.business_name || form.business_name,
         phone_number: profileData.phone_number || form.phone_number,
         booking_url: profileData.booking_url || form.booking_url,
-        plan_name: selectedPlan,
       });
     } catch (e) {
       console.error("Confirmation email failed (non-critical):", e);
@@ -184,7 +155,7 @@ export default function Onboarding() {
   };
 
   const next = () => {
-    if (currentStep === 4) {
+    if (currentStep === 3) {
       saveMutation.mutate();
       return;
     }
@@ -197,18 +168,14 @@ export default function Onboarding() {
 
   // Advance to next step after save completes
   useEffect(() => {
-    if (saveMutation.isSuccess && currentStep === 4) {
-      setCurrentStep(5);
+    if (saveMutation.isSuccess && currentStep === 3) {
+      setCurrentStep(4);
     }
   }, [saveMutation.isSuccess, currentStep]);
 
   const back = () => setCurrentStep(currentStep - 1);
 
-  const handleCheckout = () => {
-    // Skip checkout for trial — user gets 7 days free immediately
-    // Trial will be enforced server-side; after 7 days, they'll see upgrade prompt
-    navigate("/dashboard");
-  };
+
 
   const getPreviewMessage = () => {
     const name = form.business_name || "your business";
@@ -276,45 +243,8 @@ export default function Onboarding() {
             {/* Step content */}
             <div className="space-y-4">
 
-              {/* STEP 0: Plan Selection */}
+              {/* STEP 0: Business Info */}
               {currentStep === 0 && (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground -mt-2">Choose your plan — you'll get 7 days to try it. Just pay the $2.99 provisioning fee to get started.</p>
-                  <div className="space-y-3">
-                    {plans.map((plan) => (
-                      <button
-                        key={plan.name}
-                        onClick={() => setSelectedPlan(plan.name)}
-                        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                          selectedPlan === plan.name
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/40"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-bold text-sm">{plan.name}</p>
-                            {plan.highlighted && (
-                              <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full font-semibold">Most Popular</span>
-                            )}
-                          </div>
-                          <p className="font-bold text-sm">{plan.price}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">{plan.description}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {plan.features.map((f, i) => (
-                            <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{f}</span>
-                          ))}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground">$2.99 provisioning fee covers your setup. After 7 days, your selected plan begins.</p>
-                </div>
-              )}
-
-              {/* STEP 1: Business Info */}
-              {currentStep === 1 && (
                 <>
                   <div>
                     <Label>Business Name</Label>
@@ -394,8 +324,8 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 2: Phone */}
-              {currentStep === 2 && (
+              {/* STEP 1: Phone */}
+              {currentStep === 1 && (
                 <>
                   <div className="space-y-4">
                     <div>
@@ -473,8 +403,8 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 3: AI Personality */}
-              {currentStep === 3 && (
+              {/* STEP 2: AI Personality */}
+              {currentStep === 2 && (
                 <>
                   <p className="text-sm text-muted-foreground -mt-2">Choose how your AI communicates with leads. You can change this anytime.</p>
                   <div className="grid gap-3">
@@ -499,8 +429,8 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 4: Booking URL — marked as critical */}
-              {currentStep === 4 && (
+              {/* STEP 3: Booking URL — marked as critical */}
+              {currentStep === 3 && (
                 <>
                   <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 flex gap-3">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -539,8 +469,8 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 5: Template Preview */}
-              {currentStep === 5 && (
+              {/* STEP 4: Template Preview */}
+              {currentStep === 4 && (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground -mt-2">This is the first message your leads will receive within seconds of a missed call.</p>
                   <div className="bg-slate-900 rounded-2xl p-5">
@@ -564,8 +494,8 @@ export default function Onboarding() {
                 </div>
               )}
 
-              {/* STEP 6: Test SMS */}
-              {currentStep === 6 && (
+              {/* STEP 5: Test SMS */}
+              {currentStep === 5 && (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground -mt-2">Send yourself a real SMS to see exactly what your leads experience.</p>
                   <div>
@@ -603,8 +533,8 @@ export default function Onboarding() {
                 </div>
               )}
 
-              {/* STEP 7: Launch / Expectations */}
-              {currentStep === 7 && (
+              {/* STEP 6: Launch / Expectations */}
+              {currentStep === 6 && (
                 <div className="space-y-5">
                   <div className="text-center py-2">
                     <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-3">
@@ -696,9 +626,9 @@ export default function Onboarding() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
-              {currentStep === 7 ? (
+              {currentStep === 6 ? (
                 <Button
-                  onClick={handleCheckout}
+                  onClick={() => navigate("/dashboard")}
                   className="rounded-xl h-11 px-6 bg-accent hover:bg-accent/90"
                 >
                   Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
