@@ -26,7 +26,14 @@ export default function Landing() {
         if (user?.role === "admin") {
           navigate("/admin", { replace: true });
         } else if (user) {
-          navigate("/dashboard", { replace: true });
+          // Check if user has a business profile
+          base44.entities.BusinessProfile.filter({ created_by: user.email }).then((profiles) => {
+            if (profiles.length > 0) {
+              navigate("/dashboard", { replace: true });
+            } else {
+              navigate("/onboarding", { replace: true });
+            }
+          }).catch(() => navigate("/onboarding", { replace: true }));
         }
       }).catch(() => {});
     }).catch(() => {});
