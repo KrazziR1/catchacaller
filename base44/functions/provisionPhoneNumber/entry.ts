@@ -1,7 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import Stripe from 'npm:stripe@17.0.0';
 
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 const twilioFetch = (path, method = "GET", body = null) => {
   const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
@@ -24,7 +27,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Prevent duplicate provisioning — check if user already has a provisioned number
+    const { paymentMethodId, area_code } = await req.json().catch(() => ({}));
+
+    // Prevent duplicate provisioning
     const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: user.email });
     const profile = profiles[0];
 
@@ -34,7 +39,42 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    const { area_code } = await req.json().catch(() => ({}));
+    // Charge $2.99 if payment method provided
+    if (paymentMethodId) {
+      // Get or create Stripe customer
+      let stripeCustomerId = profile?.stripe_customer_id;
+      
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { user_email: user.email },
+        });
+        stripeCustomerId = customer.id;
+        
+        // Update profile with Stripe customer ID
+        if (profile) {
+          await base44.asServiceRole.entities.BusinessProfile.update(profile.id, {
+            stripe_customer_id: stripeCustomerId,
+          });
+        }
+      }
+
+      // Create payment intent for $2.99
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: 299, // $2.99 in cents
+        currency: "usd",
+        customer: stripeCustomerId,
+        payment_method: paymentMethodId,
+        confirm: true,
+        description: "Phone number provisioning",
+      });
+
+      if (paymentIntent.status !== "succeeded") {
+        return Response.json({ 
+          error: `Payment failed: ${paymentIntent.last_payment_error?.message || "Unknown error"}` 
+        }, { status: 402 });
+      }
+    }
 
     // Derive the base URL from the incoming request host
     const reqUrl = new URL(req.url);
