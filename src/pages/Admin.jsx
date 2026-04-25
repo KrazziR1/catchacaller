@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2 } from "lucide-react";
+import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock } from "lucide-react";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -41,6 +41,12 @@ export default function Admin() {
     enabled: !!user && user.role === "admin",
   });
 
+  const { data: onboardingProgress = [], isLoading: onboardingLoading } = useQuery({
+    queryKey: ["admin-onboarding"],
+    queryFn: () => base44.asServiceRole.entities.OnboardingProgress.list("-created_date", 500),
+    enabled: !!user && user.role === "admin",
+  });
+
   if (!user) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -67,6 +73,19 @@ export default function Admin() {
     return sum + (planPrices[s.plan_name] || 0);
   }, 0);
   const totalCalls = missedCalls.length;
+  const onboardingComplete = onboardingProgress.filter((p) => p.is_complete).length;
+  const onboardingInProgress = onboardingProgress.filter((p) => !p.is_complete).length;
+
+  const onboardingSteps = [
+    "Plan Selection",
+    "Business Info",
+    "Phone",
+    "AI Personality",
+    "Booking Link",
+    "Template Preview",
+    "Test SMS",
+    "Launch",
+  ];
 
   // Filter businesses by search
   const filteredBusinesses = businesses.filter((b) =>
@@ -145,6 +164,35 @@ export default function Admin() {
           </Card>
         </div>
 
+        {/* Onboarding Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <Card className="rounded-2xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Onboarding Complete</CardTitle>
+                <CheckCircle2 className="w-4 h-4 text-accent" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{onboardingComplete}</p>
+              <p className="text-xs text-muted-foreground mt-1">Users finished setup</p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+                <Clock className="w-4 h-4 text-chart-2" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{onboardingInProgress}</p>
+              <p className="text-xs text-muted-foreground mt-1">Stuck in onboarding</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Businesses List */}
         <Card className="rounded-2xl">
           <CardHeader>
@@ -179,7 +227,8 @@ export default function Admin() {
                       <th className="text-left py-3 px-4 font-semibold">Industry</th>
                       <th className="text-left py-3 px-4 font-semibold">Phone</th>
                       <th className="text-left py-3 px-4 font-semibold">Owner</th>
-                      <th className="text-left py-3 px-4 font-semibold">Status</th>
+                      <th className="text-left py-3 px-4 font-semibold">Onboarding</th>
+                      <th className="text-left py-3 px-4 font-semibold">Plan</th>
                       <th className="text-left py-3 px-4 font-semibold">Created</th>
                     </tr>
                   </thead>
@@ -187,6 +236,7 @@ export default function Admin() {
                     {filteredBusinesses.map((business) => {
                       const sub = subscriptions.find((s) => s.user_email === business.created_by);
                       const subStatus = sub?.status || "inactive";
+                      const progress = onboardingProgress.find((p) => p.user_email === business.created_by);
 
                       return (
                         <tr key={business.id} className="border-b border-border hover:bg-muted/50 transition-colors">
@@ -203,6 +253,24 @@ export default function Admin() {
                           </td>
                           <td className="py-3 px-4">
                             <p className="text-xs text-muted-foreground">{business.created_by}</p>
+                          </td>
+                          <td className="py-3 px-4">
+                            {progress ? (
+                              <div className="flex items-center gap-2">
+                                {progress.is_complete ? (
+                                  <Badge className="bg-accent/20 text-accent text-xs">Complete</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs">
+                                    Step {progress.current_step + 1}/8
+                                  </Badge>
+                                )}
+                                <span className="text-xs text-muted-foreground" title={onboardingSteps[progress.current_step]}>
+                                  {onboardingSteps[progress.current_step] || "—"}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </td>
                           <td className="py-3 px-4">
                             <Badge
