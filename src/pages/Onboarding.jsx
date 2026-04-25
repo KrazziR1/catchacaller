@@ -208,8 +208,11 @@ export default function Onboarding() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Force a brief wait to ensure profile is fully persisted
-      setTimeout(() => navigate("/dashboard"), 300);
+      // Wait for profile to persist before redirecting
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["business-profile"] });
+        navigate("/dashboard");
+      }, 500);
     }
   };
 
@@ -425,16 +428,18 @@ export default function Onboarding() {
                     <div>
                       <Label>Your Personal Cell Phone *</Label>
                       <div className="flex gap-2 mt-1.5">
+                        <Select value="+1" disabled>
+                          <SelectTrigger className="w-20 h-12 rounded-xl"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="+1">+1</SelectItem></SelectContent>
+                        </Select>
                         <Input
-                          value={form.owner_phone_number}
+                          value={form.owner_phone_number.replace(/^\+1/, '')}
                           onChange={(e) => {
-                            let val = e.target.value.replace(/\D/g, '');
-                            if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
-                            if (val && !val.startsWith('+')) val = '+' + val;
-                            setForm({ ...form, owner_phone_number: val });
+                            let val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            setForm({ ...form, owner_phone_number: val ? `+1${val}` : '' });
                           }}
-                          placeholder="+1 (555) 123-4567"
-                          className="h-12 rounded-xl"
+                          placeholder="(555) 123-4567"
+                          className="h-12 rounded-xl flex-1"
                           autoFocus
                         />
                         {form.owner_phone_number && (
@@ -448,9 +453,13 @@ export default function Onboarding() {
                           </Button>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1.5">Calls will ring this number immediately. Make sure it's a phone you check regularly. Format: +1 (555) 123-4567</p>
+                      <p className="text-xs text-muted-foreground mt-1.5">Where calls will ring. Must be a real phone you check regularly.</p>
                     </div>
-                    <div className="border-t border-border pt-4">
+                    <div className="border-t border-border pt-4 mt-4">
+                      <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 mb-4">
+                        <p className="text-sm font-semibold text-amber-900 mb-1">Twilio Business Number (Required) *</p>
+                        <p className="text-xs text-amber-800">This is separate from your personal cell. This is the number leads will call.</p>
+                      </div>
                       <p className="text-sm font-semibold mb-3">Do you have an existing Twilio account with a phone number?</p>
                       <div className="flex gap-3">
                         <button
@@ -480,18 +489,20 @@ export default function Onboarding() {
 
                     {hasTwilioAccount === true && (
                       <div>
-                        <Label>Enter Your Twilio Phone Number</Label>
+                        <Label>Your Twilio Phone Number *</Label>
                         <div className="flex gap-2 mt-1.5">
+                          <Select value="+1" disabled>
+                            <SelectTrigger className="w-20 h-12 rounded-xl"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="+1">+1</SelectItem></SelectContent>
+                          </Select>
                           <Input
-                            value={form.phone_number}
+                            value={form.phone_number.replace(/^\+1/, '')}
                             onChange={(e) => {
-                              let val = e.target.value.replace(/\D/g, '');
-                              if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
-                              if (val && !val.startsWith('+')) val = '+' + val;
-                              setForm({ ...form, phone_number: val });
+                              let val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                              setForm({ ...form, phone_number: val ? `+1${val}` : '' });
                             }}
-                            placeholder="+1 (555) 123-4567"
-                            className="h-12 rounded-xl"
+                            placeholder="(555) 123-4567"
+                            className="h-12 rounded-xl flex-1"
                             autoFocus
                           />
                           {form.phone_number && (
@@ -506,7 +517,7 @@ export default function Onboarding() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          Format: +1 (555) 123-4567. Must be valid E.164 format. Avoid 555 test numbers.
+                          Your Twilio account phone number (the one leads will call). No test numbers (555).
                         </p>
                       </div>
                     )}
@@ -553,7 +564,7 @@ export default function Onboarding() {
 
               {/* STEP 3: Booking URL — marked as critical but optional */}
               {currentStep === 3 && (
-                <>
+                <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 flex gap-3">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                     <div>
@@ -588,7 +599,7 @@ export default function Onboarding() {
                       </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {/* STEP 4: Template Preview */}
@@ -661,10 +672,10 @@ export default function Onboarding() {
                       </div>
                     </div>
                   )}
-                  {testPhone && form.phone_number && (
+                  {testPhone && (
                     <Button
                       onClick={sendTestMutation}
-                      disabled={testStatus === "sending" || testStatus === "sent"}
+                      disabled={testStatus === "sending" || testStatus === "sent" || !form.phone_number}
                       className="w-full rounded-xl h-11"
                       variant={testStatus === "sent" ? "outline" : "default"}
                     >
@@ -674,8 +685,8 @@ export default function Onboarding() {
                       {testStatus === "error" && <><Send className="w-4 h-4 mr-2" />Retry Test SMS</>}
                       </Button>
                       )}
-                      {testPhone && !form.phone_number && testStatus === "error" && (
-                      <p className="text-xs text-destructive">{testError}</p>
+                      {testPhone && !form.phone_number && (
+                      <p className="text-xs text-destructive">Please complete the phone setup step first</p>
                       )}
                   {testStatus === "sent" && (
                     <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
@@ -793,13 +804,14 @@ export default function Onboarding() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
-              {currentStep === 3 && !form.booking_url && (
+              {currentStep === 3 && (
                 <Button
                   variant="outline"
                   onClick={() => setCurrentStep(currentStep + 1)}
                   className="rounded-xl h-11 px-6"
+                  disabled={!form.booking_url}
                 >
-                  Skip <ArrowRight className="ml-2 w-4 h-4" />
+                  {form.booking_url ? 'Continue' : 'Skip'} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               )}
               {currentStep === 6 ? (
