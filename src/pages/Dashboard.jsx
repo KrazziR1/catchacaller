@@ -81,15 +81,20 @@ export default function Dashboard() {
     );
   }
 
-  // Check if trial/subscription is expired or invalid
-  const trialExpired = subscription && subscription.trial_end_date && 
-    new Date(subscription.trial_end_date) < new Date() &&
-    subscription.status === 'trial';
+  // Admin accounts bypass subscription checks
+  const isAdmin = user?.role === 'admin';
+  
+  if (!isAdmin) {
+    // Check if trial/subscription is expired or invalid
+    const trialExpired = subscription && subscription.trial_end_date && 
+      new Date(subscription.trial_end_date) < new Date() &&
+      subscription.status === 'trial';
 
-  const isSubscriptionBlocked = subscription && !["active", "trial"].includes(subscription.status) || trialExpired;
+    const isSubscriptionBlocked = subscription && !["active", "trial"].includes(subscription.status) || trialExpired;
 
-  if (isSubscriptionBlocked) {
-    return <TrialExpiredPaywall />;
+    if (isSubscriptionBlocked) {
+      return <TrialExpiredPaywall />;
+    }
   }
 
   const totalCalls = calls.length;
