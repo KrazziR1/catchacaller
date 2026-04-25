@@ -208,21 +208,29 @@ Deno.serve(async (req) => {
       response_time_seconds: Math.round(responseTimeMs / 1000),
     });
 
-    // --- Create Conversation record ---
-    await base44.asServiceRole.entities.Conversation.create({
-      missed_call_id: missedCall.id,
+    // --- Create Conversation record (check for duplicates) ---
+    const existingConv = await base44.asServiceRole.entities.Conversation.filter({
       caller_phone: callerPhone,
-      caller_name: CallerName || null,
-      status: 'active',
-      pipeline_stage: 'new',
-      messages: [{
-        sender: 'ai',
-        content: smsBody,
-        timestamp: new Date().toISOString(),
-        sms_status: 'sent',
-      }],
-      last_message_at: new Date().toISOString(),
+      created_by: profile.created_by,
     });
+    
+    // Only create if no existing conversation for this caller+owner combo
+    if (existingConv.length === 0) {
+      await base44.asServiceRole.entities.Conversation.create({
+        missed_call_id: missedCall.id,
+        caller_phone: callerPhone,
+        caller_name: CallerName || null,
+        status: 'active',
+        pipeline_stage: 'new',
+        messages: [{
+          sender: 'ai',
+          content: smsBody,
+          timestamp: new Date().toISOString(),
+          sms_status: 'sent',
+        }],
+        last_message_at: new Date().toISOString(),
+      });
+    }
 
     // --- Send email notification to the OWNER of this business profile ---
     // PRIVACY: Only send if they haven't explicitly disabled it
