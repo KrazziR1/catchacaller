@@ -137,13 +137,13 @@ Deno.serve(async (req) => {
     });
 
     // --- Send email notification to the OWNER of this business profile ---
-    // PRIVACY: Only send if they haven't explicitly disabled it (check settings later)
+    // PRIVACY: Only send if they haven't explicitly disabled it
     try {
       // Find the user who created this profile
       const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
       const profileOwner = allUsers.find(u => u.email === profile.created_by);
 
-      if (profileOwner && profile.email_notifications_enabled !== false) {
+      if (profileOwner && profile.email_notifications_enabled) {
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: profileOwner.email,
           subject: `📞 Missed Call from ${CallerName || callerPhone}`,

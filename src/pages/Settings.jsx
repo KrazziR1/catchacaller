@@ -12,6 +12,7 @@ import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save, CreditCard, E
 import PhoneProvision from "@/components/PhoneProvision";
 import TeamManagement from "@/components/team/TeamManagement";
 import CRMSettings from "@/components/crm/CRMSettings";
+import NotificationPreferences from "@/components/settings/NotificationPreferences";
 import TrialStatus from "@/components/TrialStatus";
 import { toast } from "sonner";
 
@@ -294,6 +295,8 @@ export default function Settings() {
         <CRMSettings profile={profile} subscription={subscription} />
 
         <Separator />
+
+        <NotificationPreferences />
 
         {/* Revenue Settings */}
         <Card className="rounded-2xl">

@@ -48,12 +48,14 @@ export default function Onboarding() {
   const [form, setForm] = useState({
     business_name: "",
     industry: "general",
+    is_high_risk_industry: false,
     phone_number: "",
     business_hours: "Mon-Fri 8am-6pm",
     ai_personality: "friendly",
     average_job_value: 500,
     booking_url: "",
     auto_response_enabled: true,
+    email_notifications_enabled: true,
   });
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function Onboarding() {
         ...form,
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-04-25",
+        consent_acknowledged_at: smsComplianceAgreed ? new Date().toISOString() : null,
       };
       if (profileId) {
         return base44.entities.BusinessProfile.update(profileId, dataToSave);
@@ -260,7 +263,10 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <Label>Industry</Label>
-                    <Select value={form.industry} onValueChange={(v) => setForm({ ...form, industry: v })}>
+                    <Select value={form.industry} onValueChange={(v) => {
+                      const isHighRisk = ['debt_collection', 'political'].includes(v);
+                      setForm({ ...form, industry: v, is_high_risk_industry: isHighRisk });
+                    }}>
                       <SelectTrigger className="mt-1.5 h-12 rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="general">General / Other</SelectItem>
@@ -275,9 +281,23 @@ export default function Onboarding() {
                         <SelectItem value="dental">Dental / Healthcare</SelectItem>
                         <SelectItem value="fitness">Fitness / Wellness</SelectItem>
                         <SelectItem value="automotive">Automotive</SelectItem>
+                        <SelectItem value="debt_collection">Debt Collection (Regulated)</SelectItem>
+                        <SelectItem value="political">Political Campaigns (Regulated)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  {form.is_high_risk_industry && (
+                    <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold text-red-800">⚠️ Regulated Industry</p>
+                        <p className="text-xs text-red-700 mt-1">
+                          {form.industry === 'debt_collection' && "Debt collection has strict TCPA rules. Your account will require manual review before activation."}
+                          {form.industry === 'political' && "Political campaigns have strict FCC/TCPA requirements. Your account will require manual review before activation."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <Label>Business Hours</Label>
                     <Input
