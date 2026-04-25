@@ -32,6 +32,7 @@ export default function Dashboard() {
   const { data: profiles = [], isSuccess: profileLoaded } = useQuery({
     queryKey: ["business-profile"],
     queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
+    staleTime: 5 * 60 * 1000, // 5 min cache
   });
 
   const { data: subscriptions = [] } = useQuery({
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => base44.entities.Conversation.list("-created_date", 50),
+    staleTime: 2 * 60 * 1000, // 2 min cache
   });
 
   const { data: templates = [] } = useQuery({

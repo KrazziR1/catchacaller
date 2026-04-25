@@ -29,11 +29,11 @@ export default function useLeadNotifications() {
       }
     };
 
-    // Check immediately on mount
-    checkForNewLeads();
-
-    // Then poll every 10 seconds
-    intervalRef.current = setInterval(checkForNewLeads, 10000);
+    // Only enable polling if notifications are available
+    if ('Notification' in window) {
+      checkForNewLeads();
+      intervalRef.current = setInterval(checkForNewLeads, 10000);
+    }
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

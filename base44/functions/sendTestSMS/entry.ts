@@ -13,7 +13,10 @@ Deno.serve(async (req) => {
 
     // Normalize phone number
     const normalized = to_phone.replace(/\D/g, '');
-    const e164 = normalized.startsWith('1') ? `+${normalized}` : `+1${normalized}`;
+    // Support international: handle country codes
+    let e164 = normalized.startsWith('1') ? `+${normalized}` : `+1${normalized}`;
+    if (normalized.length === 10) e164 = `+1${normalized}`; // US 10-digit
+    if (normalized.length === 11 && normalized.startsWith('1')) e164 = `+${normalized}`; // US with +1
 
     // Check opt-out list
     const optOuts = await base44.asServiceRole.entities.SMSOptOut.list('-created_date', 1000);
