@@ -13,6 +13,7 @@ import Conversations from '@/pages/Conversations';
 import Templates from '@/pages/Templates';
 import Settings from '@/pages/Settings';
 import WebhookMonitor from '@/pages/WebhookMonitor';
+import Admin from '@/pages/Admin';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Onboarding from '@/pages/Onboarding';
 import WaitlistAdmin from '@/pages/WaitlistAdmin';
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/checkout-success" element={<CheckoutSuccess />} />
+      <Route path="/admin" element={<Admin />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/missed-calls" element={<MissedCalls />} />
