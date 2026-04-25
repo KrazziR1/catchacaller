@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen } from "lucide-react";
+import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen, PhoneCall } from "lucide-react";
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
+import ColdCallDashboard from "@/components/coldcalls/ColdCallDashboard";
 import TopNav from "@/components/layout/TopNav";
 
 export default function Admin() {
@@ -18,6 +19,7 @@ export default function Admin() {
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [filterPlan, setFilterPlan] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [adminView, setAdminView] = useState("businesses"); // businesses or coldcalls
 
   useEffect(() => {
     base44.auth.me().then((u) => {
@@ -108,6 +110,10 @@ export default function Admin() {
     return null;
   }
 
+  if (adminView === "coldcalls") {
+    return <ColdCallDashboard />;
+  }
+
   // Calculate KPIs
   const totalBusinesses = businesses.length;
   const activeSubscriptions = subscriptions.filter(
@@ -165,10 +171,28 @@ export default function Admin() {
             <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
             <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
           </div>
+          <div className="flex gap-2">
+            <Button
+              variant={adminView === "businesses" ? "default" : "outline"}
+              onClick={() => setAdminView("businesses")}
+              className="gap-2"
+            >
+              <Building2 className="w-4 h-4" />
+              Businesses
+            </Button>
+            <Button
+              variant={adminView === "coldcalls" ? "default" : "outline"}
+              onClick={() => setAdminView("coldcalls")}
+              className="gap-2"
+            >
+              <PhoneCall className="w-4 h-4" />
+              Cold Calls
+            </Button>
             <Button variant="outline" onClick={() => navigate("/sales-resources")} className="gap-2">
               <BookOpen className="w-4 h-4" />
               Sales Resources
             </Button>
+          </div>
         </div>
 
         {/* KPI Cards */}

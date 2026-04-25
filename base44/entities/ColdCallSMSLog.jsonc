@@ -1,0 +1,56 @@
+{
+  "name": "ColdCallSMSLog",
+  "type": "object",
+  "properties": {
+    "prospect_id": {
+      "type": "string",
+      "description": "Reference to ColdCallProspect"
+    },
+    "phone_number": {
+      "type": "string",
+      "description": "Recipient phone number (E.164 format)"
+    },
+    "message_body": {
+      "type": "string",
+      "description": "Full SMS text"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "outbound",
+        "inbound"
+      ],
+      "description": "Whether message was sent or received"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "delivered",
+        "failed",
+        "received"
+      ],
+      "default": "sent",
+      "description": "Delivery/receipt status"
+    },
+    "twilio_message_sid": {
+      "type": "string",
+      "description": "Twilio SID for tracking"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent/received"
+    },
+    "sent_by": {
+      "type": "string",
+      "description": "Email of admin who sent the message (for outbound)"
+    }
+  },
+  "required": [
+    "prospect_id",
+    "phone_number",
+    "message_body",
+    "direction"
+  ]
+}

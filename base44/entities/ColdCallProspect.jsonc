@@ -1,0 +1,98 @@
+{
+  "name": "ColdCallProspect",
+  "type": "object",
+  "properties": {
+    "business_name": {
+      "type": "string",
+      "description": "Name of the prospective business"
+    },
+    "phone_number": {
+      "type": "string",
+      "description": "Business phone number (E.164 format)"
+    },
+    "email": {
+      "type": "string",
+      "description": "Contact email if available"
+    },
+    "city": {
+      "type": "string",
+      "description": "Business city"
+    },
+    "state": {
+      "type": "string",
+      "description": "Business state (2-letter code)"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "general",
+        "hvac",
+        "plumbing",
+        "roofing",
+        "med_spa",
+        "legal",
+        "hospitality",
+        "marketing",
+        "real_estate",
+        "dental",
+        "fitness",
+        "automotive",
+        "other"
+      ],
+      "default": "general"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "contacted",
+        "interested",
+        "not_interested",
+        "signed_up_trial",
+        "actively_using",
+        "discontinued_trial",
+        "do_not_call"
+      ],
+      "default": "contacted",
+      "description": "Current status in sales funnel"
+    },
+    "discontinuation_reason_category": {
+      "type": "string",
+      "enum": [
+        "too_expensive",
+        "not_needed",
+        "competitor",
+        "bad_experience",
+        "other"
+      ],
+      "description": "Category for why they discontinued (if applicable)"
+    },
+    "discontinuation_reason": {
+      "type": "string",
+      "description": "Detailed reason for discontinuation"
+    },
+    "linked_business_profile_id": {
+      "type": "string",
+      "description": "Reference to BusinessProfile if they converted"
+    },
+    "date_contacted": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When we first contacted them"
+    },
+    "date_converted": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When they signed up (if converted)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes about this prospect"
+    }
+  },
+  "required": [
+    "business_name",
+    "phone_number",
+    "city",
+    "state"
+  ]
+}
