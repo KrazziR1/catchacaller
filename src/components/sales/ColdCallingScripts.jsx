@@ -6,39 +6,11 @@ import { toast } from "sonner";
 
 const scripts = [
   {
-    industry: "HVAC",
-    opening: "Hi [Name], it's [Your Name]. Quick call — I work with HVAC companies and I wanted to talk about something I think you're dealing with.",
-    problem: "You're out on a job. Phone rings, you see it's a customer. But you can't answer because you're elbow-deep in a service call. They get voicemail, and next thing you know they've called three other HVAC companies.",
-    solution: "What we do is set it up so calls ring your phone like normal. But if you can't answer, our AI picks up instead of going to voicemail. Qualifies them in real time, sends your booking link. You get a qualified lead whether you picked up or not.",
-    cta: "It's basically having a receptionist who only shows up when you're busy. Want me to show you how it works? Takes 10 minutes.",
-  },
-  {
-    industry: "Plumbing",
-    opening: "Hi [Name], this is [Your Name]. I work with plumbing companies and I have a quick question.",
-    problem: "You get a call about a burst pipe. You're on another job. Can't answer right now. Customer gets voicemail. Twenty seconds later they're dialing your competitor.",
-    solution: "We set it up so calls ring your phone, but if you're busy, AI takes over. Asks the right questions, sends your information. They don't feel ignored. You don't lose the job.",
-    cta: "For plumbing, speed is everything. Let me show you how this looks with your business. 10 minutes?",
-  },
-  {
-    industry: "Roofing",
-    opening: "Hey [Name], [Your Name] here. I work with roofing companies and something tells me you deal with this.",
-    problem: "Hail storm hits. Phones go crazy. You're swamped on site. Calls ring, you can't get to them. By the time you call back, they've already gotten three quotes from your competitors.",
-    solution: "Calls still ring your phone. But if you're slammed, AI answers and qualifies. Sends your information, gets them in your pipeline. You don't miss the rush — you just don't have to answer every call in the moment.",
-    cta: "During season, this is a game-changer. Want to see how it'd work for you? 10 minutes?",
-  },
-  {
-    industry: "Med Spa",
-    opening: "Hi [Name], it's [Your Name]. I work with med spas and I noticed something about how you handle calls.",
-    problem: "Someone browses your website at 8pm, ready to book. Calls you. No one picks up. They're frustrated. Next thing you know, they've booked with the spa across town.",
-    solution: "Calls still ring your phone. But if no one's there, AI picks up and books them in. They don't know the difference. They're in the system, ready to go.",
-    cta: "For beauty, that first response is everything. Let me show you. 10 minutes?",
-  },
-  {
-    industry: "Real Estate",
-    opening: "Hi [Name], [Your Name] here. I work with real estate agents and I wanted to talk about how you handle lead calls.",
-    problem: "Prospect calls about one of your listings. You're showing another property. They can't reach you. While you're calling them back, they've already texted two other agents.",
-    solution: "Your phone rings like normal. But if you're showing, AI gets them on the line, answers questions, sends them property details. By the time you follow up, they're pre-qualified and ready.",
-    cta: "In real estate, first touch matters. Let me show you how this changes things. 10 minutes?",
+    industry: "Universal Script",
+    opening: "Hey [Name], my name is [Your Name] — I'm local here in [City].",
+    problem: "I recently started a service that I'm offering completely free to 10 businesses for a couple of weeks. I wanted to reach out to see if you'd be interested.",
+    solution: "What we do is: If a lead calls your business phone number and you don't answer, we immediately send them a text from your business and answer basic questions and ultimately guide them to either book a service with you using your current booking software OR we at least start and continue the conversation to a point where you can step in and take over the conversation once you're available. I really have this built out so that businesses can customize the experience.\n\nUltimately, this service is an attempt to convert missed calls to actual calls for service and so far, we have about an 83% success rate in retaining leads to the point of booking or determination on service.",
+    cta: "By any chance, do you have 2 minutes to see if we'd be a good fit for [business name]? I want to be mindful of your time today, so instead of diving into all the details, I can send you a link to our website for you to check out when you're free. If you want to give us a try, text or call me and we can get you set up completely free — all I'm looking for is feedback on what we're doing great and how we can improve.",
   },
 ];
 
