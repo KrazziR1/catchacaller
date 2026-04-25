@@ -18,6 +18,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    // TCPA compliance: honor opt-out keywords immediately
+    const optOutKeywords = ["stop", "stopall", "unsubscribe", "cancel", "end", "quit"];
+    const optInKeywords = ["start", "yes", "unstop"];
+    const normalizedBody = messageBody.toLowerCase().trim();
+
+    if (optOutKeywords.includes(normalizedBody)) {
+      // Mark all active conversations as opted out
+      const activeConvos = await base44.asServiceRole.entities.Conversation.filter({ caller_phone: from, status: "active" });
+      for (const c of activeConvos) {
+        await base44.asServiceRole.entities.Conversation.update(c.id, { status: "lost", messages: [
+          ...(c.messages || []),
+          { sender: "lead", content: messageBody, timestamp: new Date().toISOString() },
+          { sender: "ai", content: "You have been unsubscribed and will receive no further messages.", timestamp: new Date().toISOString() }
+        ]});
+      }
+      // Twilio auto-handles STOP replies per carrier rules — return empty response
+      return new Response("<?xml version='1.0'?><MessagingResponse></MessagingResponse>", {
+        headers: { "Content-Type": "text/xml" },
+      });
+    }
+
     // Find existing conversation for this phone number
     const conversations = await base44.asServiceRole.entities.Conversation.filter({
       caller_phone: from,
@@ -27,15 +48,24 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
 
     if (conversations.length === 0) {
-      // No active conversation — ignore or log
       console.log(`No active conversation found for ${from}`);
       return new Response("<?xml version='1.0'?><MessagingResponse></MessagingResponse>", {
         headers: { "Content-Type": "text/xml" },
       });
     }
 
-    const conversation = conversations[0];
+    // Always use the most recent active conversation to avoid duplicates
+    const conversation = conversations.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
     const messages = conversation.messages || [];
+
+    // Rate limiting: ignore if last inbound was less than 10 seconds ago
+    const lastInbound = conversation.last_inbound_at ? new Date(conversation.last_inbound_at) : null;
+    if (lastInbound && (Date.now() - lastInbound.getTime()) < 10000) {
+      console.warn(`Rate limit: ignoring rapid message from ${from}`);
+      return new Response("<?xml version='1.0'?><MessagingResponse></MessagingResponse>", {
+        headers: { "Content-Type": "text/xml" },
+      });
+    }
 
     // Append the lead's message
     messages.push({
@@ -76,6 +106,7 @@ Tone: ${profile?.ai_personality || "friendly"}. Do NOT use emojis excessively. K
     await base44.asServiceRole.entities.Conversation.update(conversation.id, {
       messages,
       last_message_at: now,
+      last_inbound_at: now,
       follow_up_count: (conversation.follow_up_count || 0) + 1,
     });
 

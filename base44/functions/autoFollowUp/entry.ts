@@ -4,6 +4,11 @@ import twilio from 'npm:twilio';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { conversation_id } = await req.json();
 
     const conversation = await base44.asServiceRole.entities.Conversation.get(conversation_id);

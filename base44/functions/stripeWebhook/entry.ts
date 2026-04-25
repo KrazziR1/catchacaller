@@ -44,8 +44,14 @@ Deno.serve(async (req) => {
           trial_end_date: trialEndDate,
         });
       } else {
+        // Fetch customer email from Stripe if not on the event object
+        let userEmail = data.customer_email || '';
+        if (!userEmail && data.customer) {
+          const customer = await stripe.customers.retrieve(data.customer);
+          userEmail = customer.email || '';
+        }
         await base44.asServiceRole.entities.Subscription.create({
-          user_email: data.customer_email || '',
+          user_email: userEmail,
           stripe_customer_id: data.customer,
           stripe_subscription_id: data.id,
           status: data.status,

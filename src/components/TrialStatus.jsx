@@ -10,12 +10,24 @@ export default function TrialStatus({ userEmail }) {
     enabled: !!userEmail,
   });
 
-  const subscription = subscriptions[0];
-  if (!subscription || !subscription.trial_end_date) return null;
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["business-profile"],
+    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
+  });
 
-  const daysLeft = Math.ceil(
-    (new Date(subscription.trial_end_date) - new Date()) / (1000 * 60 * 60 * 24)
-  );
+  const subscription = subscriptions[0];
+  const profile = profiles[0];
+
+  let daysLeft;
+  if (subscription?.trial_end_date) {
+    daysLeft = Math.ceil((new Date(subscription.trial_end_date) - new Date()) / (1000 * 60 * 60 * 24));
+  } else if (!subscription && profile?.created_date) {
+    // Fallback: use profile creation date as trial start
+    const trialEnd = new Date(profile.created_date).getTime() + 7 * 24 * 60 * 60 * 1000;
+    daysLeft = Math.ceil((trialEnd - Date.now()) / (1000 * 60 * 60 * 24));
+  } else {
+    return null;
+  }
 
   if (daysLeft <= 0) return null;
 

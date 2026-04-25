@@ -55,16 +55,32 @@ export default function Dashboard() {
     }
   }, [profileLoaded, profiles, navigate]);
 
-  // Gate: check subscription status (allow active or trialing)
+  // Gate: if subscription record exists and is not active/trialing, block access
+  // If no subscription record yet, use profile creation date as trial start (7-day grace)
   const subscription = subscriptions[0];
-  if (user && profileLoaded && subscription && !["active", "trialing"].includes(subscription.status)) {
+  const subscriptionLoaded = user && profileLoaded;
+  const profile = profiles[0];
+
+  const trialExpired = !subscription && profile &&
+    (Date.now() - new Date(profile.created_date).getTime()) > 7 * 24 * 60 * 60 * 1000;
+
+  const isSubscriptionBlocked = subscriptionLoaded && (
+    (subscription && !["active", "trialing"].includes(subscription.status)) ||
+    trialExpired
+  );
+
+  if (isSubscriptionBlocked) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
         <Card className="max-w-md p-8 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Subscription Required</h1>
+          <h1 className="text-xl font-bold mb-2">
+            {trialExpired ? "Your Trial Has Ended" : "Subscription Required"}
+          </h1>
           <p className="text-muted-foreground mb-6">
-            Your subscription is {subscription.status}. Please upgrade to continue.
+            {trialExpired
+              ? "Your 7-day free trial has expired. Subscribe to continue recovering missed calls."
+              : `Your subscription is ${subscription?.status}. Please upgrade to continue.`}
           </p>
           <Button onClick={() => window.location.href = "/#pricing"} className="w-full">
             View Plans

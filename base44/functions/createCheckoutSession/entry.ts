@@ -12,8 +12,13 @@ Deno.serve(async (req) => {
     }
 
     const { priceId } = await req.json();
-    if (!priceId) {
-      return Response.json({ error: 'Missing priceId' }, { status: 400 });
+    const allowedPriceIds = [
+      'price_1TPruHFsxP0HXZ0ANSkOGCp0',
+      'price_1TPrvMFsxP0HXZ0Apho3zV1j',
+      'price_1TPrvzFsxP0HXZ0AP2nb21Ne',
+    ];
+    if (!priceId || !allowedPriceIds.includes(priceId)) {
+      return Response.json({ error: 'Invalid priceId' }, { status: 400 });
     }
 
     const origin = req.headers.get('origin') || 'https://catchacaller.com';

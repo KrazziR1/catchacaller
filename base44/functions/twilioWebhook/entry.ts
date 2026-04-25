@@ -37,9 +37,15 @@ Deno.serve(async (req) => {
       notes: `CallSid: ${callSid} | Status: ${callStatus}`,
     });
 
-    // Fetch the business profile that owns this phone number
+    // Fetch the business profile that owns this phone number — strict match, no fallback
     const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ phone_number: calledPhone });
-    const profile = profiles[0] || (await base44.asServiceRole.entities.BusinessProfile.list("-created_date", 1))[0];
+    if (!profiles || profiles.length === 0) {
+      console.warn(`No business profile found for number: ${calledPhone}. Dropping event.`);
+      return new Response("<?xml version='1.0'?><Response></Response>", {
+        headers: { "Content-Type": "text/xml" },
+      });
+    }
+    const profile = profiles[0];
 
     // Fetch the best active initial response template
     const templates = await base44.asServiceRole.entities.SMSTemplate.filter({
@@ -91,6 +97,12 @@ Deno.serve(async (req) => {
 
     if (twilioData.error_code) {
       console.error("Twilio SMS error:", twilioData);
+      // Alert admin of SMS send failure
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: (await base44.asServiceRole.entities.User.filter({ role: "admin" }))[0]?.email || '',
+        subject: `CatchACaller: SMS send failed for ${callerPhone}`,
+        body: `Failed to send SMS to ${callerPhone}.\n\nTwilio error: ${JSON.stringify(twilioData)}\n\nMissed call ID: ${missedCall.id}`,
+      }).catch(() => {}); // Don't let alert failure break the flow
     } else {
       // Update missed call record to sms_sent
       await base44.asServiceRole.entities.MissedCall.update(missedCall.id, {
