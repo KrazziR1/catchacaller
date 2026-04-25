@@ -94,7 +94,32 @@ Deno.serve(async (req) => {
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // Only process missed/unanswered calls (owner didn't pick up)
+    // --- Handle initial inbound call (before dialing owner) ---
+    // If CallStatus is 'ringing' or 'in-progress' and no DialCallStatus, forward to owner
+    if (CallStatus === 'in-progress' && !DialCallStatus) {
+      // This is the initial inbound call - return TwiML to dial the owner
+      const ownerPhone = profile.owner_phone_number;
+      if (!ownerPhone) {
+        return new Response(`<?xml version="1.0" encoding="UTF-8"?>
+          <Response>
+            <Say>Sorry, we're unable to connect your call right now.</Say>
+          </Response>`, {
+          headers: { 'Content-Type': 'text/xml' },
+        });
+      }
+
+      // Return TwiML that dials the owner and records call status
+      const callbackUrl = `${Deno.env.get('APP_BASE_URL') || 'https://catchacaller.com'}/api/callStatusCallback?business_phone=${toPhone}&caller_phone=${From}`;
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+          <Dial callerId="${From}" statusCallbackEvent="completed" statusCallback="${callbackUrl}">
+            <Number>${ownerPhone}</Number>
+          </Dial>
+        </Response>`;
+      return new Response(twiml, { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // Only process missed/unanswered calls (owner didn't pick up after Dial)
     const missedStatuses = ['no-answer', 'busy', 'failed'];
     if (!missedStatuses.includes(DialCallStatus || CallStatus)) {
       return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {

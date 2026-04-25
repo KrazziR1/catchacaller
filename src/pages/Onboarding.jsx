@@ -149,13 +149,14 @@ export default function Onboarding() {
   const isStepValid = () => {
     if (currentStep === 0) return !!form.business_name && smsComplianceAgreed && (form.industry !== 'other' || !!form.industry_description);
     if (currentStep === 1) {
-      // Validate phone number format
-      if (!form.phone_number) return false;
-      // Must be valid E.164 format: +1XXXXXXXXXX (strict validation)
+      // Owner's cell is REQUIRED
+      if (!form.owner_phone_number) return false;
       const e164Regex = /^\+1\d{10}$/;
-      const isValidFormat = e164Regex.test(form.phone_number);
+      if (!e164Regex.test(form.owner_phone_number)) return false;
       
-      // Additional validation: reject common test numbers (555)
+      // Business phone REQUIRED (either Twilio or manual)
+      if (!form.phone_number) return false;
+      const isValidFormat = e164Regex.test(form.phone_number);
       const isTestNumber = /^\+1555/.test(form.phone_number);
       
       return isValidFormat && !isTestNumber;
