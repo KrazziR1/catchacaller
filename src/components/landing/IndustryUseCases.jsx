@@ -1,78 +1,38 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, DollarSign, TrendingUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 import { useState } from 'react';
+import { handleTrial } from '@/lib/handleTrial';
 
 const useCases = [
   {
     industry: 'HVAC',
     icon: '❄️',
     problem: 'Customer calls for AC repair at 2:30 PM but office is busy',
-    before: {
-      recovery: '0%',
-      bookingRate: '0%',
-      revenue: '$0',
-      time: 'Missed',
-    },
-    after: {
-      recovery: '73%',
-      bookingRate: '68%',
-      revenue: '$1,050',
-      time: '4 mins',
-    },
+    before: { recovery: '0%', bookingRate: '0%', revenue: '$0', time: 'Missed' },
+    after: { recovery: '73%', bookingRate: '68%', revenue: '$1,050', time: '4 mins' },
     details: 'AI qualifies urgency (high), sends availability, books $1,500 job in minutes.',
   },
   {
     industry: 'Plumbing',
     icon: '🔧',
     problem: 'Urgent water leak call missed during lunch break',
-    before: {
-      recovery: '0%',
-      bookingRate: '0%',
-      revenue: '$0',
-      time: 'Missed',
-    },
-    after: {
-      recovery: '73%',
-      bookingRate: '68%',
-      revenue: '$750',
-      time: '2 mins',
-    },
+    before: { recovery: '0%', bookingRate: '0%', revenue: '$0', time: 'Missed' },
+    after: { recovery: '73%', bookingRate: '68%', revenue: '$750', time: '2 mins' },
     details: 'AI recognizes emergency urgency, prioritizes response, books $1,100 emergency call.',
   },
   {
     industry: 'Dental',
     icon: '🦷',
     problem: 'Cosmetic consultation inquiry missed',
-    before: {
-      recovery: '0%',
-      bookingRate: '0%',
-      revenue: '$0',
-      time: 'Missed',
-    },
-    after: {
-      recovery: '73%',
-      bookingRate: '68%',
-      revenue: '$400',
-      time: '3 mins',
-    },
+    before: { recovery: '0%', bookingRate: '0%', revenue: '$0', time: 'Missed' },
+    after: { recovery: '73%', bookingRate: '68%', revenue: '$400', time: '3 mins' },
     details: 'AI captures lead info, qualifies service type, books consultation appointment.',
   },
 ];
 
 export default function IndustryUseCases() {
   const [loading, setLoading] = useState(false);
-
-  const handleTrial = async () => {
-    setLoading(true);
-    const isAuthed = await base44.auth.isAuthenticated();
-    if (!isAuthed) {
-      base44.auth.redirectToLogin('/onboarding');
-      return;
-    }
-    window.location.href = '/onboarding';
-  };
 
   return (
     <section className="py-24 lg:py-32 bg-muted/50">

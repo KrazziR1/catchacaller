@@ -1,21 +1,11 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
 import { useState } from 'react';
+import { handleTrial } from '@/lib/handleTrial';
 
 export default function DemoCTA() {
   const [loading, setLoading] = useState(false);
-
-  const handleTrial = async () => {
-    setLoading(true);
-    const isAuthed = await base44.auth.isAuthenticated();
-    if (!isAuthed) {
-      base44.auth.redirectToLogin('/onboarding');
-      return;
-    }
-    window.location.href = '/onboarding';
-  };
 
   return (
     <motion.section

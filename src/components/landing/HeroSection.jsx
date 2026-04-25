@@ -42,7 +42,7 @@ export default function HeroSection() {
               Start Free Trial
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-base font-semibold rounded-xl">
+            <Button size="lg" variant="outline" className="h-14 px-8 text-base font-semibold rounded-xl" onClick={() => document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth' })}>
               Watch Demo
             </Button>
           </div>
@@ -58,7 +58,7 @@ export default function HeroSection() {
             </span>
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              Setup in 5 min
+              Live in 15 min
             </span>
           </div>
         </motion.div>

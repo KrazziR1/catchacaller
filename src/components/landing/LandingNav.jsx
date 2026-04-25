@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PhoneCall, Menu, X } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 export default function LandingNav() {
   const [open, setOpen] = useState(false);
@@ -23,9 +24,7 @@ export default function LandingNav() {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          <Link to="/dashboard">
-            <Button variant="ghost" size="sm" className="rounded-lg">Log In</Button>
-          </Link>
+          <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => base44.auth.redirectToLogin("/dashboard")}>Log In</Button>
           <Link to="/onboarding">
             <Button size="sm" className="rounded-lg font-semibold">Start Free Trial</Button>
           </Link>
@@ -41,7 +40,7 @@ export default function LandingNav() {
           <a href="#features" className="block text-sm" onClick={() => setOpen(false)}>Features</a>
           <a href="#pricing" className="block text-sm" onClick={() => setOpen(false)}>Pricing</a>
           <a href="#how-it-works" className="block text-sm" onClick={() => setOpen(false)}>How It Works</a>
-          <Link to="/dashboard" onClick={() => setOpen(false)}>
+          <Link to="/onboarding" onClick={() => setOpen(false)}>
             <Button className="w-full mt-2">Start Free Trial</Button>
           </Link>
         </div>

@@ -83,9 +83,14 @@ export default function Onboarding() {
   }, []);
 
   const saveMutation = useMutation({
-    mutationFn: () => base44.entities.BusinessProfile.create(form),
+    mutationFn: () => {
+      if (profileId) {
+        return base44.entities.BusinessProfile.update(profileId, form);
+      }
+      return base44.entities.BusinessProfile.create(form);
+    },
     onSuccess: (data) => {
-      setProfileId(data.id);
+      if (!profileId) setProfileId(data.id);
       queryClient.invalidateQueries({ queryKey: ["business-profile"] });
       setCurrentStep(currentStep + 1);
     },

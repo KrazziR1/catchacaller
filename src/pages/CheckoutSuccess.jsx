@@ -4,10 +4,18 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(5);
+  const [destination, setDestination] = useState("/dashboard");
+
+  useEffect(() => {
+    base44.entities.BusinessProfile.list().then((profiles) => {
+      if (!profiles || profiles.length === 0) setDestination("/onboarding");
+    });
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -15,14 +23,14 @@ export default function CheckoutSuccess() {
     }, 1000);
 
     const redirect = setTimeout(() => {
-      navigate("/dashboard");
+      navigate(destination);
     }, 5000);
 
     return () => {
       clearInterval(timer);
       clearTimeout(redirect);
     };
-  }, [navigate]);
+  }, [navigate, destination]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 flex items-center justify-center p-6">
@@ -42,7 +50,7 @@ export default function CheckoutSuccess() {
           </p>
         </div>
         <Button
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate(destination)}
           className="w-full rounded-xl h-11"
         >
           Go to Dashboard Now
