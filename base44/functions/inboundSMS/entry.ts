@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import twilio from 'npm:twilio';
 
-// Twilio sends inbound SMS as URL-encoded form data
 async function parseFormBody(req) {
   const text = await req.text();
   const params = new URLSearchParams(text);
@@ -10,9 +9,17 @@ async function parseFormBody(req) {
   return obj;
 }
 
+// Normalize any phone format to E.164 (+1XXXXXXXXXX)
+function normalizePhone(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('1') && digits.length === 11) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  return `+${digits}`;
+}
+
 Deno.serve(async (req) => {
   try {
-    // Twilio sends POST with form data
     const body = await parseFormBody(req);
     const { From, To, Body } = body;
 
@@ -21,7 +28,8 @@ Deno.serve(async (req) => {
     }
 
     const inboundText = Body.trim();
-    const callerPhone = From;
+    const callerPhone = normalizePhone(From);
+    const toPhone = normalizePhone(To); // The business's Twilio number that received the SMS
 
     const base44 = createClientFromRequest(req);
 
@@ -31,31 +39,24 @@ Deno.serve(async (req) => {
     const upperText = inboundText.toUpperCase();
 
     if (optOutKeywords.includes(upperText)) {
-      // Record opt-out
       const existing = await base44.asServiceRole.entities.SMSOptOut.filter({ phone_number: callerPhone });
       if (existing.length === 0) {
         await base44.asServiceRole.entities.SMSOptOut.create({
           phone_number: callerPhone,
           opted_out_at: new Date().toISOString(),
           opt_out_keyword: upperText,
-          business_phone: To,
+          business_phone: toPhone,
         });
       }
-      // Twilio auto-handles STOP carrier acknowledgment, just return empty TwiML
-      return new Response('<Response></Response>', {
-        headers: { 'Content-Type': 'text/xml' },
-      });
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
     if (optInKeywords.includes(upperText)) {
-      // Remove from opt-out list if they re-subscribe
       const existing = await base44.asServiceRole.entities.SMSOptOut.filter({ phone_number: callerPhone });
       for (const record of existing) {
         await base44.asServiceRole.entities.SMSOptOut.delete(record.id);
       }
-      return new Response('<Response></Response>', {
-        headers: { 'Content-Type': 'text/xml' },
-      });
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
     // --- Check if opted out ---
@@ -64,16 +65,21 @@ Deno.serve(async (req) => {
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // --- Load business profile ---
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
-    const profile = profiles[0];
+    // --- Load the correct business profile by the "To" number (multi-tenant isolation) ---
+    const allProfiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 500);
+    const profile = allProfiles.find(p => normalizePhone(p.phone_number) === toPhone);
+
     if (!profile || !profile.auto_response_enabled) {
+      console.log(`No active profile found for number ${toPhone}`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // --- Find existing conversation ---
-    const conversations = await base44.asServiceRole.entities.Conversation.filter({ caller_phone: callerPhone });
-    let conversation = conversations.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+    // --- Find existing conversation for this caller + business number ---
+    // Filter by caller_phone AND ensure the conversation belongs to this business's profile owner
+    const allConversations = await base44.asServiceRole.entities.Conversation.filter({ caller_phone: callerPhone });
+    // Match conversations that were created by this profile's owner (multi-tenant safe)
+    const ownerConversations = allConversations.filter(c => c.created_by === profile.created_by);
+    const conversation = ownerConversations.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
 
     // --- Build conversation history for AI context ---
     const recentMessages = conversation?.messages?.slice(-10) || [];
@@ -115,18 +121,16 @@ The lead just sent: "${inboundText}"
 Write the SMS reply text only. No quotes, no labels.`;
 
     const aiResult = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
-
     const replyText = typeof aiResult === 'string' ? aiResult.trim() : String(aiResult).trim();
 
-    // --- Send SMS via Twilio ---
+    // --- Send SMS via Twilio, replying FROM the business's own number ---
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const fromPhone = Deno.env.get('TWILIO_PHONE_NUMBER') || To;
     const client = twilio(accountSid, authToken);
 
     await client.messages.create({
       body: replyText,
-      from: fromPhone,
+      from: toPhone, // Reply from the number the lead texted
       to: callerPhone,
     });
 
@@ -134,20 +138,8 @@ Write the SMS reply text only. No quotes, no labels.`;
     const now = new Date().toISOString();
     const newMessages = [...(conversation?.messages || [])];
 
-    // Add inbound message
-    newMessages.push({
-      sender: 'lead',
-      content: inboundText,
-      timestamp: now,
-    });
-
-    // Add AI reply
-    newMessages.push({
-      sender: 'ai',
-      content: replyText,
-      timestamp: now,
-      sms_status: 'sent',
-    });
+    newMessages.push({ sender: 'lead', content: inboundText, timestamp: now });
+    newMessages.push({ sender: 'ai', content: replyText, timestamp: now, sms_status: 'sent' });
 
     if (conversation) {
       await base44.asServiceRole.entities.Conversation.update(conversation.id, {
@@ -157,7 +149,8 @@ Write the SMS reply text only. No quotes, no labels.`;
         status: conversation.status === 'unresponsive' ? 'active' : conversation.status,
       });
     } else {
-      // Create new conversation if none exists
+      // Create new conversation scoped to this profile's owner
+      // We set created_by implicitly via asServiceRole — but we tag it with the profile owner
       await base44.asServiceRole.entities.Conversation.create({
         caller_phone: callerPhone,
         messages: newMessages,
@@ -167,10 +160,7 @@ Write the SMS reply text only. No quotes, no labels.`;
       });
     }
 
-    // Return empty TwiML (we already sent via REST API to avoid double-send)
-    return new Response('<Response></Response>', {
-      headers: { 'Content-Type': 'text/xml' },
-    });
+    return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
   } catch (error) {
     console.error('inboundSMS error:', error);
     return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });

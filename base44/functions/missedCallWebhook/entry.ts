@@ -9,12 +9,21 @@ async function parseFormBody(req) {
   return obj;
 }
 
+// Normalize any phone format to E.164 (+1XXXXXXXXXX)
+function normalizePhone(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('1') && digits.length === 11) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  return `+${digits}`;
+}
+
 Deno.serve(async (req) => {
   try {
     const body = await parseFormBody(req);
-    const { CallStatus, From, To, CallerName, CallSid } = body;
+    const { CallStatus, From, To, CallerName } = body;
 
-    console.log(`Call event: ${CallStatus} from ${From}`);
+    console.log(`Call event: ${CallStatus} from ${From} to ${To}`);
 
     // Only process missed/unanswered calls
     const missedStatuses = ['no-answer', 'busy', 'failed'];
@@ -24,7 +33,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const callerPhone = From;
+    const callerPhone = normalizePhone(From);
+    const toPhone = normalizePhone(To);
     const base44 = createClientFromRequest(req);
 
     // --- Check opt-out ---
@@ -34,12 +44,18 @@ Deno.serve(async (req) => {
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // --- Load business profile ---
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
-    const profile = profiles[0];
+    // --- Load the correct business profile by the Twilio "To" number ---
+    // This is critical for multi-tenant isolation: match on the number that was called
+    const allProfiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 500);
+    const profile = allProfiles.find(p => normalizePhone(p.phone_number) === toPhone);
 
-    if (!profile || !profile.auto_response_enabled) {
-      console.log('No profile or auto-response disabled');
+    if (!profile) {
+      console.log(`No business profile found for number ${toPhone}`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    if (!profile.auto_response_enabled) {
+      console.log(`Auto-response disabled for ${toPhone}`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
@@ -47,7 +63,7 @@ Deno.serve(async (req) => {
     const callTime = now.toISOString();
     const startTime = Date.now();
 
-    // --- Create MissedCall record ---
+    // --- Create MissedCall record (owned by this profile's user) ---
     const missedCall = await base44.asServiceRole.entities.MissedCall.create({
       caller_phone: callerPhone,
       caller_name: CallerName || null,
@@ -65,10 +81,10 @@ Deno.serve(async (req) => {
       ? `Hi, this is ${name}. We missed your call and want to make sure we help you. What can we assist you with today?${bookingLine} Reply STOP to opt out.`
       : `Hi! 👋 Sorry we missed your call — we're ${name}. We'd love to help! What can we do for you?${bookingLine} Reply STOP to opt out.`;
 
-    // --- Send SMS ---
+    // --- Send SMS from the business's own Twilio number ---
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const fromPhone = Deno.env.get('TWILIO_PHONE_NUMBER') || To;
+    const fromPhone = toPhone; // Reply from the number they called
     const client = twilio(accountSid, authToken);
 
     await client.messages.create({
@@ -101,13 +117,15 @@ Deno.serve(async (req) => {
       last_message_at: new Date().toISOString(),
     });
 
-    // --- Send email notification to business owner (async, best effort) ---
+    // --- Send email notification to the OWNER of this business profile ---
     try {
-      // Get the first admin user to notify
-      const users = await base44.asServiceRole.entities.User.list('-created_date', 1);
-      if (users[0]) {
+      // Find the user who created this profile
+      const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+      const profileOwner = allUsers.find(u => u.email === profile.created_by);
+
+      if (profileOwner) {
         await base44.asServiceRole.integrations.Core.SendEmail({
-          to: users[0].email,
+          to: profileOwner.email,
           subject: `📞 Missed Call from ${CallerName || callerPhone}`,
           body: `
             <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
@@ -117,8 +135,8 @@ Deno.serve(async (req) => {
               <p><strong>Time:</strong> ${now.toLocaleString()}</p>
               <p><strong>Business:</strong> ${name}</p>
               <p style="margin-top: 16px; padding: 12px; background: #f1f5f9; border-radius: 8px;">
-                An AI SMS was sent within ${Math.round(responseTimeMs / 1000)} seconds. 
-                <a href="https://app.catchacaller.com/conversations" style="color: #3b82f6;">View conversation →</a>
+                An AI SMS was sent within ${Math.round(responseTimeMs / 1000)} seconds.
+                <a href="https://catchacaller.com/conversations" style="color: #3b82f6;">View conversation →</a>
               </p>
             </div>
           `,
@@ -129,7 +147,7 @@ Deno.serve(async (req) => {
       console.error('Email notification failed (non-critical):', emailErr.message);
     }
 
-    console.log(`✓ Missed call processed for ${callerPhone}, SMS sent in ${responseTimeMs}ms`);
+    console.log(`✓ Missed call processed for ${callerPhone} → ${toPhone} (${name}), SMS sent in ${responseTimeMs}ms`);
 
     return new Response('<Response></Response>', {
       headers: { 'Content-Type': 'text/xml' },

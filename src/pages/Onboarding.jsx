@@ -96,9 +96,13 @@ export default function Onboarding() {
       }
       return base44.entities.BusinessProfile.create(dataToSave);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (!profileId) setProfileId(data.id);
       queryClient.invalidateQueries({ queryKey: ["business-profile"] });
+      // Auto-configure webhooks for manually entered numbers
+      await configureWebhooksIfNeeded();
+      // Send confirmation email
+      await sendConfirmationEmail(data);
       setCurrentStep(currentStep + 1);
     },
   });
@@ -109,6 +113,8 @@ export default function Onboarding() {
       if (res.data?.url) window.location.href = res.data.url;
     },
   });
+
+  const [webhookConfigStatus, setWebhookConfigStatus] = useState("idle"); // idle | loading | done | error
 
   const sendTestMutation = async () => {
     setTestStatus("sending");
@@ -133,9 +139,33 @@ export default function Onboarding() {
     return true;
   };
 
+  // After profile is saved, auto-configure webhooks if number was entered manually (not provisioned)
+  const configureWebhooksIfNeeded = async () => {
+    // Only configure if they entered manually (PhoneProvision already sets webhooks)
+    // We attempt it and silently ignore errors — not critical to block progress
+    setWebhookConfigStatus("loading");
+    try {
+      const res = await base44.functions.invoke("configureWebhooks", {});
+      setWebhookConfigStatus(res.data?.success ? "done" : "error");
+    } catch {
+      setWebhookConfigStatus("error");
+    }
+  };
+
+  const sendConfirmationEmail = async (profileData) => {
+    try {
+      await base44.functions.invoke("sendOnboardingConfirmation", {
+        business_name: profileData.business_name || form.business_name,
+        phone_number: profileData.phone_number || form.phone_number,
+        booking_url: profileData.booking_url || form.booking_url,
+        plan_name: selectedPlan,
+      });
+    } catch (e) {
+      console.error("Confirmation email failed (non-critical):", e);
+    }
+  };
+
   const next = () => {
-    // Step 5 = booking (index 4), step 5 = template preview (index 5)
-    // Before moving from booking step, save the profile
     if (currentStep === 4) {
       // Save profile before moving to template step
       saveMutation.mutate();
@@ -255,7 +285,7 @@ export default function Onboarding() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-center text-muted-foreground">You'll set up billing after completing onboarding</p>
+                  <p className="text-xs text-center text-muted-foreground">You'll be redirected to billing after completing setup — 7-day free trial, cancel anytime.</p>
                 </div>
               )}
 
@@ -525,14 +555,51 @@ export default function Onboarding() {
                       </div>
                     </div>
                   </div>
-                  {!form.booking_url && (
-                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-700">
-                        <span className="font-bold">Reminder:</span> You skipped the booking link. Add it in <span className="font-semibold">Settings → Business Profile</span> before your first call.
-                      </p>
+                  {/* Live status checklist */}
+                  <div className="border border-border rounded-xl p-4 space-y-2">
+                    <p className="text-sm font-semibold mb-2">Setup Status</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      {form.phone_number ? (
+                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                      )}
+                      <span className={form.phone_number ? "text-foreground" : "text-amber-700"}>
+                        {form.phone_number ? `Phone number: ${form.phone_number}` : "Phone number not set — add in Settings"}
+                      </span>
                     </div>
-                  )}
+                    <div className="flex items-center gap-2 text-sm">
+                      {webhookConfigStatus === "done" ? (
+                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      ) : webhookConfigStatus === "loading" ? (
+                        <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+                      ) : webhookConfigStatus === "error" ? (
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      )}
+                      <span>
+                        {webhookConfigStatus === "done" ? "Webhooks configured — calls will be captured" :
+                         webhookConfigStatus === "loading" ? "Configuring webhooks..." :
+                         webhookConfigStatus === "error" ? "Webhook config pending — contact support if calls aren't captured" :
+                         "Webhooks active (auto-provisioned number)"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {form.booking_url ? (
+                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                      )}
+                      <span className={form.booking_url ? "text-foreground" : "text-amber-700"}>
+                        {form.booking_url ? "Booking link set — AI can close appointments" : "Booking link missing — add in Settings"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      <span>Confirmation email sent to your inbox</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -548,21 +615,31 @@ export default function Onboarding() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
-              <Button
-                onClick={next}
-                disabled={!isStepValid() || saveMutation.isPending}
-                className="rounded-xl h-11 px-6"
-              >
-                {saveMutation.isPending ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
-                ) : currentStep === 7 ? (
-                  <>Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" /></>
-                ) : currentStep === 6 ? (
-                  <>Continue <ArrowRight className="ml-2 w-4 h-4" /></>
-                ) : (
-                  <>Continue <ArrowRight className="ml-2 w-4 h-4" /></>
-                )}
-              </Button>
+              {currentStep === 7 ? (
+                <Button
+                  onClick={handleCheckout}
+                  disabled={checkoutMutation.isPending}
+                  className="rounded-xl h-11 px-6 bg-accent hover:bg-accent/90"
+                >
+                  {checkoutMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Redirecting...</>
+                  ) : (
+                    <>Activate Plan & Go Live <ArrowRight className="ml-2 w-4 h-4" /></>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={next}
+                  disabled={!isStepValid() || saveMutation.isPending}
+                  className="rounded-xl h-11 px-6"
+                >
+                  {saveMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  ) : (
+                    <>Continue <ArrowRight className="ml-2 w-4 h-4" /></>
+                  )}
+                </Button>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>

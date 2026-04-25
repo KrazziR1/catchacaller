@@ -1,83 +1,91 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import twilio from 'npm:twilio';
 
-// Runs on a schedule — checks for conversations with no reply in ~24hrs and sends a single follow-up SMS
+// Normalize any phone format to E.164
+function normalizePhone(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('1') && digits.length === 11) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  return `+${digits}`;
+}
+
+// Scheduled function — iterates over ALL active business profiles and sends follow-ups
+// for their own conversations only (multi-tenant safe)
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const fromPhone = Deno.env.get('TWILIO_PHONE_NUMBER');
     const client = twilio(accountSid, authToken);
 
-    // Load business profile
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
-    const profile = profiles[0];
-    if (!profile || !profile.auto_response_enabled) {
-      return Response.json({ skipped: 'No profile or auto-response disabled' });
-    }
-
-    // Load opt-out list
+    // Load opt-out list once
     const optOuts = await base44.asServiceRole.entities.SMSOptOut.list('-created_date', 1000);
     const optOutNumbers = new Set(optOuts.map(o => o.phone_number));
 
-    // Find conversations that:
-    // - are still "active" (not booked, lost, unresponsive, manual_takeover)
-    // - have received exactly 0 follow-ups
-    // - last message was sent >22hrs ago (some buffer) and <26hrs ago (so we don't double-send if automation fires early/late)
+    // Load all business profiles with auto-response enabled
+    const allProfiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 500);
+    const activeProfiles = allProfiles.filter(p => p.auto_response_enabled && p.phone_number);
+
     const now = Date.now();
     const windowStart = now - 26 * 60 * 60 * 1000; // 26 hours ago
     const windowEnd   = now - 22 * 60 * 60 * 1000; // 22 hours ago
 
-    const conversations = await base44.asServiceRole.entities.Conversation.list('-created_date', 500);
+    // Load all conversations once
+    const allConversations = await base44.asServiceRole.entities.Conversation.list('-created_date', 2000);
 
-    const toFollowUp = conversations.filter(c => {
-      if (c.status !== 'active') return false;
-      if ((c.follow_up_count || 0) >= 1) return false; // already sent a follow-up
-      if (optOutNumbers.has(c.caller_phone)) return false;
-
-      // Use last_message_at if available, else created_date
-      const lastActivity = new Date(c.last_message_at || c.created_date).getTime();
-      return lastActivity >= windowStart && lastActivity <= windowEnd;
-    });
-
-    console.log(`Found ${toFollowUp.length} conversations eligible for 24hr follow-up`);
-
+    let totalSent = 0;
     const results = [];
 
-    for (const conv of toFollowUp) {
-      const callerName = conv.caller_name || 'there';
-      const bookingLine = profile.booking_url
-        ? ` Book here: ${profile.booking_url}`
-        : '';
+    for (const profile of activeProfiles) {
+      const fromPhone = normalizePhone(profile.phone_number);
+      if (!fromPhone) continue;
 
-      const body = profile.ai_personality === 'professional'
-        ? `Hi ${callerName}, just following up on your missed call to ${profile.business_name}. We'd love to help — what can we assist you with?${bookingLine} Reply STOP to opt out.`
-        : `Hey ${callerName}! 👋 Just checking in — you called ${profile.business_name} yesterday and we don't want you to miss out. Still need help?${bookingLine} Reply STOP to opt out.`;
+      // Only process conversations belonging to this profile's owner
+      const profileConversations = allConversations.filter(c => c.created_by === profile.created_by);
 
-      await client.messages.create({ body, from: fromPhone, to: conv.caller_phone });
-
-      // Record message in conversation
-      const messages = conv.messages || [];
-      messages.push({
-        sender: 'ai',
-        content: body,
-        timestamp: new Date().toISOString(),
-        sms_status: 'sent',
+      const toFollowUp = profileConversations.filter(c => {
+        if (c.status !== 'active') return false;
+        if ((c.follow_up_count || 0) >= 1) return false;
+        if (optOutNumbers.has(c.caller_phone)) return false;
+        const lastActivity = new Date(c.last_message_at || c.created_date).getTime();
+        return lastActivity >= windowStart && lastActivity <= windowEnd;
       });
 
-      await base44.asServiceRole.entities.Conversation.update(conv.id, {
-        messages,
-        follow_up_count: (conv.follow_up_count || 0) + 1,
-        last_message_at: new Date().toISOString(),
-      });
+      console.log(`Profile ${profile.business_name}: ${toFollowUp.length} conversations eligible for follow-up`);
 
-      results.push({ conversation_id: conv.id, phone: conv.caller_phone, status: 'sent' });
-      console.log(`✓ Follow-up sent to ${conv.caller_phone}`);
+      for (const conv of toFollowUp) {
+        const callerName = conv.caller_name || 'there';
+        const bookingLine = profile.booking_url ? ` Book here: ${profile.booking_url}` : '';
+
+        const body = profile.ai_personality === 'professional'
+          ? `Hi ${callerName}, just following up on your missed call to ${profile.business_name}. We'd love to help — what can we assist you with?${bookingLine} Reply STOP to opt out.`
+          : `Hey ${callerName}! 👋 Just checking in — you called ${profile.business_name} yesterday and we don't want you to miss out. Still need help?${bookingLine} Reply STOP to opt out.`;
+
+        await client.messages.create({ body, from: fromPhone, to: conv.caller_phone });
+
+        const messages = [...(conv.messages || [])];
+        messages.push({
+          sender: 'ai',
+          content: body,
+          timestamp: new Date().toISOString(),
+          sms_status: 'sent',
+        });
+
+        await base44.asServiceRole.entities.Conversation.update(conv.id, {
+          messages,
+          follow_up_count: (conv.follow_up_count || 0) + 1,
+          last_message_at: new Date().toISOString(),
+        });
+
+        results.push({ conversation_id: conv.id, phone: conv.caller_phone, business: profile.business_name, status: 'sent' });
+        totalSent++;
+        console.log(`✓ Follow-up sent to ${conv.caller_phone} for ${profile.business_name}`);
+      }
     }
 
-    return Response.json({ processed: results.length, results });
+    return Response.json({ processed: totalSent, results });
   } catch (error) {
     console.error('autoFollowUp error:', error);
     return Response.json({ error: error.message }, { status: 500 });
