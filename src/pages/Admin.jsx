@@ -11,6 +11,7 @@ import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, C
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
 import AdminKPICharts from "@/components/admin/AdminKPICharts";
 import ActivityHeatmap from "@/components/admin/ActivityHeatmap";
+import ManualReviewQueue from "@/components/admin/ManualReviewQueue";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -179,6 +180,11 @@ export default function Admin() {
               <p className="text-xs text-muted-foreground mt-1">Missed calls captured</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Manual Review Queue */}
+        <div className="mb-8">
+          <ManualReviewQueue businesses={businesses} />
         </div>
 
         {/* Charts & Heatmap */}
