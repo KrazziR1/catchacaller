@@ -30,31 +30,71 @@ export default function Admin() {
     });
   }, [navigate]);
 
-  // Fetch actual data (limited to 100 per query for performance)
+  // Fetch actual data with pagination for performance
   const { data: businesses = [] } = useQuery({
     queryKey: ["all-businesses"],
-    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 100),
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.BusinessProfile.list("-created_date", 50),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
+        ]);
+      } catch (err) {
+        console.error('Failed to fetch businesses:', err.message);
+        return [];
+      }
+    },
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["all-subscriptions"],
-    queryFn: () => base44.entities.Subscription.list("-created_date", 100),
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.Subscription.list("-created_date", 50),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
+        ]);
+      } catch (err) {
+        console.error('Failed to fetch subscriptions:', err.message);
+        return [];
+      }
+    },
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: missedCalls = [] } = useQuery({
     queryKey: ["all-missed-calls"],
-    queryFn: () => base44.entities.MissedCall.list("-call_time", 100),
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.MissedCall.list("-call_time", 50),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
+        ]);
+      } catch (err) {
+        console.error('Failed to fetch missed calls:', err.message);
+        return [];
+      }
+    },
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: onboardingProgress = [] } = useQuery({
     queryKey: ["all-onboarding"],
-    queryFn: () => base44.entities.OnboardingProgress.list("-updated_date", 100),
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.OnboardingProgress.list("-updated_date", 50),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
+        ]);
+      } catch (err) {
+        console.error('Failed to fetch onboarding progress:', err.message);
+        return [];
+      }
+    },
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
   });

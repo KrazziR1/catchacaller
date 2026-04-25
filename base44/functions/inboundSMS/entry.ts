@@ -275,10 +275,15 @@ Write the SMS reply text only. No quotes, no labels.`;
 
     // --- Update conversation record ---
     const now = new Date().toISOString();
-    const newMessages = [...(conversation?.messages || [])];
+    let newMessages = [...(conversation?.messages || [])];
 
     newMessages.push({ sender: 'lead', content: inboundText, timestamp: now });
     newMessages.push({ sender: 'ai', content: replyText, timestamp: now, sms_status: smsStatus });
+
+    // Truncate to last 100 messages to prevent unbounded growth
+    if (newMessages.length > 100) {
+      newMessages = newMessages.slice(-100);
+    }
 
     if (conversation) {
       await base44.asServiceRole.entities.Conversation.update(conversation.id, {

@@ -175,12 +175,17 @@ Deno.serve(async (req) => {
     const callTime = now.toISOString();
     const startTime = Date.now();
 
-    // --- Get caller state via Twilio lookup ---
+    // --- Get caller state via Twilio lookup (with timeout) ---
     let callerState = 'UNKNOWN';
     try {
-      const stateRes = await base44.asServiceRole.functions.invoke('getCallerState', {
-        phone_number: callerPhone,
-      });
+      const stateRes = await Promise.race([
+        base44.asServiceRole.functions.invoke('getCallerState', {
+          phone_number: callerPhone,
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('State lookup timeout after 5s')), 5000)
+        )
+      ]);
       callerState = stateRes.data?.state || 'UNKNOWN';
     } catch (e) {
       console.error('State lookup failed - cannot determine compliance requirements:', e.message);
@@ -204,9 +209,22 @@ Deno.serve(async (req) => {
       is_valid: true,
     });
 
-    // --- Check DNC ---
-    const dncCheckRes = await base44.asServiceRole.functions.invoke('checkDNC', { phone_number: callerPhone });
-    if (dncCheckRes.data?.is_dnc) {
+    // --- Check DNC (with timeout) ---
+    let isDNC = false;
+    try {
+      const dncCheckRes = await Promise.race([
+        base44.asServiceRole.functions.invoke('checkDNC', { phone_number: callerPhone }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('DNC check timeout after 5s')), 5000)
+        )
+      ]);
+      isDNC = dncCheckRes.data?.is_dnc || false;
+    } catch (e) {
+      console.warn('DNC check failed (non-critical):', e.message);
+      isDNC = false; // Allow SMS if check fails
+    }
+
+    if (isDNC) {
       console.log(`${callerPhone} is on DNC list, skipping SMS`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
@@ -220,20 +238,35 @@ Deno.serve(async (req) => {
       estimated_value: profile.average_job_value || 500,
     });
 
-    // --- COMPLIANCE: Validate before sending ANY SMS ---
-    const complianceCheck = await base44.asServiceRole.functions.invoke(
-      'validateComplianceBeforeAnyContact',
-      {
-        phone_number: callerPhone,
-        contact_type: 'sms',
-        caller_state: callerState,
-      }
-    );
+    // --- COMPLIANCE: Validate before sending ANY SMS (with timeout) ---
+    let canContact = false;
+    let complianceReason = 'unknown';
+    try {
+      const complianceCheck = await Promise.race([
+        base44.asServiceRole.functions.invoke(
+          'validateComplianceBeforeAnyContact',
+          {
+            phone_number: callerPhone,
+            contact_type: 'sms',
+            caller_state: callerState,
+          }
+        ),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Compliance check timeout after 5s')), 5000)
+        )
+      ]);
+      canContact = complianceCheck.data?.can_contact || false;
+      complianceReason = complianceCheck.data?.reason || 'unknown';
+    } catch (e) {
+      console.error('Compliance check failed:', e.message);
+      // CRITICAL: Block SMS if compliance check fails
+      // Better safe than sorry with regulatory issues
+      console.log(`Blocked SMS to ${callerPhone} - compliance check failure`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
 
-    if (!complianceCheck.data?.can_contact) {
-      console.log(
-        `SMS blocked for ${callerPhone}: ${complianceCheck.data?.reason}`
-      );
+    if (!canContact) {
+      console.log(`SMS blocked for ${callerPhone}: ${complianceReason}`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
@@ -352,7 +385,7 @@ Deno.serve(async (req) => {
               <p><strong>Business:</strong> ${name}</p>
               <p style="margin-top: 16px; padding: 12px; background: #f1f5f9; border-radius: 8px;">
                 An AI SMS was sent within ${Math.round(responseTimeMs / 1000)} seconds.
-                <a href="https://catchacaller.com/conversations" style="color: #3b82f6;">View conversation →</a>
+                <a href="${Deno.env.get('APP_BASE_URL') || 'https://catchacaller.com'}/conversations" style="color: #3b82f6;">View conversation →</a>
               </p>
             </div>
           `,
