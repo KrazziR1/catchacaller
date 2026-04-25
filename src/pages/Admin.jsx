@@ -121,9 +121,9 @@ export default function Admin() {
               <BookOpen className="w-4 h-4" />
               Sales Resources
             </Button>
-            <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+            <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Landing
+              Go to Dashboard
             </Button>
           </div>
         </div>
