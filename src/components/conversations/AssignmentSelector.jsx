@@ -27,11 +27,11 @@ export default function AssignmentSelector({ conversation, profile, onAssignment
   });
 
   const handleAssign = (email) => {
-    assignMutation.mutate(email);
-  };
-
-  const handleUnassign = () => {
-    assignMutation.mutate(null);
+    if (email === "unassigned") {
+      assignMutation.mutate(null);
+    } else {
+      assignMutation.mutate(email);
+    }
   };
 
   return (
@@ -56,21 +56,7 @@ export default function AssignmentSelector({ conversation, profile, onAssignment
             )}
           </SelectContent>
         </Select>
-        {conversation.assigned_to && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleUnassign}
-            disabled={assignMutation.isPending}
-            className="h-9 px-2"
-          >
-            {assignMutation.isPending ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : (
-              "Clear"
-            )}
-          </Button>
-        )}
+
       </div>
     </div>
   );
