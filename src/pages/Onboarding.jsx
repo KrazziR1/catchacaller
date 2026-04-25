@@ -86,10 +86,15 @@ export default function Onboarding() {
 
   const saveMutation = useMutation({
     mutationFn: () => {
+      const dataToSave = {
+        ...form,
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: "2026-04-25",
+      };
       if (profileId) {
-        return base44.entities.BusinessProfile.update(profileId, form);
+        return base44.entities.BusinessProfile.update(profileId, dataToSave);
       }
-      return base44.entities.BusinessProfile.create(form);
+      return base44.entities.BusinessProfile.create(dataToSave);
     },
     onSuccess: (data) => {
       if (!profileId) setProfileId(data.id);

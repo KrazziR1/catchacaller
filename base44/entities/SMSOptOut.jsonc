@@ -1,0 +1,27 @@
+{
+  "name": "SMSOptOut",
+  "type": "object",
+  "properties": {
+    "phone_number": {
+      "type": "string",
+      "description": "The phone number that opted out (E.164 format)"
+    },
+    "opted_out_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the opt-out was recorded"
+    },
+    "opt_out_keyword": {
+      "type": "string",
+      "description": "The keyword they used to opt out (e.g. STOP, CANCEL)"
+    },
+    "business_phone": {
+      "type": "string",
+      "description": "The business number they opted out from (null = global opt-out)"
+    }
+  },
+  "required": [
+    "phone_number",
+    "opted_out_at"
+  ]
+}
