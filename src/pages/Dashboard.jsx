@@ -17,6 +17,7 @@ import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import LeadSourceBreakdown from "@/components/dashboard/LeadSourceBreakdown";
 import SMSMetrics from "@/components/dashboard/SMSMetrics";
 import ExportReports from "@/components/dashboard/ExportReports";
+import LeadScoringDistribution from "@/components/dashboard/LeadScoringDistribution";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -147,6 +148,8 @@ export default function Dashboard() {
       </div>
 
       <SMSMetrics conversations={conversations} />
+
+      <LeadScoringDistribution conversations={conversations} />
 
       <div className="grid lg:grid-cols-2 gap-6 mb-8 mt-8">
         <ConversionChart />
