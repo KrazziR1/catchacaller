@@ -4,7 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BusinessDetailModal({ business, isOpen, onClose }) {
@@ -59,57 +60,94 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">{business.business_name}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Business Info */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Business Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Industry</p>
-                  <Badge variant="outline" className="mt-1 capitalize">
-                    {business.industry}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Timezone</p>
-                  <p className="text-sm font-medium mt-1">{business.timezone}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Business Hours</p>
-                  <p className="text-sm font-medium mt-1">{business.business_hours}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Avg Job Value</p>
-                  <p className="text-sm font-medium mt-1">${business.average_job_value}</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {business.phone_number && (
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-primary" />
-                      <p className="text-sm font-mono">{business.phone_number}</p>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(business.phone_number, "phone")}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {copied === "phone" ? "✓" : <Copy className="w-3 h-3" />}
-                    </button>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="usage">Usage</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Business Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Industry</p>
+                    <Badge variant="outline" className="mt-1 capitalize">
+                      {business.industry}
+                    </Badge>
                   </div>
-                )}
+                  <div>
+                    <p className="text-xs text-muted-foreground">Timezone</p>
+                    <p className="text-sm font-medium mt-1">{business.timezone}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Business Hours</p>
+                    <p className="text-sm font-medium mt-1">{business.business_hours}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Avg Job Value</p>
+                    <p className="text-sm font-medium mt-1">${business.average_job_value}</p>
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-4 space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-xs font-semibold text-muted-foreground">Business Phone Number</p>
+                  </div>
+                  {business.phone_number ? (
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
+                      <p className="text-sm font-mono">{business.phone_number}</p>
+                      <button
+                        onClick={() => copyToClipboard(business.phone_number, "phone")}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {copied === "phone" ? "✓" : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Not provisioned</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <PhoneCall className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-xs font-semibold text-muted-foreground">Twilio Phone SID</p>
+                  </div>
+                  {business.twilio_number_sid ? (
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
+                      <p className="text-sm font-mono text-xs">{business.twilio_number_sid}</p>
+                      <button
+                        onClick={() => copyToClipboard(business.twilio_number_sid, "twilio")}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {copied === "twilio" ? "✓" : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Not configured</p>
+                  )}
+                </div>
+
                 {business.booking_url && (
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-accent" />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      <p className="text-xs font-semibold text-muted-foreground">Booking URL</p>
+                    </div>
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
                       <a
                         href={business.booking_url}
                         target="_blank"
@@ -118,177 +156,227 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                       >
                         {business.booking_url}
                       </a>
+                      <button
+                        onClick={() => copyToClipboard(business.booking_url, "booking")}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {copied === "booking" ? "✓" : <Copy className="w-3 h-3" />}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => copyToClipboard(business.booking_url, "booking")}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {copied === "booking" ? "✓" : <Copy className="w-3 h-3" />}
-                    </button>
                   </div>
                 )}
-                {business.twilio_number_sid && (
-                  <div className="flex items-center justify-between p-2 bg-muted rounded">
-                    <div className="flex items-center gap-2">
-                      <PhoneCall className="w-4 h-4 text-chart-1" />
-                      <p className="text-sm font-mono">{business.twilio_number_sid}</p>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(business.twilio_number_sid, "twilio")}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {copied === "twilio" ? "✓" : <Copy className="w-3 h-3" />}
-                    </button>
-                  </div>
-                )}
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
-                <div>
-                  <p className="text-xs text-muted-foreground">AI Personality</p>
-                  <Badge variant="outline" className="mt-1 capitalize text-xs">
-                    {business.ai_personality || "—"}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Approval Status</p>
-                  {business.requires_manual_review ? (
-                    <Badge className="bg-destructive/20 text-destructive mt-1 text-xs">Pending Review</Badge>
-                  ) : (
-                    <Badge className="bg-accent/20 text-accent mt-1 text-xs">Approved</Badge>
-                  )}
-                </div>
-                </div>
-                </CardContent>
-                </Card>
 
-          {/* Subscription */}
-          {sub && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Subscription</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Plan</p>
-                  <p className="text-sm font-medium mt-1">{sub.plan_name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  <Badge
-                    className={
-                      ["active", "trialing"].includes(sub.status)
-                        ? "bg-accent/20 text-accent mt-1"
-                        : "bg-destructive/20 text-destructive mt-1"
-                    }
-                  >
-                    {sub.status}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Period Ends</p>
-                  <p className="text-sm font-medium mt-1">
-                    {new Date(sub.current_period_end).toLocaleDateString()}
-                  </p>
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
+                  <div>
+                    <p className="text-xs text-muted-foreground">AI Personality</p>
+                    <Badge variant="outline" className="mt-1 capitalize text-xs">
+                      {business.ai_personality || "—"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Approval Status</p>
+                    {business.requires_manual_review ? (
+                      <Badge className="bg-destructive/20 text-destructive mt-1 text-xs">Pending Review</Badge>
+                    ) : (
+                      <Badge className="bg-accent/20 text-accent mt-1 text-xs">Approved</Badge>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Usage Metrics */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Usage</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-primary" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Conversations</p>
-                  <p className="text-lg font-bold">{conversations.length}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-accent" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Active</p>
-                  <p className="text-lg font-bold">{activeCount}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-chart-4" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Booked</p>
-                  <p className="text-lg font-bold">{bookedCount}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Subscription Card */}
+            {sub && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Subscription</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Plan</p>
+                    <p className="text-sm font-medium mt-1">{sub.plan_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge
+                      className={
+                        ["active", "trialing"].includes(sub.status)
+                          ? "bg-accent/20 text-accent mt-1"
+                          : "bg-destructive/20 text-destructive mt-1"
+                      }
+                    >
+                      {sub.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Period Ends</p>
+                    <p className="text-sm font-medium mt-1">
+                      {new Date(sub.current_period_end).toLocaleDateString()}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* SMS Metrics */}
-          {business.phone_number && (
-            <Card>
+            {/* Account Owner */}
+            <Card className="bg-muted/30">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">SMS Compliance</CardTitle>
+                <CardTitle className="text-sm">Account Owner</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Numbers Opted Out</p>
-                    <p className="text-2xl font-bold mt-1">{optOuts.length}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground text-right">
-                    {optOuts.length > 0 && `Last: ${new Date(optOuts[0].opted_out_at).toLocaleDateString()}`}
+                  <p className="text-sm font-mono">{business.created_by}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Signed up {new Date(business.created_date).toLocaleDateString()}
                   </p>
                 </div>
               </CardContent>
             </Card>
-          )}
+          </TabsContent>
 
-          {/* Team Members */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Users className="w-4 h-4" /> Team ({teamMembers.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {teamMembers.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No team members added</p>
-              ) : (
-                <div className="space-y-2">
-                  {teamMembers.map((tm) => (
-                    <div key={tm.id} className="flex items-center justify-between p-2 bg-muted rounded">
-                      <div>
-                        <p className="text-sm font-mono">{tm.user_email}</p>
-                        <Badge variant="outline" className="text-xs mt-1 capitalize">
-                          {tm.role}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(tm.joined_at).toLocaleDateString()}
+          {/* Usage Tab */}
+          <TabsContent value="usage" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Conversation Metrics</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-3 gap-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                    <p className="text-lg font-bold">{conversations.length}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-accent" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Active</p>
+                    <p className="text-lg font-bold">{activeCount}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-chart-4" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Booked</p>
+                    <p className="text-lg font-bold">{bookedCount}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Compliance Tab */}
+          <TabsContent value="compliance" className="space-y-4 mt-4">
+            {business.phone_number && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Shield className="w-4 h-4" /> SMS Compliance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Numbers Opted Out</p>
+                      <p className="text-lg font-bold mt-1">{optOuts.length}</p>
+                    </div>
+                    {optOuts.length > 0 && (
+                      <p className="text-xs text-muted-foreground text-right">
+                        Last: {new Date(optOuts[0].opted_out_at).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Terms & Classification</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div className="flex items-center gap-2">
+                    <Check className={`w-4 h-4 ${business.terms_accepted_at ? "text-accent" : "text-muted-foreground"}`} />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Terms Accepted</p>
+                      <p className="text-sm font-medium mt-1">
+                        {business.terms_accepted_at 
+                          ? new Date(business.terms_accepted_at).toLocaleDateString()
+                          : "Not accepted"
+                        }
                       </p>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Account Owner */}
-          <Card className="bg-muted/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Account Owner</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-mono">{business.created_by}</p>
-                <p className="text-xs text-muted-foreground">
-                  Signed up {new Date(business.created_date).toLocaleDateString()}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                <div className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div className="flex items-center gap-2">
+                    {business.is_high_risk_industry ? (
+                      <AlertCircle className="w-4 h-4 text-destructive" />
+                    ) : (
+                      <Check className="w-4 h-4 text-accent" />
+                    )}
+                    <div>
+                      <p className="text-xs text-muted-foreground">Industry Classification</p>
+                      <Badge 
+                        variant={business.is_high_risk_industry ? "destructive" : "outline"}
+                        className="mt-1 text-xs"
+                      >
+                        {business.is_high_risk_industry ? "High Risk" : "Standard"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {business.consent_acknowledged_at && (
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                    <Check className="w-4 h-4 text-accent" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">SMS Consent Acknowledged</p>
+                      <p className="text-sm font-medium mt-1">
+                        {new Date(business.consent_acknowledged_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Team Tab */}
+          <TabsContent value="team" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Team Members ({teamMembers.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {teamMembers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No team members added</p>
+                ) : (
+                  <div className="space-y-2">
+                    {teamMembers.map((tm) => (
+                      <div key={tm.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                        <div>
+                          <p className="text-sm font-mono">{tm.user_email}</p>
+                          <Badge variant="outline" className="text-xs mt-1 capitalize">
+                            {tm.role}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(tm.joined_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
