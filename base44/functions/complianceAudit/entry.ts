@@ -7,11 +7,20 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     
+    // Admin-only function
     if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+      console.warn(`Unauthorized compliance audit attempt from ${user?.email}`);
+      return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { lookback_days = 30 } = await req.json();
+    const payload = await req.json().catch(() => ({}));
+    let { lookback_days = 30 } = payload;
+    
+    // Validate lookback_days
+    if (typeof lookback_days !== 'number' || lookback_days < 1 || lookback_days > 365) {
+      lookback_days = 30;
+    }
+    
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - lookback_days);
 
@@ -95,16 +104,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.info(`Compliance audit completed by ${user.email}: ${issues.length} issues found in ${lookback_days} days`);
     return Response.json({
       audit_period_days: lookback_days,
       stats,
       total_issues: issues.length,
-      issues: issues.slice(0, 100), // Return top 100 issues
+      issues: issues.slice(0, 100),
       recommendations: generateRecommendations(stats, issues),
     });
   } catch (error) {
-    console.error('Compliance audit error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`Compliance audit error for ${user?.email}:`, error.message);
+    return Response.json({ error: 'Audit failed', details: 'System error during compliance audit' }, { status: 500 });
   }
 });
 

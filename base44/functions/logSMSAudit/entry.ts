@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const payload = await req.json().catch(() => ({}));
     const {
       phone_number,
       business_phone,
@@ -18,29 +19,42 @@ Deno.serve(async (req) => {
       status = 'sent',
       twilio_message_sid,
       consent_type = 'called_business',
-    } = await req.json();
+    } = payload;
 
-    if (!phone_number || !business_phone || !message_body) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    // Input validation
+    if (!phone_number || typeof phone_number !== 'string') {
+      return Response.json({ error: 'Invalid phone_number' }, { status: 400 });
+    }
+    if (!business_phone || typeof business_phone !== 'string') {
+      return Response.json({ error: 'Invalid business_phone' }, { status: 400 });
+    }
+    if (!message_body || typeof message_body !== 'string') {
+      return Response.json({ error: 'Invalid message_body' }, { status: 400 });
     }
 
-    // Log to audit trail
-    const audit = await base44.entities.SMSAuditLog.create({
+    // Truncate message to prevent overflow
+    const truncatedBody = message_body.substring(0, 1600);
+
+    // Log to audit trail - CRITICAL for compliance
+    const audit = await base44.asServiceRole.entities.SMSAuditLog.create({
       phone_number,
       business_phone,
-      message_body,
+      message_body: truncatedBody,
       message_type,
-      conversation_id,
+      conversation_id: conversation_id || null,
       status,
-      twilio_message_sid,
+      twilio_message_sid: twilio_message_sid || null,
       consent_type,
       sent_by: user.email,
       sent_at: new Date().toISOString(),
     });
 
+    console.info(`SMS audit logged: ${phone_number} via ${business_phone} - ${status}`);
     return Response.json({ success: true, audit_id: audit.id });
   } catch (error) {
-    console.error('logSMSAudit error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    // CRITICAL: Log this error but always try to create audit entry
+    console.error(`logSMSAudit error for ${user?.email}:`, error.message);
+    // Return generic error without details
+    return Response.json({ error: 'Audit logging failed' }, { status: 500 });
   }
 });

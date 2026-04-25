@@ -8,17 +8,20 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
+    // Admin-only function
     if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+      console.warn(`Unauthorized account validation attempt from ${user?.email}`);
+      return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { business_profile_id } = await req.json();
+    const payload = await req.json().catch(() => ({}));
+    const { business_profile_id } = payload;
 
     const blockers = [];
     const warnings = [];
 
-    if (!business_profile_id) {
-      return Response.json({ error: 'business_profile_id required' }, { status: 400 });
+    if (!business_profile_id || typeof business_profile_id !== 'string') {
+      return Response.json({ error: 'Invalid business_profile_id' }, { status: 400 });
     }
 
     // Fetch business profile
@@ -73,6 +76,7 @@ Deno.serve(async (req) => {
       warnings.push('Provisioning fee not verified — may indicate payment issue');
     }
 
+    console.info(`Account validation for ${profile.business_name}: ${blockers.length} blockers, ${warnings.length} warnings`);
     return Response.json({
       safe_to_activate: blockers.length === 0,
       profile_name: profile.business_name,
@@ -87,10 +91,10 @@ Deno.serve(async (req) => {
         : 'Account ready for activation',
     });
   } catch (error) {
-    console.error('validateAccountForActivation error:', error);
+    console.error(`Account validation error for admin ${user?.email}:`, error.message);
     return Response.json({
       safe_to_activate: false,
-      blockers: ['Validation service error: ' + error.message],
+      blockers: ['Validation service error'],
       warnings: [],
     }, { status: 500 });
   }
