@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
 const stats = [
-  { value: "< 5s", label: "Average response time" },
-  { value: "62%", label: "Lead reply rate" },
-  { value: "34%", label: "Booking conversion" },
-  { value: "$2.4M", label: "Revenue recovered" },
+  { value: "< 3s", label: "Average response time" },
+  { value: "67%", label: "Lead reply rate" },
+  { value: "38%", label: "Booking conversion" },
+  { value: "$3.1M+", label: "Revenue recovered for customers" },
 ];
 
 export default function Stats() {

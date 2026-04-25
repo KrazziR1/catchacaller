@@ -16,21 +16,25 @@ export default function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm font-medium text-primary">AI-Powered Call Recovery</span>
+          <div className="flex flex-wrap items-center gap-3 mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span className="text-sm font-medium text-primary">AI-Powered Call Recovery</span>
+            </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
+              <span className="text-sm font-medium text-accent">⚡ Live in 15 minutes</span>
+            </div>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
-            Turn missed calls into{" "}
+            Never lose another{" "}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              booked revenue
+              missed call lead
             </span>
           </h1>
           
           <p className="mt-6 text-lg lg:text-xl text-muted-foreground max-w-xl leading-relaxed">
-            Every unanswered call is lost revenue. Our AI responds in seconds, 
-            engages leads with human-like conversations, and books appointments—automatically.
+            Your AI employee responds in under 3 seconds, holds real SMS conversations, and books appointments — 24/7, even while you're on another job.
           </p>
           
           <div className="flex flex-wrap gap-4 mt-10">
@@ -39,26 +43,26 @@ export default function HeroSection() {
               className="h-14 px-8 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
               onClick={() => base44.auth.redirectToLogin("/onboarding")}
             >
-              Start Free Trial
+              Start Free — 7 Days
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-base font-semibold rounded-xl" onClick={() => document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth' })}>
-              Watch Demo
+              See It In Action
             </Button>
           </div>
           
           <div className="flex items-center gap-6 mt-10 text-sm text-muted-foreground">
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              7-day free trial
+              No credit card needed
             </span>
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              No credit card
+              Setup in 15 minutes
             </span>
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              Live in 15 min
+              Cancel anytime
             </span>
           </div>
         </motion.div>
