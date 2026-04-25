@@ -30,9 +30,15 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-3">4. SMS Compliance</h2>
+            <h2 className="text-xl font-bold mb-3">4. SMS Compliance & Your Responsibility</h2>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              You agree to use our SMS features in compliance with all applicable laws, including the Telephone Consumer Protection Act (TCPA), CAN-SPAM Act, and all carrier guidelines. <strong>You, as the business customer, are solely responsible for ensuring that your use of the Service — including any SMS messages sent to your callers — complies with all applicable laws and regulations in your jurisdiction.</strong>
+            </p>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              By enabling automated SMS responses on your account, you represent and warrant that: (a) your business has a legitimate basis to contact individuals who have called your phone number; (b) you will honor all opt-out requests immediately; and (c) you will not use the Service to send messages to individuals who have previously opted out.
+            </p>
             <p className="text-muted-foreground leading-relaxed">
-              You agree to use our SMS features in compliance with all applicable laws, including the Telephone Consumer Protection Act (TCPA) and carrier guidelines. You are responsible for ensuring that your use of the Service complies with all applicable regulations in your jurisdiction.
+              CatchACaller acts solely as a technology platform and messaging service provider. We are not responsible for the content of messages or the legal compliance of your specific use case. You agree to indemnify and hold CatchACaller harmless from any claims, fines, or damages arising from your non-compliance with SMS regulations.
             </p>
           </section>
 
@@ -68,14 +74,24 @@ export default function Terms() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-3">9. Changes to Terms</h2>
+            <h2 className="text-xl font-bold mb-3">9. Governing Law & Dispute Resolution</h2>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              These Terms are governed by the laws of the State of Delaware, without regard to conflict of law principles.
+            </p>
             <p className="text-muted-foreground leading-relaxed">
-              We may update these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.
+              Any dispute arising from these Terms or your use of the Service shall be resolved by binding arbitration under the rules of the American Arbitration Association (AAA), conducted in English. You waive your right to participate in a class action lawsuit or class-wide arbitration. Small claims court actions are exempted from this arbitration requirement.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-3">10. Contact</h2>
+            <h2 className="text-xl font-bold mb-3">10. Changes to Terms</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              We may update these Terms at any time. We will notify you of material changes by email or in-app notice. Continued use of the Service after changes constitutes acceptance of the new Terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold mb-3">11. Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
               For questions about these Terms, contact us at: <a href="mailto:contact@catchacaller.com" className="text-primary hover:underline">contact@catchacaller.com</a>
             </p>

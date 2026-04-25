@@ -61,9 +61,13 @@ Deno.serve(async (req) => {
         .replace("{caller_name}", "")
         .replace("{booking_url}", profile?.booking_url || "")
         .trim();
+      // TCPA: ensure every outbound message contains opt-out instructions
+      if (!messageBody.toLowerCase().includes("stop")) {
+        messageBody += " Reply STOP to opt out.";
+      }
     } else {
       const businessName = profile?.business_name || "our team";
-      messageBody = `Hi! Sorry we missed your call from ${businessName}. We want to help — what can we assist you with today?`;
+      messageBody = `Hi! This is an automated message from ${businessName}. We missed your call and want to help — what can we assist you with today? Reply STOP to opt out.`;
     }
 
     // Send the SMS via Twilio

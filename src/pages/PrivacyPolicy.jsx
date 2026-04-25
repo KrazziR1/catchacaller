@@ -37,15 +37,25 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-xl font-bold mb-3">4. SMS Messaging & Consent</h2>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              SMS messages are sent only to individuals who have previously initiated contact by calling a business that uses CatchACaller. These messages are sent on behalf of our business customers (not by CatchACaller directly) as a follow-up to a missed call. Each automated message identifies the sending business and includes opt-out instructions ("Reply STOP to opt out").
+            </p>
             <p className="text-muted-foreground leading-relaxed">
-              SMS messages are sent only to individuals who have previously initiated contact by calling a business that uses CatchACaller. By calling a business that uses our service, callers provide implicit consent to receive a follow-up SMS. Every message includes an opt-out option (reply STOP to unsubscribe). We comply fully with TCPA and carrier regulations.
+              Our business customers are responsible for ensuring they have a lawful basis to send SMS messages to their callers. Opt-out requests are honored immediately and permanently — once a caller opts out, no further messages will be sent from that business's number. We comply with the Telephone Consumer Protection Act (TCPA) and all applicable carrier regulations.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold mb-3">4a. CCPA & GDPR Rights</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              California residents have the right to know what personal data we collect, request deletion of their data, and opt out of any sale of personal data (we do not sell data). EU/EEA residents have additional rights under GDPR, including data portability and the right to object to processing. To exercise any of these rights, contact us at <a href="mailto:contact@catchacaller.com" className="text-primary hover:underline">contact@catchacaller.com</a>. We will respond within 30 days.
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-bold mb-3">5. Data Sharing</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We do not sell your data. We share data only with trusted service providers necessary to operate the platform (e.g., Twilio for SMS delivery, OpenAI for AI responses). All third-party providers are bound by data processing agreements.
+              We do not sell your data. We share data only with trusted service providers necessary to operate the platform (e.g., Twilio for SMS delivery, AI providers for generating responses). All third-party providers are bound by data processing agreements and are prohibited from using your data for their own purposes.
             </p>
           </section>
 

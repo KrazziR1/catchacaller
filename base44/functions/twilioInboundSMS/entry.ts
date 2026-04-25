@@ -93,7 +93,12 @@ ${profile?.booking_url ? `If they seem ready to book, include this link: ${profi
 Tone: ${profile?.ai_personality || "friendly"}. Do NOT use emojis excessively. Keep it concise.`,
     });
 
-    const aiReply = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.data ?? aiResponse?.message ?? '');
+    let aiReply = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.data ?? aiResponse?.message ?? '');
+    // TCPA: add opt-out reminder on first AI reply in a conversation
+    const isFirstReply = messages.filter(m => m.sender === "ai").length === 1;
+    if (isFirstReply && !aiReply.toLowerCase().includes("stop")) {
+      aiReply += " Reply STOP to opt out.";
+    }
 
     // Append AI reply
     messages.push({
