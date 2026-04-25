@@ -24,6 +24,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Prevent duplicate provisioning — check if user already has a provisioned number
+    const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: user.email });
+    const profile = profiles[0];
+
+    if (profile?.twilio_number_sid) {
+      return Response.json({ 
+        error: "You already have a provisioned number. Use Settings to change it." 
+      }, { status: 400 });
+    }
+
     const { area_code } = await req.json().catch(() => ({}));
 
     // Derive the base URL from the incoming request host
@@ -61,12 +71,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Failed to purchase number", details: purchaseData }, { status: 500 });
     }
 
-    // Step 3: Save to BusinessProfile
-    const profiles = await base44.entities.BusinessProfile.filter({ created_by: user.email });
-    const profile = profiles[0];
-
+    // Step 3: Save to BusinessProfile (we already fetched profile earlier)
     if (profile) {
-      await base44.entities.BusinessProfile.update(profile.id, {
+      await base44.asServiceRole.entities.BusinessProfile.update(profile.id, {
         phone_number: purchaseData.phone_number,
         twilio_number_sid: purchaseData.sid,
       });
