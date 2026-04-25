@@ -118,37 +118,14 @@ export default function Dashboard() {
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Admin bypass: show admin panel instead of user dashboard
-  if (user?.role === 'admin' && !profileLoading && profiles.length === 0) {
-    return (
-      <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
-        <div className="mb-8 mt-6">
-          <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
-          <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <p className="text-sm text-muted-foreground">Total Businesses</p>
-            <p className="text-3xl font-bold mt-2">0</p>
-          </div>
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <p className="text-sm text-muted-foreground">Active Subscriptions</p>
-            <p className="text-3xl font-bold mt-2">0</p>
-          </div>
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <p className="text-sm text-muted-foreground">Monthly Revenue</p>
-            <p className="text-3xl font-bold mt-2">$0</p>
-          </div>
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <p className="text-sm text-muted-foreground">Total Calls</p>
-            <p className="text-3xl font-bold mt-2">0</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Admin redirect: navigate admins to /admin page on mount
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      navigate("/admin");
+    }
+  }, [user?.role, navigate]);
 
-  // Block rendering while loading if not admin
+  // Block rendering while loading
   if (!user || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -157,28 +134,24 @@ export default function Dashboard() {
     );
   }
 
-  // Redirect non-admins without profile to onboarding
+  // If no profile after loading, will redirect via useEffect
   if (profiles.length === 0) {
-    navigate("/onboarding");
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
   }
-
-
-
-  // Admin accounts bypass subscription checks
-  const isAdmin = user?.role === 'admin';
   
-  if (!isAdmin) {
-    // Check if trial/subscription is expired or invalid
-    const trialExpired = subscription && subscription.trial_end_date && 
-      new Date(subscription.trial_end_date) < new Date() &&
-      subscription.status === 'trial';
+  // Check subscription status for regular users
+  const trialExpired = subscription && subscription.trial_end_date && 
+    new Date(subscription.trial_end_date) < new Date() &&
+    subscription.status === 'trial';
 
-    const isSubscriptionBlocked = (subscription && !["active", "trial"].includes(subscription.status)) || trialExpired;
+  const isSubscriptionBlocked = (subscription && !["active", "trial"].includes(subscription.status)) || trialExpired;
 
-    if (isSubscriptionBlocked) {
-      return <TrialExpiredPaywall />;
-    }
+  if (isSubscriptionBlocked) {
+    return <TrialExpiredPaywall />;
   }
 
   const totalCalls = calls.length;

@@ -21,20 +21,38 @@ export default function Admin() {
   useEffect(() => {
     base44.auth.me().then((u) => {
       setUser(u);
-      if (u && u.role !== "admin") {
+      if (!u || u.role !== "admin") {
         navigate("/dashboard");
       }
     }).catch(() => {
-      // If auth check fails, redirect to home
-      navigate("/");
+      navigate("/dashboard");
     });
   }, [navigate]);
 
-  // Placeholder data
-  const businesses = [];
-  const subscriptions = [];
-  const missedCalls = [];
-  const onboardingProgress = [];
+  // Fetch actual data
+  const { data: businesses = [] } = useQuery({
+    queryKey: ["all-businesses"],
+    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 500),
+    enabled: !!user && user.role === "admin",
+  });
+
+  const { data: subscriptions = [] } = useQuery({
+    queryKey: ["all-subscriptions"],
+    queryFn: () => base44.entities.Subscription.list("-created_date", 500),
+    enabled: !!user && user.role === "admin",
+  });
+
+  const { data: missedCalls = [] } = useQuery({
+    queryKey: ["all-missed-calls"],
+    queryFn: () => base44.entities.MissedCall.list("-call_time", 500),
+    enabled: !!user && user.role === "admin",
+  });
+
+  const { data: onboardingProgress = [] } = useQuery({
+    queryKey: ["all-onboarding"],
+    queryFn: () => base44.entities.OnboardingProgress.list("-updated_date", 500),
+    enabled: !!user && user.role === "admin",
+  });
 
   // Don't wait for user, show page immediately
   if (!user) {

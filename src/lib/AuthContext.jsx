@@ -22,38 +22,17 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
-      
-      // Demo mode: skip app settings, enable demo user immediately
+
+      // Load app public settings
       setAppPublicSettings({ id: appParams.appId });
       setIsLoadingPublicSettings(false);
-      
-      // Check if user auth works, else fall back to demo
-      if (appParams.token) {
-        await checkUserAuth();
-      } else {
-        // No token, use demo mode
-        const demoUser = {
-          email: 'demo@catchacaller.com',
-          full_name: 'Demo Admin',
-          role: 'admin'
-        };
-        setUser(demoUser);
-        setIsAuthenticated(true);
-        setIsLoadingAuth(false);
-        setAuthChecked(true);
-      }
+
+      // Check user auth
+      await checkUserAuth();
     } catch (error) {
       console.error('App state error:', error);
-      // Fallback to demo
-      const demoUser = {
-        email: 'demo@catchacaller.com',
-        full_name: 'Demo Admin',
-        role: 'admin'
-      };
-      setUser(demoUser);
-      setIsAuthenticated(true);
       setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
+      setAuthError({ type: 'auth_required' });
       setAuthChecked(true);
     }
   };
@@ -67,17 +46,9 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
-      console.warn('User auth check failed, enabling demo mode:', error?.message);
+      console.warn('User auth check failed:', error?.message);
       setIsLoadingAuth(false);
-      
-      // Enable demo mode for development/testing
-      const demoUser = {
-        email: 'demo@catchacaller.com',
-        full_name: 'Demo Admin',
-        role: 'admin'
-      };
-      setUser(demoUser);
-      setIsAuthenticated(true);
+      setAuthError({ type: 'auth_required' });
       setAuthChecked(true);
     }
   };
