@@ -15,17 +15,38 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
   useEffect(() => {
-    // Check if we already have an active session from another tab
-    const hasSessionToken = sessionStorage.getItem('base44_auth_checked') === 'true';
+    // Check if we have a persistent user session from localStorage (survives browser close)
+    const cachedUser = localStorage.getItem('base44_user_cached');
+    const cachedTimestamp = localStorage.getItem('base44_user_cache_time');
     const hasStoredToken = localStorage.getItem('base44_access_token') || localStorage.getItem('token');
-    
-    if (hasSessionToken && hasStoredToken) {
-      // Token exists from another tab, skip full check and go straight to user auth
-      checkUserAuth();
-    } else {
-      // Full app state check
-      checkAppState();
+
+    // If cached user is recent (within 24 hours) and token exists, use cached user
+    if (cachedUser && hasStoredToken && cachedTimestamp) {
+      const cacheAge = Date.now() - parseInt(cachedTimestamp);
+      if (cacheAge < 24 * 3600 * 1000) { // 24 hour cache
+        try {
+          const user = JSON.parse(cachedUser);
+          setUser(user);
+          setIsAuthenticated(true);
+          setIsLoadingAuth(false);
+          setAuthChecked(true);
+          // Verify token is still valid in background (non-blocking)
+          checkUserAuth().catch(() => {
+            // If background check fails, clear cache and require re-login
+            localStorage.removeItem('base44_user_cached');
+            localStorage.removeItem('base44_user_cache_time');
+            setUser(null);
+            setIsAuthenticated(false);
+          });
+          return;
+        } catch (e) {
+          localStorage.removeItem('base44_user_cached');
+        }
+      }
     }
+
+    // No valid cache, do full auth check
+    checkAppState();
   }, []);
 
   const checkAppState = async () => {
@@ -58,24 +79,16 @@ export const AuthProvider = ({ children }) => {
       ]);
       setUser(currentUser);
       setIsAuthenticated(true);
-      // Persist user data for session persistence
-      sessionStorage.setItem('base44_user_cached', JSON.stringify(currentUser));
-      sessionStorage.setItem('base44_auth_checked', 'true');
+      // Persist user data to localStorage (survives browser close)
+      localStorage.setItem('base44_user_cached', JSON.stringify(currentUser));
+      localStorage.setItem('base44_user_cache_time', Date.now().toString());
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
       console.warn('User auth check failed:', error?.message);
-      // Check if we have a cached user from a previous session
-      const cachedUser = sessionStorage.getItem('base44_user_cached');
-      if (cachedUser) {
-        try {
-          const user = JSON.parse(cachedUser);
-          setUser(user);
-          setIsAuthenticated(true);
-        } catch {
-          sessionStorage.removeItem('base44_user_cached');
-        }
-      }
+      // Cache is already checked in useEffect, if we're here it means token is invalid
+      localStorage.removeItem('base44_user_cached');
+      localStorage.removeItem('base44_user_cache_time');
       setIsLoadingAuth(false);
       setAuthError({ type: 'auth_required' });
       setAuthChecked(true);

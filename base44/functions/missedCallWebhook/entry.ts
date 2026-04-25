@@ -1,6 +1,33 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import twilio from 'npm:twilio';
 
+// In-memory rate limiter (5 SMS per hour per phone number)
+const smsRateLimits = new Map();
+
+function checkSMSRateLimit(phoneNumber) {
+  const now = Date.now();
+  const oneHour = 3600000;
+
+  if (!smsRateLimits.has(phoneNumber)) {
+    smsRateLimits.set(phoneNumber, []);
+  }
+
+  const timestamps = smsRateLimits.get(phoneNumber);
+  const recent = timestamps.filter(ts => now - ts < oneHour);
+
+  if (recent.length >= 5) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetIn: Math.ceil((recent[0] + oneHour - now) / 1000),
+    };
+  }
+
+  recent.push(now);
+  smsRateLimits.set(phoneNumber, recent);
+  return { allowed: true, remaining: 5 - recent.length };
+}
+
 async function parseFormBody(req) {
   const text = await req.text();
   const params = new URLSearchParams(text);
@@ -85,6 +112,32 @@ Deno.serve(async (req) => {
     }
 
     const base44 = createClientFromRequest(req);
+
+    // --- Idempotency: Check if we already processed this call (within 60 seconds) ---
+    // Twilio retries webhooks if they timeout. Deduplicate based on CallSid + timestamp
+    const idempotencyKey = body.CallSid || `${From}-${callTime.substring(0, 19)}`;
+    const dedupeWindow = 60000; // 60 second window
+    
+    // Simple in-process deduplication (production: use Redis)
+    const lastProcessed = await base44.asServiceRole.entities.MissedCall.filter({
+      caller_phone: callerPhone,
+      call_time: {
+        $gte: new Date(Date.now() - dedupeWindow).toISOString()
+      }
+    }).then(calls => calls[0]);
+
+    if (lastProcessed && lastProcessed.caller_phone === callerPhone && 
+        Math.abs(new Date(lastProcessed.call_time) - new Date(callTime)) < 5000) {
+      console.log(`Duplicate call detected for ${callerPhone}, skipping`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // --- Rate limiting: 5 SMS/hour per phone ---
+    const rateLimitCheck = checkSMSRateLimit(callerPhone);
+    if (!rateLimitCheck.allowed) {
+      console.warn(`Rate limit exceeded for ${callerPhone}`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
 
     // --- Check opt-out ---
     const optOuts = await base44.asServiceRole.entities.SMSOptOut.filter({ phone_number: callerPhone });

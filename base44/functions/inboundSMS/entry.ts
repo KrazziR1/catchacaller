@@ -1,6 +1,33 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import twilio from 'npm:twilio';
 
+// In-memory rate limiter (5 SMS per hour per phone number)
+const smsRateLimits = new Map();
+
+function checkSMSRateLimit(phoneNumber) {
+  const now = Date.now();
+  const oneHour = 3600000;
+
+  if (!smsRateLimits.has(phoneNumber)) {
+    smsRateLimits.set(phoneNumber, []);
+  }
+
+  const timestamps = smsRateLimits.get(phoneNumber);
+  const recent = timestamps.filter(ts => now - ts < oneHour);
+
+  if (recent.length >= 5) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetIn: Math.ceil((recent[0] + oneHour - now) / 1000),
+    };
+  }
+
+  recent.push(now);
+  smsRateLimits.set(phoneNumber, recent);
+  return { allowed: true, remaining: 5 - recent.length };
+}
+
 async function parseFormBody(req) {
   const text = await req.text();
   const params = new URLSearchParams(text);
@@ -60,11 +87,25 @@ Deno.serve(async (req) => {
     let inboundText = Body.trim();
     const callerPhone = normalizePhone(From);
     const toPhone = normalizePhone(To); // The business's Twilio number that received the SMS
+    const messageSid = body.MessageSid;
 
     // Sanitize input to prevent prompt injection
     inboundText = inboundText.replace(/[<>{}]/g, '').slice(0, 1000);
 
     const base44 = createClientFromRequest(req);
+
+    // --- Idempotency: Check if we already processed this SMS ---
+    // Deduplicate by MessageSid (Twilio's unique identifier for SMS)
+    if (messageSid) {
+      const existingMessages = await base44.asServiceRole.entities.SMSAuditLog.filter({
+        twilio_message_sid: messageSid
+      }).catch(() => []);
+      
+      if (existingMessages.length > 0) {
+        console.log(`Duplicate SMS detected (SID: ${messageSid}), skipping`);
+        return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+      }
+    }
 
     // --- Opt-out handling ---
     const optOutKeywords = ['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'];
@@ -100,6 +141,13 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.SMSOptOut.delete(record.id);
       }
       // Continue to process conversation normally (fall through)
+    }
+
+    // --- Rate limiting: 5 SMS/hour per phone ---
+    const rateLimitCheck = checkSMSRateLimit(callerPhone);
+    if (!rateLimitCheck.allowed) {
+      console.warn(`Rate limit exceeded for ${callerPhone}`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
     // --- Check if opted out ---
