@@ -4,6 +4,8 @@ import Stats from "@/components/landing/Stats";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Features from "@/components/landing/Features";
 import DemoSection from "@/components/landing/DemoSection";
+import DemoCTA from "@/components/landing/DemoCTA";
+import IndustryUseCases from "@/components/landing/IndustryUseCases";
 import IntegrationsSection from "@/components/landing/IntegrationsSection";
 import Pricing from "@/components/landing/Pricing";
 import FAQSection from "@/components/landing/FAQSection";
@@ -24,6 +26,8 @@ export default function Landing() {
         <Features />
       </div>
       <DemoSection />
+      <DemoCTA />
+      <IndustryUseCases />
       <IntegrationsSection />
       <div id="pricing">
         <Pricing />
