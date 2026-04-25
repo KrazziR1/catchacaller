@@ -23,6 +23,12 @@ Deno.serve(async (req) => {
     const body = await parseFormBody(req);
     const { CallStatus, From, To, CallerName } = body;
 
+    // Validate required fields
+    if (!CallStatus || !From || !To) {
+      console.error('Invalid webhook payload: missing required fields');
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
     console.log(`Call event: ${CallStatus} from ${From} to ${To}`);
 
     // Only process missed/unanswered calls
@@ -35,6 +41,13 @@ Deno.serve(async (req) => {
 
     const callerPhone = normalizePhone(From);
     const toPhone = normalizePhone(To);
+    
+    // Validate phone normalization
+    if (!callerPhone || !toPhone) {
+      console.error('Invalid phone format: From or To could not be normalized');
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
     const base44 = createClientFromRequest(req);
 
     // --- Check opt-out ---
@@ -238,13 +251,14 @@ Deno.serve(async (req) => {
       console.error('Email notification failed (non-critical):', emailErr.message);
     }
 
-    console.log(`✓ Missed call processed for ${callerPhone} → ${toPhone} (${name}), SMS sent in ${responseTimeMs}ms`);
+    console.info(`✓ Missed call processed for ${callerPhone} → ${toPhone} (${name}), SMS sent in ${responseTimeMs}ms`);
 
     return new Response('<Response></Response>', {
       headers: { 'Content-Type': 'text/xml' },
     });
   } catch (error) {
-    console.error('missedCallWebhook error:', error);
+    console.error(`missedCallWebhook error:`, error.message);
+    // Always return success to Twilio to prevent retries on validation errors
     return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
   }
 });

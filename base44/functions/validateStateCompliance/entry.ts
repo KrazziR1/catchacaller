@@ -34,13 +34,14 @@ const STATE_RULES = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { caller_state, phone_number } = await req.json();
+    const payload = await req.json().catch(() => ({}));
+    const { caller_state, phone_number } = payload;
 
-    if (!caller_state || !phone_number) {
-      return Response.json(
-        { error: 'caller_state and phone_number required' },
-        { status: 400 }
-      );
+    if (!caller_state || typeof caller_state !== 'string') {
+      return Response.json({ error: 'Invalid caller_state' }, { status: 400 });
+    }
+    if (!phone_number || typeof phone_number !== 'string') {
+      return Response.json({ error: 'Invalid phone_number' }, { status: 400 });
     }
 
     const stateCode = caller_state.toUpperCase();
@@ -72,6 +73,7 @@ Deno.serve(async (req) => {
 
     const is_compliant = !rules.requires_explicit_consent ? !ebs_expired : has_valid_consent;
 
+    console.info(`State compliance check: ${stateCode} - compliant: ${is_compliant}`);
     return Response.json({
       state: stateCode,
       state_name: rules.name || stateCode,
@@ -81,6 +83,7 @@ Deno.serve(async (req) => {
       has_valid_consent,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`State compliance error for ${phone_number}:`, error.message);
+    return Response.json({ error: 'Compliance check failed' }, { status: 500 });
   }
 });

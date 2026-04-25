@@ -4,10 +4,15 @@ import twilio from 'npm:twilio';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const payload = await req.json();
+    const payload = await req.json().catch(() => ({}));
     
     const { conversation_id, caller_phone, caller_name } = payload;
     
+    // Validate required fields
+    if (!caller_phone || typeof caller_phone !== 'string') {
+      return Response.json({ error: 'Invalid caller_phone' }, { status: 400 });
+    }
+
     // Get business profile for confirmation message
     const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
     const profile = profiles[0];
@@ -20,6 +25,11 @@ Deno.serve(async (req) => {
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const fromPhone = Deno.env.get('TWILIO_PHONE_NUMBER');
     
+    if (!accountSid || !authToken || !fromPhone) {
+      console.error('Missing Twilio credentials');
+      return Response.json({ error: 'Configuration error' }, { status: 500 });
+    }
+    
     const client = twilio(accountSid, authToken);
 
     // Validate full consent before sending
@@ -28,6 +38,7 @@ Deno.serve(async (req) => {
     });
 
     if (!consentCheck.data?.can_send) {
+      console.info(`Booking confirmation blocked for ${caller_phone}: ${consentCheck.data?.reason}`);
       return Response.json({
         status: 'skipped',
         reason: consentCheck.data?.reason || 'consent_invalid',
@@ -56,10 +67,10 @@ Deno.serve(async (req) => {
       sent_by: 'system',
     });
 
-    console.log(`✓ SMS sent to ${caller_phone}`);
+    console.info(`Booking confirmation sent to ${caller_phone}`);
     return Response.json({ status: 'sent', phone: caller_phone });
   } catch (error) {
-    console.error('SMS send error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`Booking confirmation error for ${caller_phone}:`, error.message);
+    return Response.json({ error: 'Failed to send confirmation' }, { status: 500 });
   }
 });

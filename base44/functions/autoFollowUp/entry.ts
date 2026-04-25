@@ -77,38 +77,57 @@ Deno.serve(async (req) => {
       console.log(`Profile ${profile.business_name}: ${toFollowUp.length} conversations eligible for follow-up`);
 
       for (const conv of toFollowUp) {
-        const callerName = conv.caller_name || 'there';
-        const bookingLine = profile.booking_url ? ` Book here: ${profile.booking_url}` : '';
+         try {
+           const callerName = conv.caller_name || 'there';
+           const bookingLine = profile.booking_url ? ` Book here: ${profile.booking_url}` : '';
 
-        const body = profile.ai_personality === 'professional'
-          ? `Hi ${callerName}, just following up on your missed call to ${profile.business_name}. We'd love to help — what can we assist you with?${bookingLine} Reply STOP to opt out.`
-          : `Hey ${callerName}! 👋 Just checking in — you called ${profile.business_name} yesterday and we don't want you to miss out. Still need help?${bookingLine} Reply STOP to opt out.`;
+           const body = profile.ai_personality === 'professional'
+             ? `Hi ${callerName}, just following up on your missed call to ${profile.business_name}. We'd love to help — what can we assist you with?${bookingLine} Reply STOP to opt out.`
+             : `Hey ${callerName}! 👋 Just checking in — you called ${profile.business_name} yesterday and we don't want you to miss out. Still need help?${bookingLine} Reply STOP to opt out.`;
 
-        await client.messages.create({ body, from: fromPhone, to: conv.caller_phone });
+           const msg = await client.messages.create({ body, from: fromPhone, to: conv.caller_phone });
 
-        const messages = [...(conv.messages || [])];
-        messages.push({
-          sender: 'ai',
-          content: body,
-          timestamp: new Date().toISOString(),
-          sms_status: 'sent',
-        });
+           const messages = [...(conv.messages || [])];
+           messages.push({
+             sender: 'ai',
+             content: body,
+             timestamp: new Date().toISOString(),
+             sms_status: 'sent',
+           });
 
-        await base44.asServiceRole.entities.Conversation.update(conv.id, {
-          messages,
-          follow_up_count: (conv.follow_up_count || 0) + 1,
-          last_message_at: new Date().toISOString(),
-        });
+           await base44.asServiceRole.entities.Conversation.update(conv.id, {
+             messages,
+             follow_up_count: (conv.follow_up_count || 0) + 1,
+             last_message_at: new Date().toISOString(),
+           });
 
-        results.push({ conversation_id: conv.id, phone: conv.caller_phone, business: profile.business_name, status: 'sent' });
-        totalSent++;
-        console.log(`✓ Follow-up sent to ${conv.caller_phone} for ${profile.business_name}`);
-      }
+           // Log audit trail
+           await base44.asServiceRole.functions.invoke('logSMSAudit', {
+             phone_number: conv.caller_phone,
+             business_phone: fromPhone,
+             message_body: body,
+             message_type: 'follow_up',
+             conversation_id: conv.id,
+             status: 'sent',
+             twilio_message_sid: msg.sid,
+             consent_type: 'called_business',
+             sent_by: 'auto_followup',
+           }).catch(e => console.warn('Audit log failed for follow-up:', e.message));
+
+           results.push({ conversation_id: conv.id, phone: conv.caller_phone, business: profile.business_name, status: 'sent' });
+           totalSent++;
+           console.log(`✓ Follow-up sent to ${conv.caller_phone} for ${profile.business_name}`);
+         } catch (err) {
+           console.error(`Failed to send follow-up for ${conv.id}:`, err.message);
+           results.push({ conversation_id: conv.id, phone: conv.caller_phone, business: profile.business_name, status: 'error', error: err.message });
+         }
+       }
     }
 
+    console.info(`autoFollowUp processed ${activeProfiles.length} profiles, sent ${totalSent} follow-ups`);
     return Response.json({ processed: totalSent, results });
   } catch (error) {
-    console.error('autoFollowUp error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`autoFollowUp error:`, error.message);
+    return Response.json({ error: 'Follow-up job failed' }, { status: 500 });
   }
 });

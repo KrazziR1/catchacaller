@@ -6,11 +6,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { phone_number, contact_type, caller_state } = await req.json();
+    const payload = await req.json().catch(() => ({}));
+    const { phone_number, contact_type, caller_state } = payload;
     // contact_type: 'sms' | 'email' | 'call'
 
-    if (!phone_number || !contact_type) {
-      return Response.json({ error: 'phone_number and contact_type required' }, { status: 400 });
+    if (!phone_number || typeof phone_number !== 'string') {
+      return Response.json({ error: 'Invalid phone_number' }, { status: 400 });
+    }
+    if (!contact_type || !['sms', 'email', 'call'].includes(contact_type)) {
+      return Response.json({ error: 'Invalid contact_type' }, { status: 400 });
     }
 
     // 1. UNIVERSAL: Check for global opt-out (STOP)
@@ -107,12 +111,11 @@ Deno.serve(async (req) => {
       },
     });
   } catch (error) {
-    console.error('validateComplianceBeforeAnyContact error:', error);
-    // On error, default to FAIL (safer than permitting)
+    console.error('validateComplianceBeforeAnyContact error:', error.message);
+    // On error, default to FAIL (safer than permitting) - don't expose error details
     return Response.json({
       can_contact: false,
       reason: 'validation_error',
-      error: error.message,
     }, { status: 500 });
   }
 });

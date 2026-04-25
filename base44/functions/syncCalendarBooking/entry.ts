@@ -3,19 +3,30 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { email, name, phone, scheduled_time, service_type, calendar_platform } = await req.json();
-
-    if (!email || !phone || !scheduled_time) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    const user = await base44.auth.me();
+    
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get business profile
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
-    const profile = profiles[0];
+    const payload = await req.json().catch(() => ({}));
+    const { email, name, phone, scheduled_time, service_type, calendar_platform } = payload;
 
-    if (!profile) {
+    // Validate required fields
+    if (!phone || !scheduled_time) {
+      return Response.json({ error: 'Missing required fields: phone, scheduled_time' }, { status: 400 });
+    }
+
+    if (typeof phone !== 'string' || !scheduled_time.match(/^\d{4}-\d{2}-\d{2}T/)) {
+      return Response.json({ error: 'Invalid phone or scheduled_time format' }, { status: 400 });
+    }
+
+    // Get user's business profile
+    const profiles = await base44.entities.BusinessProfile.filter({ created_by: user.email });
+    if (profiles.length === 0) {
       return Response.json({ error: 'Business profile not found' }, { status: 404 });
     }
+    const profile = profiles[0];
 
     // Create calendar booking record
     const booking = await base44.asServiceRole.entities.CalendarBooking.create({
@@ -71,9 +82,10 @@ Deno.serve(async (req) => {
       console.warn('CRM sync failed (non-critical):', e);
     }
 
+    console.info(`Calendar booking created by ${user.email}: ${phone} scheduled for ${scheduled_time}`);
     return Response.json({ success: true, booking_id: booking.id, conversation_id: conversationId });
   } catch (error) {
-    console.error('syncCalendarBooking error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`syncCalendarBooking error for ${user?.email}:`, error.message);
+    return Response.json({ error: 'Failed to create booking' }, { status: 500 });
   }
 });
