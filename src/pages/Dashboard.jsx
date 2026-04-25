@@ -142,13 +142,11 @@ export default function Dashboard() {
     );
   }
 
-  // If admin, don't render anything (useEffect will redirect)
-  if (user.role === 'admin') {
+  // If admin or no profile, don't render (useEffect will redirect)
+  if (user.role === 'admin' || profiles.length === 0) {
     return null;
   }
 
-
-  
   // Check subscription status for regular users
   const trialExpired = subscription && subscription.trial_end_date && 
     new Date(subscription.trial_end_date) < new Date() &&
