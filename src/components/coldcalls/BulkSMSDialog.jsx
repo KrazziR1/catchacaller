@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { processBatchWithConcurrency } from "@/lib/rateLimitBulkSMS";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
