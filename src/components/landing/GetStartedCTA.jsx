@@ -1,9 +1,21 @@
 import { motion } from "framer-motion";
 import { ArrowRight, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { handleTrial } from "@/lib/handleTrial";
+import { useNavigate } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
 export default function GetStartedCTA() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = async () => {
+    const isAuthed = await base44.auth.isAuthenticated();
+    if (!isAuthed) {
+      base44.auth.redirectToLogin("/onboarding");
+    } else {
+      navigate("/onboarding");
+    }
+  };
+
   return (
     <section className="py-24 lg:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <div className="max-w-2xl mx-auto px-6 text-center">
@@ -32,7 +44,7 @@ export default function GetStartedCTA() {
           <Button
             size="lg"
             className="h-14 px-10 rounded-xl text-base font-semibold"
-            onClick={() => handleTrial()}
+            onClick={handleGetStarted}
           >
             <PhoneCall className="w-5 h-5 mr-2" />
             Get Started Free
