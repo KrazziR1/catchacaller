@@ -6,12 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter } from "lucide-react";
+import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
+import AdminKPICharts from "@/components/admin/AdminKPICharts";
+import ActivityHeatmap from "@/components/admin/ActivityHeatmap";
 
 export default function Admin() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [filterPlan, setFilterPlan] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     base44.auth.me().then((u) => {
@@ -87,11 +94,21 @@ export default function Admin() {
     "Launch",
   ];
 
-  // Filter businesses by search
-  const filteredBusinesses = businesses.filter((b) =>
-    b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.industry.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter businesses by search, plan, and status
+  const filteredBusinesses = businesses.filter((b) => {
+    const matchesSearch =
+      b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.industry.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const sub = subscriptions.find((s) => s.user_email === b.created_by);
+    const matchesPlan = filterPlan === "all" || sub?.plan_name === filterPlan;
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && ["active", "trialing"].includes(sub?.status)) ||
+      (filterStatus === "inactive" && !["active", "trialing"].includes(sub?.status));
+
+    return matchesSearch && matchesPlan && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen bg-background p-6 lg:p-8">
@@ -164,6 +181,15 @@ export default function Admin() {
           </Card>
         </div>
 
+        {/* Charts & Heatmap */}
+        <div className="mb-8">
+          <AdminKPICharts subscriptions={subscriptions} businesses={businesses} missedCalls={missedCalls} />
+        </div>
+
+        <div className="mb-8">
+          <ActivityHeatmap businesses={businesses} missedCalls={missedCalls} />
+        </div>
+
         {/* Onboarding Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <Card className="rounded-2xl">
@@ -196,18 +222,39 @@ export default function Admin() {
         {/* Businesses List */}
         <Card className="rounded-2xl">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Businesses</CardTitle>
-              </div>
-              <div className="flex items-center gap-2 w-full max-w-xs">
-                <Search className="w-4 h-4 text-muted-foreground absolute ml-2" />
-                <Input
-                  placeholder="Search by name or industry..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 rounded-lg"
-                />
+            <div className="space-y-4">
+              <CardTitle className="text-lg">Businesses</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+                  <Input
+                    placeholder="Search by name or industry..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 rounded-lg"
+                  />
+                </div>
+                <Select value={filterPlan} onValueChange={setFilterPlan}>
+                  <SelectTrigger className="w-full sm:w-40 rounded-lg">
+                    <SelectValue placeholder="Filter by plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Plans</SelectItem>
+                    <SelectItem value="Starter">Starter</SelectItem>
+                    <SelectItem value="Growth">Growth</SelectItem>
+                    <SelectItem value="Pro">Pro</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full sm:w-40 rounded-lg">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>
@@ -239,7 +286,11 @@ export default function Admin() {
                       const progress = onboardingProgress.find((p) => p.user_email === business.created_by);
 
                       return (
-                        <tr key={business.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        <tr
+                          key={business.id}
+                          className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => setSelectedBusiness(business)}
+                        >
                           <td className="py-3 px-4">
                             <p className="font-medium">{business.business_name}</p>
                           </td>
@@ -297,6 +348,12 @@ export default function Admin() {
             )}
           </CardContent>
         </Card>
+
+        <BusinessDetailModal
+          business={selectedBusiness}
+          isOpen={!!selectedBusiness}
+          onClose={() => setSelectedBusiness(null)}
+        />
       </div>
     </div>
   );

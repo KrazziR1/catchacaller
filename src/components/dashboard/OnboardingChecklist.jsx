@@ -1,55 +1,98 @@
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Circle, Phone, Settings, MessageSquare, Send } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, AlertCircle, Phone, Globe, Zap, Users } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
-const steps = [
-  { id: 'phone', label: 'Provision Phone Number', icon: Phone, check: (p) => !!p.phone_number && !!p.twilio_number_sid },
-  { id: 'ai', label: 'Set AI Personality', icon: Settings, check: (p) => !!p.ai_personality && p.ai_personality !== 'friendly' },
-  { id: 'templates', label: 'Create SMS Templates', icon: MessageSquare, check: (t) => t && t.length > 0 },
-  { id: 'first_message', label: 'Send First SMS', icon: Send, check: (c) => c && c.length > 0 },
-];
-
-export default function OnboardingChecklist({ profile, templates, conversations }) {
-  const completed = [
-    steps[0].check(profile || {}),
-    steps[1].check(profile || {}),
-    steps[2].check(templates),
-    steps[3].check(conversations),
+export default function OnboardingChecklist({ profile, subscription, user }) {
+  const items = [
+    {
+      key: "phone",
+      label: "Phone Number",
+      completed: !!profile?.phone_number,
+      icon: Phone,
+      description: "Required for capturing missed calls",
+    },
+    {
+      key: "booking",
+      label: "Booking Link",
+      completed: !!profile?.booking_url,
+      icon: Globe,
+      description: "Critical for closing appointments",
+    },
+    {
+      key: "ai",
+      label: "AI Personality",
+      completed: !!profile?.ai_personality,
+      icon: Zap,
+      description: "Set your communication style",
+    },
+    {
+      key: "team",
+      label: "Team Setup",
+      completed: false, // TODO: Check if team members exist
+      icon: Users,
+      description: "Invite team members (optional)",
+    },
   ];
 
-  const completedCount = completed.filter(Boolean).length;
-  const progress = Math.round((completedCount / completed.length) * 100);
+  const completed = items.filter((i) => i.completed).length;
+  const total = items.length;
+  const percentage = Math.round((completed / total) * 100);
 
-  if (completedCount === completed.length) return null; // Hide when complete
+  if (percentage === 100) return null;
 
   return (
-    <Card className="rounded-2xl border-primary/20 bg-primary/5 mb-6">
+    <Card className="rounded-2xl border-amber-200 bg-amber-50">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Setup Progress</CardTitle>
-          <Badge variant="outline">{completedCount}/{completed.length} Complete</Badge>
-        </div>
-        <div className="mt-3 w-full bg-muted rounded-full h-2">
-          <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${progress}%` }} />
+          <div>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600" />
+              Complete Your Setup ({completed}/{total})
+            </CardTitle>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-medium text-amber-900">{percentage}% complete</p>
+            <div className="w-24 h-2 bg-amber-200 rounded-full mt-1 overflow-hidden">
+              <div
+                className="h-full bg-amber-600 transition-all"
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {steps.map((step, i) => (
-            <div key={step.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-              {completed[i] ? (
-                <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
-              ) : (
-                <Circle className="w-5 h-5 text-muted-foreground/50 shrink-0" />
-              )}
-              <span className={`text-sm ${completed[i] ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                {step.label}
-              </span>
-            </div>
-          ))}
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.key}
+                className="flex items-start gap-3 p-3 rounded-lg bg-white"
+              >
+                {item.completed ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-muted-foreground" />
+                    {item.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
+        <Link to="/settings" className="block mt-4">
+          <Button variant="outline" className="w-full rounded-lg" size="sm">
+            Go to Settings
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   );

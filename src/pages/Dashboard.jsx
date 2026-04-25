@@ -13,6 +13,9 @@ import CalendarBookingWidget from "@/components/dashboard/CalendarBookingWidget"
 import PipelineAnalytics from "@/components/dashboard/PipelineAnalytics";
 import TrialStatus from "@/components/TrialStatus";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
+import LeadSourceBreakdown from "@/components/dashboard/LeadSourceBreakdown";
+import SMSMetrics from "@/components/dashboard/SMSMetrics";
+import ExportReports from "@/components/dashboard/ExportReports";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -104,7 +107,11 @@ export default function Dashboard() {
         <p className="text-muted-foreground mt-1">Your call recovery performance at a glance</p>
       </div>
 
-      <OnboardingChecklist profile={profiles[0]} templates={templates} conversations={conversations} />
+      <OnboardingChecklist profile={profiles[0]} subscription={subscription} user={user} />
+
+      <div className="flex justify-end mb-6">
+        <ExportReports conversations={conversations} missedCalls={calls} />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -133,8 +140,11 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid lg:grid-cols-1 gap-6 mb-8">
+      <SMSMetrics conversations={conversations} />
+
+      <div className="grid lg:grid-cols-2 gap-6 mb-8 mt-8">
         <ConversionChart />
+        <LeadSourceBreakdown missedCalls={calls} />
       </div>
 
       {subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name) && (
@@ -145,7 +155,9 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6 mb-8">
         <LeadPipeline user={user} subscription={subscription} />
-        <CalendarBookingWidget user={user} subscription={subscription} />
+        {subscription?.plan_name && ['Pro'].includes(subscription.plan_name) && (
+          <CalendarBookingWidget user={user} subscription={subscription} />
+        )}
       </div>
 
       <RecentCallsTable calls={calls.slice(0, 10)} />
