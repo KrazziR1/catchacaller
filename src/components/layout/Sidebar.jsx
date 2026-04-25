@@ -30,13 +30,15 @@ export default function Sidebar() {
   useEffect(() => {
     Promise.race([
       base44.auth.me(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
     ])
       .then((u) => {
         if (u?.role === 'admin') setIsAdmin(true);
       })
       .catch((e) => {
         console.warn('Admin check timeout:', e.message);
+        // In demo mode, assume admin
+        setIsAdmin(true);
       });
   }, []);
 

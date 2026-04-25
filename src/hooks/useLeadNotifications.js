@@ -8,7 +8,10 @@ export default function useLeadNotifications() {
   useEffect(() => {
     const checkForNewLeads = async () => {
       try {
-        const conversations = await base44.entities.Conversation.list('-last_message_at', 100);
+        const conversations = await Promise.race([
+          base44.entities.Conversation.list('-last_message_at', 100),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
+        ]);
         const newConversations = conversations.filter(c => c.status === 'active');
 
         if (newConversations.length > lastCountRef.current && lastCountRef.current > 0) {
@@ -25,13 +28,13 @@ export default function useLeadNotifications() {
 
         lastCountRef.current = newConversations.length;
       } catch (error) {
-        console.error('Lead notification check failed:', error);
+        console.warn('Lead notification check skipped:', error?.message);
       }
     };
 
     // Only enable polling if notifications are available
     if ('Notification' in window) {
-      checkForNewLeads();
+      // Don't block on initial load, start polling after delay
       intervalRef.current = setInterval(checkForNewLeads, 10000);
     }
 

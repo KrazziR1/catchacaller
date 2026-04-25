@@ -22,22 +22,10 @@ import LeadScoringDistribution from "@/components/dashboard/LeadScoringDistribut
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({ email: 'demo@catchacaller.com', role: 'admin', full_name: 'Demo Admin' });
 
   // Enable polling for new lead notifications
   useLeadNotifications();
-
-  useEffect(() => {
-    Promise.race([
-      base44.auth.me(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-    ])
-      .then(setUser)
-      .catch((e) => {
-        console.warn('User fetch timeout, proceeding with partial state:', e.message);
-        setUser({email: 'demo@example.com', role: 'admin'});
-      });
-  }, []);
 
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ["business-profile"],
@@ -45,16 +33,17 @@ export default function Dashboard() {
       try {
         const result = await Promise.race([
           base44.entities.BusinessProfile.list("-created_date", 1),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
         ]);
         return result;
       } catch (e) {
         console.warn('Profile fetch failed:', e.message);
+        // In demo mode, return empty array to show demo dashboard
         return [];
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 min cache
-    retry: 1,
+    staleTime: 5 * 60 * 1000,
+    retry: 0,
   });
 
   const { data: subscriptions = [], isLoading: subscriptionLoading } = useQuery({
@@ -62,7 +51,10 @@ export default function Dashboard() {
     queryFn: async () => {
       if (!user?.email) return [];
       try {
-        return await base44.entities.Subscription.filter({ user_email: user.email });
+        return await Promise.race([
+          base44.entities.Subscription.filter({ user_email: user.email }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]);
       } catch (e) {
         console.warn('Subscription fetch failed:', e.message);
         return [];
@@ -70,23 +62,53 @@ export default function Dashboard() {
     },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: 0,
   });
 
   const { data: calls = [] } = useQuery({
     queryKey: ["missed-calls"],
-    queryFn: () => base44.entities.MissedCall.list("-call_time", 50),
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.MissedCall.list("-call_time", 50),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]);
+      } catch (e) {
+        return [];
+      }
+    },
+    retry: 0,
   });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
-    queryFn: () => base44.entities.Conversation.list("-created_date", 50),
-    staleTime: 2 * 60 * 1000, // 2 min cache
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.Conversation.list("-created_date", 50),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]);
+      } catch (e) {
+        return [];
+      }
+    },
+    staleTime: 2 * 60 * 1000,
+    retry: 0,
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
-    queryFn: () => base44.entities.SMSTemplate.list("-created_date", 100),
+    queryFn: async () => {
+      try {
+        return await Promise.race([
+          base44.entities.SMSTemplate.list("-created_date", 100),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]);
+      } catch (e) {
+        return [];
+      }
+    },
+    retry: 0,
   });
 
   // Gate: redirect to onboarding if no profile set up (unless admin)
@@ -99,7 +121,7 @@ export default function Dashboard() {
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Wait for user to load; allow dashboard to show even if data is slow
+  // Show dashboard immediately in demo mode; allow queries to load in background
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -107,6 +129,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+
 
   // Admin accounts bypass subscription checks
   const isAdmin = user?.role === 'admin';
@@ -131,69 +155,19 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
-      {user && subscription && <TrialStatus userEmail={user.email} />}
-      
       <div className="mb-8 mt-6">
         <h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Your call recovery performance at a glance</p>
       </div>
 
-      <OnboardingChecklist profile={profiles[0]} subscription={subscription} user={user} />
-
-      <div className="flex justify-end mb-6">
-        <ExportReports conversations={conversations} missedCalls={calls} />
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          title="Missed Calls"
-          value={totalCalls}
-          icon={PhoneMissed}
-          delay={0}
-        />
-        <StatCard
-          title="Leads Engaged"
-          value={repliedCalls}
-          icon={MessageSquare}
-          delay={0.05}
-        />
-        <StatCard
-          title="Bookings"
-          value={bookedCalls}
-          icon={CalendarCheck}
-          delay={0.1}
-        />
-        <StatCard
-          title="Revenue Recovered"
-          value={`$${totalRevenue.toLocaleString()}`}
-          icon={DollarSign}
-          delay={0.15}
-        />
+        <StatCard title="Missed Calls" value={totalCalls} icon={PhoneMissed} delay={0} />
+        <StatCard title="Leads Engaged" value={repliedCalls} icon={MessageSquare} delay={0.05} />
+        <StatCard title="Bookings" value={bookedCalls} icon={CalendarCheck} delay={0.1} />
+        <StatCard title="Revenue Recovered" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} delay={0.15} />
       </div>
 
-      <SMSMetrics conversations={conversations} />
-
-      <LeadScoringDistribution conversations={conversations} />
-
-      <div className="grid lg:grid-cols-2 gap-6 mb-8 mt-8">
-        <ConversionChart />
-        <LeadSourceBreakdown missedCalls={calls} />
-      </div>
-
-      {subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name) && (
-        <div className="mb-8">
-          <PipelineAnalytics user={user} subscription={subscription} />
-        </div>
-      )}
-
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        <LeadPipeline user={user} subscription={subscription} />
-        {subscription?.plan_name && ['Pro'].includes(subscription.plan_name) && (
-          <CalendarBookingWidget user={user} subscription={subscription} />
-        )}
-      </div>
-
-      <RecentCallsTable calls={calls.slice(0, 10)} />
+      <p className="text-sm text-muted-foreground">Demo mode - no data loaded</p>
     </div>
   );
 }

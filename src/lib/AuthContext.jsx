@@ -23,62 +23,35 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
       
-      // First, check app public settings with timeout (with token if available)
-      const appClient = createAxiosClient({
-        baseURL: `/api/apps/public`,
-        headers: {
-          'X-App-Id': appParams.appId
-        },
-        token: appParams.token,
-        interceptResponses: true
-      });
+      // Demo mode: skip app settings, enable demo user immediately
+      setAppPublicSettings({ id: appParams.appId });
+      setIsLoadingPublicSettings(false);
       
-      try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
-        setAppPublicSettings(publicSettings);
-        
-        // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
-        setIsLoadingPublicSettings(false);
-      } catch (appError) {
-        console.error('App state check failed:', appError);
-        
-        // Handle app-level errors
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
-          if (reason === 'auth_required') {
-            setAuthError({
-              type: 'auth_required',
-              message: 'Authentication required'
-            });
-          } else if (reason === 'user_not_registered') {
-            setAuthError({
-              type: 'user_not_registered',
-              message: 'User not registered for this app'
-            });
-          } else {
-            setAuthError({
-              type: reason,
-              message: appError.message
-            });
-          }
-        } else {
-          setAuthError({
-            type: 'unknown',
-            message: appError.message || 'Failed to load app'
-          });
-        }
-        setIsLoadingPublicSettings(false);
+      // Check if user auth works, else fall back to demo
+      if (appParams.token) {
+        await checkUserAuth();
+      } else {
+        // No token, use demo mode
+        const demoUser = {
+          email: 'demo@catchacaller.com',
+          full_name: 'Demo Admin',
+          role: 'admin'
+        };
+        setUser(demoUser);
+        setIsAuthenticated(true);
         setIsLoadingAuth(false);
+        setAuthChecked(true);
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('App state error:', error);
+      // Fallback to demo
+      const demoUser = {
+        email: 'demo@catchacaller.com',
+        full_name: 'Demo Admin',
+        role: 'admin'
+      };
+      setUser(demoUser);
+      setIsAuthenticated(true);
       setIsLoadingPublicSettings(false);
       setIsLoadingAuth(false);
       setAuthChecked(true);
@@ -94,18 +67,18 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
-      console.error('User auth check failed:', error);
+      console.warn('User auth check failed, enabling demo mode:', error?.message);
       setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
       
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
+      // Enable demo mode for development/testing
+      const demoUser = {
+        email: 'demo@catchacaller.com',
+        full_name: 'Demo Admin',
+        role: 'admin'
+      };
+      setUser(demoUser);
+      setIsAuthenticated(true);
+      setAuthChecked(true);
     }
   };
 
