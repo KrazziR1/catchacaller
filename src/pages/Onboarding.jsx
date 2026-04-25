@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { loadStripe } from "@stripe/js";
 import { Elements } from "@stripe/react-stripe-js";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -18,9 +17,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import PhoneProvision from "@/components/PhoneProvision";
 
-// Stripe publishable key is safe to expose on client
-const STRIPE_PUBLISHABLE_KEY = "pk_live_51TQ7e0FsxP0HXZ0AL4xFM0tGvmqLkCEPVCO4PVW5VrGxnbV2cKmHZpFXHNZTv6Y3mzGJCK6KRvFt2P3rEWL5I67n00dxEm3n3r"; // from your Stripe account
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+const STRIPE_PUBLISHABLE_KEY = "pk_live_51TQ7e0FsxP0HXZ0AL4xFM0tGvmqLkCEPVCO4PVW5VrGxnbV2cKmHZpFXHNZTv6Y3mzGJCK6KRvFt2P3rEWL5I67n00dxEm3n3r";
+const stripePromise = typeof window !== 'undefined' 
+  ? window.Stripe(STRIPE_PUBLISHABLE_KEY) 
+  : Promise.resolve(null);
 
 const plans = [
   {
