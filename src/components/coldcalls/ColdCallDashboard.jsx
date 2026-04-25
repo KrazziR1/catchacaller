@@ -181,7 +181,7 @@ export default function ColdCallDashboard() {
           <h1 className="text-3xl font-extrabold tracking-tight">Cold Call Tracking</h1>
           <p className="text-muted-foreground mt-1">Manage prospects, send SMS templates, and track conversions</p>
         </div>
-        <Button variant="outline" onClick={() => navigate("/admin")} className="gap-2 rounded-xl">
+        <Button variant="outline" onClick={() => navigate("/admin", { replace: true })} className="gap-2 rounded-xl">
           ← Back to Admin
         </Button>
         <div className="flex gap-2">

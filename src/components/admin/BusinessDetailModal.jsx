@@ -71,23 +71,28 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
 
   const deleteBusinessMutation = useMutation({
     mutationFn: async (hardDelete) => {
-      if (hardDelete) {
-        // Hard delete: remove the business record entirely
-        await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
-      } else {
-        // Soft delete: mark as disabled/archived (could add an is_archived field)
-        // For now, we'll create an audit log and the business stays but is marked
-        await base44.asServiceRole.entities.AdminAuditLog.create({
-          admin_email: (await base44.auth.me()).email,
-          action: "account_rejected",
-          target_email: business.created_by,
-          target_business: business.business_name,
-          reason: "Soft deleted - disabled via admin panel",
-        });
+      try {
+        if (hardDelete) {
+          // Hard delete: remove the business record entirely
+          await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
+        } else {
+          // Soft delete: mark as disabled/archived (could add an is_archived field)
+          // For now, we'll create an audit log and the business stays but is marked
+          await base44.asServiceRole.entities.AdminAuditLog.create({
+            admin_email: (await base44.auth.me()).email,
+            action: "account_rejected",
+            target_email: business.created_by,
+            target_business: business.business_name,
+            reason: "Soft deleted - disabled via admin panel",
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
+        toast.success(hardDelete ? "Business deleted permanently" : "Business disabled");
+        setConfirmDelete(false);
+        onClose();
+      } catch (error) {
+        toast.error(error.message || "Failed to delete business");
       }
-      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
-      toast.success(hardDelete ? "Business deleted permanently" : "Business disabled");
-      onClose();
     },
   });
 
