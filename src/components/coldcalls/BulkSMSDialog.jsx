@@ -1,19 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BulkSMSDialog({ prospects, templates, open, onOpenChange }) {
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [editedMessage, setEditedMessage] = useState("");
   const [selectedProspects, setSelectedProspects] = useState(new Set());
   const [isSending, setIsSending] = useState(false);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (template) {
+      setEditedMessage(template.message_body);
+    }
+  }, [selectedTemplate, templates]);
 
   const handleProspectToggle = (id) => {
     const newSet = new Set(selectedProspects);
@@ -35,16 +44,13 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
 
   const sendBulkMutation = useMutation({
     mutationFn: async () => {
-      const template = templates.find(t => t.id === selectedTemplate);
-      if (!template) throw new Error("Template not found");
-
       await Promise.all(
         Array.from(selectedProspects).map(prospectId => {
           const prospect = prospects.find(p => p.id === prospectId);
           return base44.functions.invoke("sendColdCallSMS", {
             prospect_id: prospectId,
             phone_number: prospect.phone_number,
-            message_body: template.message_body,
+            message_body: editedMessage,
           });
         })
       );
@@ -63,8 +69,8 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
   });
 
   const handleSend = async () => {
-    if (!selectedTemplate || selectedProspects.size === 0) {
-      toast.error("Select a template and at least one prospect");
+    if (!editedMessage.trim() || selectedProspects.size === 0) {
+      toast.error("Edit the message and select at least one prospect");
       return;
     }
 
@@ -76,8 +82,6 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
     }
   };
 
-  const selectedTemplate_ = templates.find(t => t.id === selectedTemplate);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
@@ -88,10 +92,10 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
         <div className="space-y-6 overflow-y-auto flex-1">
           {/* Template Selection */}
           <div>
-            <label className="text-sm font-semibold mb-2 block">Select Template</label>
+            <Label>Select Template (optional)</Label>
             <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a template..." />
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Choose a template to start..." />
               </SelectTrigger>
               <SelectContent>
                 {templates.map(t => (
@@ -101,12 +105,20 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
                 ))}
               </SelectContent>
             </Select>
-            {selectedTemplate_ && (
-              <Card className="mt-3 p-3 bg-muted/50">
-                <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-                <p className="text-sm leading-relaxed">{selectedTemplate_.message_body}</p>
-              </Card>
-            )}
+          </div>
+
+          {/* Editable Message */}
+          <div>
+            <Label>Message to Send</Label>
+            <Textarea
+              value={editedMessage}
+              onChange={(e) => setEditedMessage(e.target.value)}
+              placeholder="Edit or type your message here..."
+              className="mt-1.5 min-h-[120px] rounded-lg"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {editedMessage.length} characters
+            </p>
           </div>
 
           {/* Prospects Selection */}
@@ -145,7 +157,7 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
           </Button>
           <Button
             onClick={handleSend}
-            disabled={isSending || !selectedTemplate || selectedProspects.size === 0}
+            disabled={isSending || !editedMessage.trim() || selectedProspects.size === 0}
           >
             {isSending ? (
               <>

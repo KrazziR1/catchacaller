@@ -397,7 +397,8 @@ export default function ColdCallDashboard() {
       <Dialog open={showTemplateForm} onOpenChange={setShowTemplateForm}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Create SMS Template</DialogTitle>
+            <DialogTitle>Create Sales Template</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-2">Create outreach templates to pitch your service to prospects</p>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
@@ -405,21 +406,21 @@ export default function ColdCallDashboard() {
               <Input
                 value={newTemplate.name}
                 onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                placeholder="Follow-up: Discount Offer"
+                placeholder="e.g., Initial Outreach, Demo Offer, Limited Time"
                 className="mt-1.5 rounded-lg"
                 autoFocus
               />
             </div>
             <div>
-              <Label>Message</Label>
+              <Label>Sales Message</Label>
               <Textarea
                 value={newTemplate.message_body}
                 onChange={(e) => setNewTemplate({ ...newTemplate, message_body: e.target.value })}
-                placeholder="Type your SMS template..."
+                placeholder="Hi [Name], we help businesses like yours recover missed calls and turn them into bookings. Free trial available. Interested? Reply YES"
                 className="mt-1.5 rounded-lg min-h-[120px]"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {newTemplate.message_body.length} characters
+                {newTemplate.message_body.length} characters (SMS limit: 160)
               </p>
             </div>
           </div>
