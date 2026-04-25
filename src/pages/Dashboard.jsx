@@ -89,12 +89,12 @@ export default function Dashboard() {
     queryFn: () => base44.entities.SMSTemplate.list("-created_date", 100),
   });
 
-  // Gate: redirect to onboarding if no profile set up
+  // Gate: redirect to onboarding if no profile set up (unless admin)
   useEffect(() => {
-    if (!profileLoading && profiles.length === 0) {
+    if (!profileLoading && profiles.length === 0 && user?.role !== 'admin') {
       navigate("/onboarding");
     }
-  }, [profileLoading, profiles, navigate]);
+  }, [profileLoading, profiles, navigate, user]);
 
   const subscription = subscriptions[0];
   const profile = profiles[0];
