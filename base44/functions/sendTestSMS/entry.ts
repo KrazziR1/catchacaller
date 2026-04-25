@@ -36,7 +36,22 @@ Deno.serve(async (req) => {
       ? `Thank you for contacting ${name}. We missed your call and would be happy to assist you. What can we help you with today? Reply STOP to opt out.`
       : `Hi! 👋 Sorry we missed your call — we're ${name}. What can we help you with today? Reply STOP to opt out.`;
 
-    await client.messages.create({ body, from: fromPhone, to: e164 });
+    const msg = await client.messages.create({ body, from: fromPhone, to: e164 });
+
+    // Log to audit trail
+    try {
+      await base44.functions.invoke('logSMSAudit', {
+        phone_number: e164,
+        business_phone: fromPhone,
+        message_body: body,
+        message_type: 'test',
+        status: 'sent',
+        twilio_message_sid: msg.sid,
+        consent_type: 'test',
+      });
+    } catch (auditError) {
+      console.warn('Audit logging failed (non-critical):', auditError);
+    }
 
     return Response.json({ success: true, sent_to: e164 });
   } catch (error) {

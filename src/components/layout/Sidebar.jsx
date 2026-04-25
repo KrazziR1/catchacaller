@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, PhoneMissed, MessageSquare, 
-  FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight, Users, Activity, BarChart3, Calendar
+  FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight, Users, Activity, BarChart3, Calendar, Shield
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
@@ -17,6 +17,7 @@ const navItems = [
 ];
 
 const adminNavItems = [
+  { icon: Shield, label: "Compliance", path: "/compliance" },
   { icon: Activity, label: "Webhooks", path: "/webhooks" },
   { icon: Users, label: "Waitlist", path: "/waitlist" },
 ];

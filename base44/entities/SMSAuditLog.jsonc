@@ -1,0 +1,79 @@
+{
+  "name": "SMSAuditLog",
+  "type": "object",
+  "properties": {
+    "phone_number": {
+      "type": "string",
+      "description": "Recipient phone number (E.164 format)"
+    },
+    "business_phone": {
+      "type": "string",
+      "description": "Business number that sent the SMS"
+    },
+    "message_body": {
+      "type": "string",
+      "description": "Full SMS text sent"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "auto_response",
+        "follow_up",
+        "campaign",
+        "manual",
+        "test"
+      ],
+      "description": "Type of SMS"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to conversation if applicable"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "delivered",
+        "failed",
+        "bounced"
+      ],
+      "default": "sent",
+      "description": "SMS delivery status from Twilio"
+    },
+    "twilio_message_sid": {
+      "type": "string",
+      "description": "Twilio message SID for tracking"
+    },
+    "consent_type": {
+      "type": "string",
+      "enum": [
+        "called_business",
+        "opt_in_campaign",
+        "test",
+        "unknown"
+      ],
+      "default": "called_business",
+      "description": "How consent was established"
+    },
+    "opted_out": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether recipient has since opted out"
+    },
+    "sent_by": {
+      "type": "string",
+      "description": "Email of user who sent (AI, user email, or system)"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when SMS was sent"
+    }
+  },
+  "required": [
+    "phone_number",
+    "business_phone",
+    "message_body",
+    "message_type"
+  ]
+}

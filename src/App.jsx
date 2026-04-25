@@ -27,6 +27,7 @@ import Unsubscribe from '@/pages/Unsubscribe';
 import DPA from '@/pages/DPA';
 import AdvancedReporting from '@/pages/AdvancedReporting';
 import CalendarIntegration from '@/pages/CalendarIntegration';
+import ComplianceAudit from '@/pages/ComplianceAudit';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -64,6 +65,7 @@ const AuthenticatedApp = () => {
         <Route path="/waitlist" element={<WaitlistAdmin />} />
         <Route path="/reporting" element={<AdvancedReporting />} />
         <Route path="/calendar" element={<CalendarIntegration />} />
+        <Route path="/compliance" element={<ComplianceAudit />} />
       </Route>
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />
