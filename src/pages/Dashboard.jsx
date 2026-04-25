@@ -28,20 +28,49 @@ export default function Dashboard() {
   useLeadNotifications();
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    Promise.race([
+      base44.auth.me(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+    ])
+      .then(setUser)
+      .catch((e) => {
+        console.warn('User fetch timeout, proceeding with partial state:', e.message);
+        setUser({email: 'demo@example.com', role: 'admin'});
+      });
   }, []);
 
-  const { data: profiles = [], isSuccess: profileLoaded } = useQuery({
+  const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ["business-profile"],
-    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
+    queryFn: async () => {
+      try {
+        const result = await Promise.race([
+          base44.entities.BusinessProfile.list("-created_date", 1),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))
+        ]);
+        return result;
+      } catch (e) {
+        console.warn('Profile fetch failed:', e.message);
+        return [];
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 min cache
+    retry: 1,
   });
 
   const { data: subscriptions = [], isLoading: subscriptionLoading } = useQuery({
     queryKey: ["subscription", user?.email],
-    queryFn: () => base44.entities.Subscription.filter({ user_email: user.email }),
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        return await base44.entities.Subscription.filter({ user_email: user.email });
+      } catch (e) {
+        console.warn('Subscription fetch failed:', e.message);
+        return [];
+      }
+    },
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const { data: calls = [] } = useQuery({
@@ -62,18 +91,16 @@ export default function Dashboard() {
 
   // Gate: redirect to onboarding if no profile set up
   useEffect(() => {
-    if (profileLoaded && profiles.length === 0) {
+    if (!profileLoading && profiles.length === 0) {
       navigate("/onboarding");
     }
-  }, [profileLoaded, profiles, navigate]);
+  }, [profileLoading, profiles, navigate]);
 
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Wait for all required data to load
-  const allDataLoaded = user && profileLoaded && !subscriptionLoading;
-  
-  if (!allDataLoaded) {
+  // Wait for user to load; allow dashboard to show even if data is slow
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />

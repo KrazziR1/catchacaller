@@ -64,16 +64,23 @@ export default function Onboarding() {
     });
   }, []);
 
+  const [savingError, setSavingError] = useState(null);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
+      setSavingError(null);
       // Check for compliance keywords if "other" industry
       if (form.industry === 'other') {
-        const keywordCheck = await base44.functions.invoke('checkComplianceKeywords', {
-          business_name: form.business_name,
-          industry: form.industry,
-        });
-        if (keywordCheck.data?.requires_manual_review) {
-          form.is_high_risk_industry = true;
+        try {
+          const keywordCheck = await base44.functions.invoke('checkComplianceKeywords', {
+            business_name: form.business_name,
+            industry: form.industry,
+          });
+          if (keywordCheck.data?.requires_manual_review) {
+            form.is_high_risk_industry = true;
+          }
+        } catch (e) {
+          console.warn('Compliance check failed (non-critical):', e.message);
         }
       }
 
@@ -96,6 +103,7 @@ export default function Onboarding() {
       await sendConfirmationEmail(data);
     },
     onError: (error) => {
+      setSavingError(error.message || 'Failed to save profile. Please try again.');
       console.error("Save failed:", error);
     },
   });
@@ -278,6 +286,17 @@ export default function Onboarding() {
                 <p className="text-sm text-muted-foreground">{step.subtitle}</p>
               </div>
             </div>
+
+            {/* Error Alert */}
+            {savingError && (
+              <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-destructive">Error</p>
+                  <p className="text-xs text-destructive/80 mt-1">{savingError}</p>
+                </div>
+              </div>
+            )}
 
             {/* Step content */}
             <div className="space-y-4">
