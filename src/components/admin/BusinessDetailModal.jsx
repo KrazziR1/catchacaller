@@ -6,13 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail, Trash2, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail, Trash2, AlertTriangle, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BusinessDetailModal({ business, isOpen, onClose }) {
   const [copied, setCopied] = useState(null);
   const [deleteMode, setDeleteMode] = useState(null); // null | "soft" | "hard"
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [businessName, setBusinessName] = useState(business?.business_name || "");
   const queryClient = useQueryClient();
 
   const { data: sub } = useQuery({
@@ -51,6 +54,21 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
     enabled: !!business,
   });
 
+  const updateBusinessNameMutation = useMutation({
+    mutationFn: (newName) =>
+      base44.asServiceRole.entities.BusinessProfile.update(business.id, {
+        business_name: newName,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
+      setEditingName(false);
+      toast.success("Business name updated");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update business name");
+    },
+  });
+
   const deleteBusinessMutation = useMutation({
     mutationFn: async (hardDelete) => {
       if (hardDelete) {
@@ -67,7 +85,7 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
           reason: "Soft deleted - disabled via admin panel",
         });
       }
-      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
       toast.success(hardDelete ? "Business deleted permanently" : "Business disabled");
       onClose();
     },
@@ -88,7 +106,47 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">{business.business_name}</DialogTitle>
+          {editingName ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="Business name"
+                className="text-lg font-semibold"
+                autoFocus
+              />
+              <Button
+                size="sm"
+                onClick={() => updateBusinessNameMutation.mutate(businessName)}
+                disabled={updateBusinessNameMutation.isPending || businessName === business.business_name}
+              >
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditingName(false);
+                  setBusinessName(business.business_name);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">{businessName}</DialogTitle>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setEditingName(true)}
+                className="h-8 w-8"
+                title="Edit business name"
+              >
+                <Edit2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
