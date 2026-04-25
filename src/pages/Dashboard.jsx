@@ -39,6 +39,13 @@ export default function Dashboard() {
     }
   }, [user, navigate]);
 
+  // Redirect to onboarding if no profile exists after loading
+  useEffect(() => {
+    if (user && !profileLoading && profiles.length === 0) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [user, profileLoading, profiles.length, navigate]);
+
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ["business-profile", user?.email],
     queryFn: async () => {
@@ -140,14 +147,7 @@ export default function Dashboard() {
     return null;
   }
 
-  // If no profile after loading, redirect to onboarding
-  if (profiles.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
+
   
   // Check subscription status for regular users
   const trialExpired = subscription && subscription.trial_end_date && 
