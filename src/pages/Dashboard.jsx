@@ -29,10 +29,13 @@ export default function Dashboard() {
     base44.auth.me().then((u) => {
       if (u?.role === 'admin') {
         navigate("/admin", { replace: true });
-      } else {
-        setUser(u);
+        return;
       }
-    }).catch(() => setUser(null));
+      setUser(u);
+    }).catch(() => {
+      setUser(null);
+      navigate("/", { replace: true });
+    });
   }, [navigate]);
 
   // Enable polling for new lead notifications

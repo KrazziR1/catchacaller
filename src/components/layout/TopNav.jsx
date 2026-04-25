@@ -36,8 +36,7 @@ export default function TopNav() {
     await base44.auth.logout("/");
   };
 
-  const handleLandingClick = (e) => {
-    e.preventDefault();
+  const handleLandingClick = () => {
     if (user.role === "admin") {
       navigate("/admin");
     } else {
@@ -56,7 +55,7 @@ export default function TopNav() {
         <div className="flex items-center gap-2">
           {/* Landing Link */}
           <Button
-            variant={isLandingPage && !user.role === "admin" ? "default" : "ghost"}
+            variant={(isLandingPage && user.role !== "admin") || (isAdminPage && user.role === "admin") ? "default" : "ghost"}
             size="sm"
             onClick={handleLandingClick}
             className="gap-2"
