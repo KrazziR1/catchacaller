@@ -28,12 +28,22 @@ Deno.serve(async (req) => {
     const fromPhone = Deno.env.get('TWILIO_PHONE_NUMBER');
     
     const client = twilio(accountSid, authToken);
+    // Load opt-out list once
+    const optOuts = await base44.asServiceRole.entities.SMSOptOut.list('-created_date', 1000);
+    const optOutNumbers = new Set(optOuts.map(o => o.phone_number));
+
     const results = [];
 
     for (const convId of convoIds) {
       try {
         const conversation = await base44.asServiceRole.entities.Conversation.get(convId);
         if (!conversation) continue;
+
+        // Check opt-out
+        if (optOutNumbers.has(conversation.caller_phone)) {
+          results.push({ conversation_id: convId, status: 'skipped', reason: 'opted_out' });
+          continue;
+        }
 
         // Replace placeholders
         let message = template.message_body
@@ -46,10 +56,23 @@ Deno.serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, template.send_delay_seconds * 1000));
         }
 
-        await client.messages.create({
+        const msg = await client.messages.create({
           body: message,
           from: fromPhone,
           to: conversation.caller_phone,
+        });
+
+        // Log audit
+        await base44.asServiceRole.functions.invoke('logSMSAudit', {
+          phone_number: conversation.caller_phone,
+          business_phone: fromPhone,
+          message_body: message,
+          message_type: 'follow_up',
+          conversation_id: convId,
+          status: 'sent',
+          twilio_message_sid: msg.sid,
+          consent_type: 'called_business',
+          sent_by: 'template',
         });
 
         results.push({ conversation_id: convId, status: 'sent' });

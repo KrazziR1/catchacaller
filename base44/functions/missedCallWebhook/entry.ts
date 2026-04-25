@@ -87,11 +87,27 @@ Deno.serve(async (req) => {
     const fromPhone = toPhone; // Reply from the number they called
     const client = twilio(accountSid, authToken);
 
-    await client.messages.create({
+    const msg = await client.messages.create({
       body: smsBody,
       from: fromPhone,
       to: callerPhone,
     });
+
+    // Log to audit trail
+    try {
+      await base44.asServiceRole.functions.invoke('logSMSAudit', {
+        phone_number: callerPhone,
+        business_phone: toPhone,
+        message_body: smsBody,
+        message_type: 'auto_response',
+        status: 'sent',
+        twilio_message_sid: msg.sid,
+        consent_type: 'called_business',
+        sent_by: 'webhook',
+      });
+    } catch (auditErr) {
+      console.warn('Audit logging failed (non-critical):', auditErr.message);
+    }
 
     const responseTimeMs = Date.now() - startTime;
 

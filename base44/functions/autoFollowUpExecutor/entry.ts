@@ -16,6 +16,10 @@ Deno.serve(async (req) => {
     const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 100);
     const conversations = await base44.asServiceRole.entities.Conversation.list('-created_date', 500);
     
+    // Load opt-out list once
+    const optOuts = await base44.asServiceRole.entities.SMSOptOut.list('-created_date', 1000);
+    const optOutNumbers = new Set(optOuts.map(o => o.phone_number));
+    
     let processed = 0;
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
@@ -39,6 +43,11 @@ Deno.serve(async (req) => {
 
         // Check if enough time has passed
         if (hoursSinceLastMsg >= rule.hours_delay && conv.status === 'active') {
+          // Check opt-out
+          if (optOutNumbers.has(conv.caller_phone)) {
+            continue;
+          }
+          
           try {
             let messageBody = rule.custom_message || '';
             
