@@ -6,7 +6,7 @@ const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
+    // CRITICAL: Validate webhook signature BEFORE initializing base44
     const signature = req.headers.get('stripe-signature');
     const body = await req.text();
 
@@ -14,8 +14,12 @@ Deno.serve(async (req) => {
     try {
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     } catch (error) {
+      console.warn('Invalid Stripe signature');
       return Response.json({ error: 'Invalid signature' }, { status: 400 });
     }
+
+    // NOW safe to initialize base44
+    const base44 = createClientFromRequest(req);
 
     const eventType = event.type;
     const data = event.data.object;
@@ -94,7 +98,8 @@ Deno.serve(async (req) => {
 
     return Response.json({ received: true });
   } catch (error) {
-    console.error('stripeWebhook error:', error.message);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('stripeWebhook fatal error:', error.message);
+    // Never expose error details in webhook response
+    return Response.json({ error: 'Processing failed' }, { status: 500 });
   }
 });

@@ -1,19 +1,25 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Helper function: Validates if SMS can be sent to a phone number
+// Validates if SMS can be sent to a phone number
 // Returns: { can_send: boolean, reason?: string }
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const { phone_number } = await req.json();
 
-    if (!phone_number) {
-      return Response.json({ error: 'phone_number required' }, { status: 400 });
+    // Input validation
+    if (!phone_number || typeof phone_number !== 'string') {
+      return Response.json({ error: 'Invalid phone_number' }, { status: 400 });
+    }
+
+    const normalizedPhone = phone_number.trim();
+    if (!/^\+?1?\d{10,}$/.test(normalizedPhone.replace(/\D/g, ''))) {
+      return Response.json({ error: 'Invalid phone format' }, { status: 400 });
     }
 
     // 1. Check if opted out
     const optOuts = await base44.asServiceRole.entities.SMSOptOut.filter({
-      phone_number,
+      phone_number: normalizedPhone,
     });
     if (optOuts.length > 0) {
       return Response.json({
@@ -24,7 +30,7 @@ Deno.serve(async (req) => {
 
     // 2. Check if consent exists and is valid
     const consents = await base44.asServiceRole.entities.LeadConsent.filter({
-      phone_number,
+      phone_number: normalizedPhone,
       is_valid: true,
     });
 
@@ -67,6 +73,8 @@ Deno.serve(async (req) => {
       ebr_expires_at: consent.ebs_expiration_date,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('validateConsentBeforeSMS error:', error.message);
+    // Fail safely on errors - better to reject than allow
+    return Response.json({ can_send: false, reason: 'validation_error' }, { status: 500 });
   }
 });
