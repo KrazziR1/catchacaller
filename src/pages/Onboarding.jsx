@@ -208,11 +208,8 @@ export default function Onboarding() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Wait for profile to persist before redirecting
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["business-profile"] });
-        navigate("/dashboard");
-      }, 500);
+      // Profile was already created in step 3, just redirect
+      navigate("/dashboard");
     }
   };
 
