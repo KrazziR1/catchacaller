@@ -49,10 +49,10 @@ export default function Onboarding() {
     business_name: "",
     industry: "general",
     is_high_risk_industry: false,
+    industry_description: "",
     phone_number: "",
     business_hours: "Mon-Fri 8am-6pm",
     ai_personality: "friendly",
-    average_job_value: 500,
     booking_url: "",
     auto_response_enabled: true,
     email_notifications_enabled: true,
@@ -146,7 +146,7 @@ export default function Onboarding() {
   };
 
   const isStepValid = () => {
-    if (currentStep === 0) return !!form.business_name && smsComplianceAgreed;
+    if (currentStep === 0) return !!form.business_name && smsComplianceAgreed && (form.industry !== 'other' || !!form.industry_description);
     if (currentStep === 1) {
       // Validate phone number format
       if (!form.phone_number) return false;
@@ -160,17 +160,18 @@ export default function Onboarding() {
       return isValidFormat && !isTestNumber;
     }
     if (currentStep === 3) {
-      // Validate booking URL is a real URL
-      if (!form.booking_url || form.booking_url.trim() === '') return false;
-      try {
-        new URL(form.booking_url);
-        return true;
-      } catch {
-        return false;
+      // Booking URL is optional - allow skip
+      if (form.booking_url && form.booking_url.trim() !== '') {
+        try {
+          new URL(form.booking_url);
+        } catch {
+          return false;
+        }
       }
+      return true;
     }
     return true;
-  };
+    };
 
   // After profile is saved, auto-configure webhooks if number was entered manually (not provisioned)
   const configureWebhooksIfNeeded = async () => {
@@ -323,25 +324,37 @@ export default function Onboarding() {
                     <Label>Industry</Label>
                     <Select value={form.industry} onValueChange={(v) => {
                       const isHighRisk = v === 'other';
-                      setForm({ ...form, industry: v, is_high_risk_industry: isHighRisk });
+                      setForm({ ...form, industry: v, is_high_risk_industry: isHighRisk, industry_description: isHighRisk ? '' : form.industry_description });
                     }}>
                       <SelectTrigger className="mt-1.5 h-12 rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">General / Other</SelectItem>
-                        <SelectItem value="hvac">HVAC</SelectItem>
-                        <SelectItem value="plumbing">Plumbing</SelectItem>
-                        <SelectItem value="roofing">Roofing</SelectItem>
-                        <SelectItem value="med_spa">Med Spa / Aesthetics</SelectItem>
-                        <SelectItem value="legal">Legal</SelectItem>
-                        <SelectItem value="hospitality">Hospitality</SelectItem>
-                        <SelectItem value="marketing">Marketing / Agency</SelectItem>
-                        <SelectItem value="real_estate">Real Estate</SelectItem>
+                        <SelectItem value="automotive">Automotive</SelectItem>
                         <SelectItem value="dental">Dental / Healthcare</SelectItem>
                         <SelectItem value="fitness">Fitness / Wellness</SelectItem>
-                        <SelectItem value="automotive">Automotive</SelectItem>
+                        <SelectItem value="general">General</SelectItem>
+                        <SelectItem value="hospitality">Hospitality</SelectItem>
+                        <SelectItem value="hvac">HVAC</SelectItem>
+                        <SelectItem value="legal">Legal</SelectItem>
+                        <SelectItem value="marketing">Marketing / Agency</SelectItem>
+                        <SelectItem value="med_spa">Med Spa / Aesthetics</SelectItem>
+                        <SelectItem value="plumbing">Plumbing</SelectItem>
+                        <SelectItem value="real_estate">Real Estate</SelectItem>
+                        <SelectItem value="roofing">Roofing</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  {form.industry === 'other' && (
+                    <div>
+                      <Label>What services does your business offer? *</Label>
+                      <Input
+                        value={form.industry_description || ''}
+                        onChange={(e) => setForm({ ...form, industry_description: e.target.value })}
+                        placeholder="e.g., Consulting, Coaching, Repairs"
+                        className="mt-1.5 h-12 rounded-xl"
+                      />
+                    </div>
+                  )}
                   {form.is_high_risk_industry && (
                     <div className="p-4 rounded-xl bg-orange-50 border border-orange-200 flex gap-3">
                       <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
@@ -361,17 +374,6 @@ export default function Onboarding() {
                       placeholder="Mon-Fri 8am-6pm"
                       className="mt-1.5 h-12 rounded-xl"
                     />
-                  </div>
-                  <div>
-                    <Label>Average Job Value ($)</Label>
-                    <Input
-                      type="number"
-                      value={form.average_job_value}
-                      onChange={(e) => setForm({ ...form, average_job_value: parseFloat(e.target.value) || 0 })}
-                      placeholder="500"
-                      className="mt-1.5 h-12 rounded-xl"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1.5">Used to calculate recovered revenue in your dashboard</p>
                   </div>
 
                   {/* SMS Compliance Acknowledgment */}
@@ -509,7 +511,7 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 3: Booking URL — marked as critical */}
+              {/* STEP 3: Booking URL — marked as critical but optional */}
               {currentStep === 3 && (
                 <>
                   <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 flex gap-3">
@@ -522,7 +524,7 @@ export default function Onboarding() {
                     </div>
                   </div>
                   <div>
-                    <Label>Booking / Scheduling URL <span className="text-destructive">*</span></Label>
+                    <Label>Booking / Scheduling URL</Label>
                     <Input
                       value={form.booking_url}
                       onChange={(e) => setForm({ ...form, booking_url: e.target.value })}
@@ -739,6 +741,15 @@ export default function Onboarding() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
+              {currentStep === 3 && !form.booking_url && (
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(currentStep + 1)}
+                  className="rounded-xl h-11 px-6"
+                >
+                  Skip <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              )}
               {currentStep === 6 ? (
                 <Button
                   onClick={() => navigate("/dashboard")}

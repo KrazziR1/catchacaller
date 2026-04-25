@@ -137,27 +137,34 @@ export default function ConversationDetail({ conversation, profile, subscription
             No messages yet
           </div>
         ) : (
-          conversation.messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.sender === 'human' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-xs rounded-2xl px-4 py-2 text-sm ${
-                  msg.sender === 'human'
-                    ? 'bg-primary text-primary-foreground'
-                    : msg.sender === 'ai'
-                    ? 'bg-muted text-foreground'
-                    : 'bg-secondary text-foreground'
-                }`}
-              >
-                <p>{msg.content}</p>
-                <p className={`text-xs mt-1 ${
-                  msg.sender === 'human' ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                }`}>
-                  {format(new Date(msg.timestamp), 'h:mm a')}
-                </p>
-                {msg.sender === 'human' && <ConversationMessageStatus smsStatus={msg.sms_status} />}
+          conversation.messages.map((msg, i) => {
+            const senderLabel = msg.sender === 'human' ? 'You' : msg.sender === 'ai' ? 'AI' : 'Lead';
+            const isMineOrAI = msg.sender === 'human' || msg.sender === 'ai';
+            return (
+              <div key={i} className={`flex flex-col ${isMineOrAI ? 'items-end' : 'items-start'}`}>
+                <div className="text-xs text-muted-foreground mb-1 font-semibold px-2">
+                  {senderLabel}
+                </div>
+                <div
+                  className={`max-w-xs rounded-2xl px-4 py-2 text-sm ${
+                    msg.sender === 'human'
+                      ? 'bg-primary text-primary-foreground'
+                      : msg.sender === 'ai'
+                      ? 'bg-blue-100 text-blue-900'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
+                >
+                  <p>{msg.content}</p>
+                  <p className={`text-xs mt-1 ${
+                    msg.sender === 'human' ? 'text-primary-foreground/70' : 'text-gray-600'
+                  }`}>
+                    {format(new Date(msg.timestamp), 'h:mm a')}
+                  </p>
+                  {msg.sender === 'human' && <ConversationMessageStatus smsStatus={msg.sms_status} />}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

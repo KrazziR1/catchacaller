@@ -18,17 +18,10 @@ Deno.serve(async (req) => {
     if (normalized.length === 10) e164 = `+1${normalized}`; // US 10-digit
     if (normalized.length === 11 && normalized.startsWith('1')) e164 = `+${normalized}`; // US with +1
 
-    // TCPA Compliance: Check if the number being tested matches user's own number (prevent spam to random numbers)
-    // Don't allow test SMS to numbers that aren't the user's own phone
-    const userProfile = await base44.entities.BusinessProfile.list('-created_date', 1);
-    if (userProfile.length === 0) {
+    // Get user's profile
+    const userProfiles = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: user.email });
+    if (userProfiles.length === 0) {
       return Response.json({ success: false, error: 'No business profile found. Complete onboarding first.' });
-    }
-
-    // Get user's phone from profile to prevent abuse
-    const profile = userProfile[0];
-    if (profile.created_by !== user.email) {
-      return Response.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
     // Check opt-out list (respect previous opt-outs even for tests)
