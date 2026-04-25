@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 export default function Settings() {
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({ email: '' });
   const [formData, setFormData] = useState({
     business_name: "",
     industry: "hvac",
@@ -43,7 +43,7 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
   const profile = profiles[0];
