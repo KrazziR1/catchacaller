@@ -29,15 +29,15 @@ export default function Dashboard() {
     base44.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
 
+  // Enable polling for new lead notifications
+  useLeadNotifications();
+
   // Admin redirect: navigate admins to /admin page immediately
   useEffect(() => {
     if (user?.role === 'admin') {
       navigate("/admin");
     }
   }, [user?.role, navigate]);
-
-  // Enable polling for new lead notifications
-  useLeadNotifications();
 
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ["business-profile", user?.email],
@@ -126,8 +126,8 @@ export default function Dashboard() {
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Block rendering while loading user (admin redirect happens above)
-  if (!user || profileLoading) {
+  // Block rendering while loading user or if redirecting (admin)
+  if (!user || user?.role === 'admin' || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
