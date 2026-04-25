@@ -392,12 +392,37 @@ export default function ColdCallDashboard() {
           <div className="space-y-4 py-4">
             <div>
               <Label>Business Name *</Label>
-              <Input
-                value={formData.business_name}
-                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                className="mt-1.5 rounded-lg"
-                autoFocus
-              />
+              <div className="flex gap-2 mt-1.5">
+                <Input
+                  value={formData.business_name}
+                  onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                  className="rounded-lg"
+                  placeholder="Business name"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    if (formData.phone_number) {
+                      try {
+                        const result = await base44.functions.invoke("validateDuplicateProspect", {
+                          phone_number: formData.phone_number,
+                        });
+                        if (result.data.exists) {
+                          toast.error(result.data.message);
+                        }
+                      } catch (e) {
+                        console.error("Duplicate check failed:", e);
+                      }
+                    }
+                  }}
+                  className="rounded-lg whitespace-nowrap"
+                  disabled={!formData.phone_number}
+                >
+                  Check Duplicate
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -411,6 +436,21 @@ export default function ColdCallDashboard() {
                     }}
                     placeholder="+1 (555) 123-4567"
                     className="rounded-lg"
+                    onBlur={async () => {
+                      // Auto-check for duplicates when field loses focus
+                      if (formData.phone_number && !dncCheckResult) {
+                        try {
+                          const result = await base44.functions.invoke("validateDuplicateProspect", {
+                            phone_number: formData.phone_number,
+                          });
+                          if (result.data.exists) {
+                            toast.warning(result.data.message);
+                          }
+                        } catch (e) {
+                          console.error("Duplicate check failed:", e);
+                        }
+                      }
+                    }}
                   />
                   <Button
                     type="button"
@@ -571,9 +611,10 @@ export default function ColdCallDashboard() {
                 placeholder="Hi [Name], we help businesses like yours recover missed calls and turn them into bookings. Free trial available. Interested? Reply YES"
                 className="mt-1.5 rounded-lg min-h-[120px]"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                {newTemplate.message_body.length} characters (SMS limit: 160)
-              </p>
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>{newTemplate.message_body.length} characters</span>
+                <span>{Math.ceil(newTemplate.message_body.length / 153)} SMS segment{Math.ceil(newTemplate.message_body.length / 153) > 1 ? 's' : ''}</span>
+              </div>
             </div>
           </div>
           <DialogFooter>

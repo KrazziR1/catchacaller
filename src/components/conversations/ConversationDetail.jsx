@@ -13,6 +13,7 @@ import AssignmentSelector from './AssignmentSelector';
 import ConversationNotes from './ConversationNotes';
 import ConversationMessageStatus from './ConversationMessageStatus';
 import CreateBookingDialog from './CreateBookingDialog';
+import SMSSegmentCounter from './SMSSegmentCounter';
 
 export default function ConversationDetail({ conversation, profile, subscription, user }) {
   const queryClient = useQueryClient();
@@ -182,6 +183,7 @@ export default function ConversationDetail({ conversation, profile, subscription
            <Send className="w-4 h-4" />
          </Button>
        </div>
+       {reply && <SMSSegmentCounter message={reply} />}
        <div className="flex gap-2">
          {isPro && (
            <Button

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { processBatchWithConcurrency } from "@/lib/rateLimitBulkSMS";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,15 +45,20 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
 
   const sendBulkMutation = useMutation({
     mutationFn: async () => {
-      const results = await Promise.allSettled(
-        Array.from(selectedProspects).map(prospectId => {
+      const prospectIds = Array.from(selectedProspects);
+      
+      // Process in batches of 5 to avoid Twilio rate limits
+      const results = await processBatchWithConcurrency(
+        prospectIds,
+        (prospectId) => {
           const prospect = prospects.find(p => p.id === prospectId);
           return base44.functions.invoke("sendColdCallSMSWithCompliance", {
             prospect_id: prospectId,
             phone_number: prospect.phone_number,
             message_body: editedMessage,
           });
-        })
+        },
+        5
       );
       
       const failed = results.filter(r => r.status === 'rejected');

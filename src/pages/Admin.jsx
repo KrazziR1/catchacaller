@@ -11,6 +11,8 @@ import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, C
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
 import ColdCallDashboard from "@/components/coldcalls/ColdCallDashboard";
 import TopNav from "@/components/layout/TopNav";
+import PaginationControls from "@/components/admin/PaginationControls";
+import BulkAccountActions from "@/components/admin/BulkAccountActions";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ export default function Admin() {
   const [filterPlan, setFilterPlan] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [adminView, setAdminView] = useState("businesses"); // businesses or coldcalls
+  const [page, setPage] = useState(0);
+  const [selectedAccounts, setSelectedAccounts] = useState(new Set());
 
   useEffect(() => {
     base44.auth.me().then((u) => {
@@ -34,12 +38,13 @@ export default function Admin() {
   }, [navigate]);
 
   // Fetch actual data with pagination for performance
+  const pageSize = 20;
   const { data: businesses = [] } = useQuery({
-    queryKey: ["all-businesses"],
+    queryKey: ["all-businesses", page],
     queryFn: async () => {
       try {
         return await Promise.race([
-          base44.entities.BusinessProfile.list("-created_date", 50),
+          base44.entities.BusinessProfile.list("-created_date", 10000),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
         ]);
       } catch (err) {
@@ -50,6 +55,9 @@ export default function Admin() {
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
   });
+
+  // Paginate results
+  const paginatedBusinesses = businesses.slice(page * pageSize, (page + 1) * pageSize);
 
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["all-subscriptions"],
@@ -284,7 +292,15 @@ export default function Admin() {
         <Card className="rounded-2xl">
           <CardHeader>
             <div className="space-y-4">
-              <CardTitle className="text-lg">Businesses</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Businesses</CardTitle>
+                {selectedAccounts.size > 0 && (
+                  <BulkAccountActions 
+                    selectedAccounts={selectedAccounts}
+                    onComplete={() => setSelectedAccounts(new Set())}
+                  />
+                )}
+              </div>
               <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
@@ -327,6 +343,20 @@ export default function Admin() {
                 <table className="w-full text-sm">
                   <thead className="border-b border-border">
                     <tr>
+                      <th className="text-left py-3 px-4 font-semibold">
+                        <input
+                          type="checkbox"
+                          checked={selectedAccounts.size === paginatedBusinesses.length && paginatedBusinesses.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedAccounts(new Set(paginatedBusinesses.map(b => b.id)));
+                            } else {
+                              setSelectedAccounts(new Set());
+                            }
+                          }}
+                          className="rounded"
+                        />
+                      </th>
                       <th className="text-left py-3 px-4 font-semibold">Business Name</th>
                       <th className="text-left py-3 px-4 font-semibold">Industry</th>
                       <th className="text-left py-3 px-4 font-semibold">Phone</th>
@@ -337,7 +367,18 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredBusinesses.map((business) => {
+                    {paginatedBusinesses.filter(b => {
+                      const matchesSearch =
+                        b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        b.industry.toLowerCase().includes(searchQuery.toLowerCase());
+                      const sub = subscriptions.find((s) => s.user_email === b.created_by);
+                      const matchesPlan = filterPlan === "all" || sub?.plan_name === filterPlan;
+                      const matchesStatus =
+                        filterStatus === "all" ||
+                        (filterStatus === "active" && ["active", "trialing"].includes(sub?.status)) ||
+                        (filterStatus === "inactive" && !["active", "trialing"].includes(sub?.status));
+                      return matchesSearch && matchesPlan && matchesStatus;
+                    }).map((business) => {
                       const sub = subscriptions.find((s) => s.user_email === business.created_by);
                       const subStatus = sub?.status || "inactive";
                       const progress = onboardingProgress.find((p) => p.user_email === business.created_by);
@@ -345,10 +386,29 @@ export default function Admin() {
                       return (
                         <tr
                           key={business.id}
-                          className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
-                          onClick={() => setSelectedBusiness(business)}
+                          className="border-b border-border hover:bg-muted/50 transition-colors"
                         >
                           <td className="py-3 px-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedAccounts.has(business.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                const newSet = new Set(selectedAccounts);
+                                if (e.target.checked) {
+                                  newSet.add(business.id);
+                                } else {
+                                  newSet.delete(business.id);
+                                }
+                                setSelectedAccounts(newSet);
+                              }}
+                              className="rounded"
+                            />
+                          </td>
+                          <td 
+                            className="py-3 px-4 cursor-pointer hover:text-primary"
+                            onClick={() => setSelectedBusiness(business)}
+                          >
                             <p className="font-medium">{business.business_name}</p>
                           </td>
                           <td className="py-3 px-4">
@@ -404,6 +464,14 @@ export default function Admin() {
               </div>
             )}
           </CardContent>
+          {businesses.length > pageSize && (
+            <PaginationControls
+              page={page}
+              pageSize={pageSize}
+              totalCount={businesses.length}
+              onPageChange={setPage}
+            />
+          )}
         </Card>
 
         <BusinessDetailModal
