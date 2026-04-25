@@ -44,7 +44,7 @@ const plans = [
 ];
 
 const steps = [
-  { key: "plan", icon: CreditCard, title: "Choose Your Plan", subtitle: "7-day free trial — no credit card required" },
+  { key: "plan", icon: CreditCard, title: "Choose Your Plan", subtitle: "You'll start your 7-day free trial after onboarding" },
   { key: "business", icon: Building2, title: "Your Business", subtitle: "Let's get your profile set up" },
   { key: "phone", icon: PhoneCall, title: "Your Phone Number", subtitle: "The number you want to monitor for missed calls" },
   { key: "ai", icon: Bot, title: "AI Personality", subtitle: "How should your AI respond to leads?" },
@@ -273,7 +273,7 @@ export default function Onboarding() {
               {/* STEP 0: Plan Selection */}
               {currentStep === 0 && (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground -mt-2">All plans come with a 7-day free trial. No credit card required during onboarding.</p>
+                  <p className="text-sm text-muted-foreground -mt-2">Choose the plan you'll use after your 7-day free trial. Your trial starts once you complete onboarding.</p>
                   <div className="space-y-3">
                     {plans.map((plan) => (
                       <button
@@ -303,7 +303,7 @@ export default function Onboarding() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-center text-muted-foreground">Your 7-day free trial starts immediately. After setup, you'll manage billing from your account.</p>
+                  <p className="text-xs text-center text-muted-foreground">Your 7-day free trial starts after onboarding completes. No charges during the trial period.</p>
                 </div>
               )}
 
@@ -457,7 +457,7 @@ export default function Onboarding() {
                       <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
                         <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
                         <p className="text-xs text-blue-800 mt-2">
-                          One-time setup fee: $2.99. Monthly cost: ~$1-2/month plus SMS fees.
+                          One-time provisioning fee: <span className="font-semibold">$2.99</span> (charged separately). Ongoing monthly cost: ~$1-2/month plus SMS fees (starts after trial).
                         </p>
                       </div>
                     )}

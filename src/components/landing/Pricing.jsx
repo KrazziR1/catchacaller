@@ -95,7 +95,7 @@ export default function Pricing() {
           </p>
         </motion.div>
 
-        <p className="text-center text-sm text-muted-foreground mb-8">🎉 7-day free trial — <span className="font-semibold">no credit card required.</span> Month-to-month billing after trial. Cancel anytime.</p>
+        <p className="text-center text-sm text-muted-foreground mb-8">🎉 <span className="font-semibold">7-day free trial</span> on any plan. Optional $2.99 provisioning fee if you want a dedicated number. Month-to-month after trial. Cancel anytime.</p>
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {plans.map((plan, i) => (
             <motion.div
