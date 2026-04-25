@@ -11,6 +11,7 @@ export default function ManualReviewQueue({ businesses }) {
   const queryClient = useQueryClient();
   const [reviewingId, setReviewingId] = useState(null);
   const [notes, setNotes] = useState("");
+  const [refundSelected, setRefundSelected] = useState(false);
 
   const flaggedBusinesses = businesses.filter((b) => b.requires_manual_review);
 
@@ -32,17 +33,19 @@ export default function ManualReviewQueue({ businesses }) {
 
   const rejectMutation = useMutation({
     mutationFn: async (businessId) => {
+      const business = businesses.find((b) => b.id === businessId);
       // First mark as rejected in profile
       await base44.asServiceRole.entities.BusinessProfile.update(businessId, {
         requires_manual_review: false,
       });
-      // Then send rejection email (non-critical)
+      // Then send rejection email with optional refund (non-critical)
       try {
-        const business = businesses.find((b) => b.id === businessId);
         await base44.functions.invoke("sendReviewRejectionEmail", {
           email: business.created_by,
           business_name: business.business_name,
           reason: notes || "Account does not meet compliance requirements",
+          issueRefund: refundSelected && !!business.twilio_number_sid,
+          stripeCustomerId: business.created_by, // We'll lookup the customer by email in the function
         });
       } catch (e) {
         console.warn("Email notification failed (non-critical):", e);
@@ -52,6 +55,7 @@ export default function ManualReviewQueue({ businesses }) {
       queryClient.invalidateQueries({ queryKey: ["admin-businesses"] });
       setReviewingId(null);
       setNotes("");
+      setRefundSelected(false);
       toast.success("Account rejected and user notified");
     },
     onError: (error) => {
@@ -124,6 +128,20 @@ export default function ManualReviewQueue({ businesses }) {
                     rows={2}
                   />
                 </div>
+                {business.twilio_number_sid && (
+                  <div className="flex items-center gap-2 p-2 rounded bg-white border border-border">
+                    <input
+                      type="checkbox"
+                      id={`refund-${business.id}`}
+                      checked={refundSelected}
+                      onChange={(e) => setRefundSelected(e.target.checked)}
+                      className="rounded"
+                    />
+                    <label htmlFor={`refund-${business.id}`} className="text-xs cursor-pointer">
+                      Issue refund for provisioning fee ($2.99)
+                    </label>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <Button
                     variant="outline"
