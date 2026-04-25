@@ -198,8 +198,9 @@ export default function Onboarding() {
   const back = () => setCurrentStep(currentStep - 1);
 
   const handleCheckout = () => {
-    const plan = plans.find((p) => p.name === selectedPlan);
-    if (plan) checkoutMutation.mutate(plan.priceId);
+    // Skip checkout for trial — user gets 7 days free immediately
+    // Trial will be enforced server-side; after 7 days, they'll see upgrade prompt
+    navigate("/dashboard");
   };
 
   const getPreviewMessage = () => {
@@ -389,21 +390,47 @@ export default function Onboarding() {
               {/* STEP 2: Phone */}
               {currentStep === 2 && (
                 <>
-                  <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
-                  <div className="relative flex items-center gap-3">
+                  <div>
+                    <Label>Enter Your Phone Number</Label>
+                    <div className="flex gap-2 mt-1.5">
+                      <Input
+                        value={form.phone_number}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/\D/g, '');
+                          if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
+                          if (val && !val.startsWith('+')) val = '+' + val;
+                          setForm({ ...form, phone_number: val });
+                        }}
+                        placeholder="+1 (555) 123-4567"
+                        className="h-12 rounded-xl"
+                      />
+                      {form.phone_number && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setForm({ ...form, phone_number: '' })}
+                          className="rounded-xl h-12 px-3"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Enter the phone number you want to monitor. We automatically format it for you.
+                    </p>
+                  </div>
+
+                  <div className="relative flex items-center gap-3 py-2">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">or enter manually</span>
+                    <span className="text-xs text-muted-foreground">or get a new number</span>
                     <div className="flex-1 h-px bg-border" />
                   </div>
-                  <div>
-                    <Label>Enter Existing Phone Number</Label>
-                    <Input
-                      value={form.phone_number}
-                      onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
-                      placeholder="(555) 123-4567"
-                      className="mt-1.5 h-12 rounded-xl"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1.5">If you already have a number configured in Twilio</p>
+
+                  <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                    <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
+                    <p className="text-xs text-blue-800 mt-2">
+                      Provisioning a dedicated toll-free number is optional and costs ~$1-2/month plus SMS fees. You'll only pay if you choose this option.
+                    </p>
                   </div>
                 </>
               )}
@@ -559,8 +586,8 @@ export default function Onboarding() {
                     <div className="flex gap-3 p-3 rounded-xl bg-muted/50">
                       <TrendingUp className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm font-semibold">First 24-48 hours</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Most customers see their first recovered lead within 24 hours. Businesses with high call volume see results faster.</p>
+                        <p className="text-sm font-semibold">What to expect</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Results depend on your call volume and industry. The system is now actively listening for missed calls.</p>
                       </div>
                     </div>
                     <div className="flex gap-3 p-3 rounded-xl bg-muted/50">
@@ -634,14 +661,9 @@ export default function Onboarding() {
               {currentStep === 7 ? (
                 <Button
                   onClick={handleCheckout}
-                  disabled={checkoutMutation.isPending}
                   className="rounded-xl h-11 px-6 bg-accent hover:bg-accent/90"
                 >
-                  {checkoutMutation.isPending ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Redirecting...</>
-                  ) : (
-                    <>Activate Plan & Go Live <ArrowRight className="ml-2 w-4 h-4" /></>
-                  )}
+                  Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               ) : (
                 <Button
