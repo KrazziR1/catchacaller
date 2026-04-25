@@ -111,10 +111,14 @@ export default function Dashboard() {
     retry: 0,
   });
 
-  // Gate: redirect to onboarding if no profile set up (unless admin)
+  // Gate: redirect to appropriate page based on user type
   useEffect(() => {
-    if (!profileLoading && profiles.length === 0 && user?.role !== 'admin') {
-      navigate("/onboarding");
+    if (!profileLoading && profiles.length === 0) {
+      if (user?.role === 'admin') {
+        navigate("/admin");
+      } else {
+        navigate("/onboarding");
+      }
     }
   }, [profileLoading, profiles, navigate, user]);
 
