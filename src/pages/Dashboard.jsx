@@ -33,7 +33,7 @@ export default function Dashboard() {
   useLeadNotifications();
 
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
-    queryKey: ["business-profile"],
+    queryKey: ["business-profile", user?.email],
     queryFn: async () => {
       try {
         const result = await Promise.race([
@@ -46,6 +46,7 @@ export default function Dashboard() {
         return [];
       }
     },
+    enabled: !!user?.email && user?.role !== 'admin',
     staleTime: 5 * 60 * 1000,
     retry: 0,
   });

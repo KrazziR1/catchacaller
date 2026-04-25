@@ -50,23 +50,31 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     try {
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
+      const currentUser = await Promise.race([
+        base44.auth.me(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+        )
+      ]);
       setUser(currentUser);
       setIsAuthenticated(true);
+      // Persist user data for session persistence
+      sessionStorage.setItem('base44_user_cached', JSON.stringify(currentUser));
+      sessionStorage.setItem('base44_auth_checked', 'true');
       setIsLoadingAuth(false);
       setAuthChecked(true);
-      // Persist auth state to localStorage for session persistence across tabs
-      if (currentUser) {
-        sessionStorage.setItem('base44_auth_checked', 'true');
-      }
     } catch (error) {
-      // Only redirect to login if not a callback/token issue
-      if (error?.message?.includes('Unauthorized') || error?.message?.includes('HTTPException')) {
-        console.warn('Auth token invalid, clearing and redirecting to login');
-        localStorage.removeItem('base44_access_token');
-        sessionStorage.removeItem('base44_auth_checked');
-      } else {
-        console.warn('User auth check failed:', error?.message);
+      console.warn('User auth check failed:', error?.message);
+      // Check if we have a cached user from a previous session
+      const cachedUser = sessionStorage.getItem('base44_user_cached');
+      if (cachedUser) {
+        try {
+          const user = JSON.parse(cachedUser);
+          setUser(user);
+          setIsAuthenticated(true);
+        } catch {
+          sessionStorage.removeItem('base44_user_cached');
+        }
       }
       setIsLoadingAuth(false);
       setAuthError({ type: 'auth_required' });
