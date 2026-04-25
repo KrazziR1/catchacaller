@@ -5,12 +5,11 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import Features from "@/components/landing/Features";
 import DemoSection from "@/components/landing/DemoSection";
 import DemoCTA from "@/components/landing/DemoCTA";
-import IndustryUseCases from "@/components/landing/IndustryUseCases";
 import IntegrationsSection from "@/components/landing/IntegrationsSection";
 import Pricing from "@/components/landing/Pricing";
 import FAQSection from "@/components/landing/FAQSection";
 import ContactSection from "@/components/landing/ContactSection";
-import WaitlistSection from "@/components/landing/WaitlistSection";
+import GetStartedCTA from "@/components/landing/GetStartedCTA";
 import Footer from "@/components/landing/Footer";
 
 export default function Landing() {
@@ -29,14 +28,13 @@ export default function Landing() {
         <DemoSection />
       </div>
       <DemoCTA />
-      <IndustryUseCases />
       <IntegrationsSection />
       <div id="pricing">
         <Pricing />
       </div>
       <FAQSection />
       <ContactSection />
-      <WaitlistSection />
+      <GetStartedCTA />
       <Footer />
     </div>
   );
