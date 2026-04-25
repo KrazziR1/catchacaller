@@ -16,7 +16,6 @@ const plans = [
       "Instant SMS auto-response",
       "100 SMS/month",
       "Basic templates",
-      "Email support",
     ],
     cta: "Start Free Trial",
     highlighted: false,
@@ -54,7 +53,6 @@ const plans = [
       "Multi-location support",
       "Advanced analytics",
       "Custom AI training",
-      "CRM integrations",
       "Dedicated account manager",
     ],
     cta: "Get Started",
@@ -93,7 +91,7 @@ export default function Pricing() {
             Plans that pay for themselves
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            One recovered job covers months of service. 7-day free trial on all plans.
+            One recovered job covers months of service.
           </p>
         </motion.div>
 

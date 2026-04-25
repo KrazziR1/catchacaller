@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: 'How long does setup take?',
-    a: 'Most businesses are fully operational in 1-2 hours. This includes claiming your toll-free number (which requires carrier verification), setting up your templates, and testing. If you already have a number, it\'s just 15-20 minutes.',
+    a: 'Setup takes 15-20 minutes to configure your business profile, AI personality, and SMS templates. However, if you provision a new toll-free number, full carrier activation takes 1-2 business days. You can test everything immediately while waiting for full activation.',
   },
   {
     q: 'Can I cancel anytime?',
