@@ -125,8 +125,8 @@ export default function Dashboard() {
     }
   }, [user?.role, navigate]);
 
-  // Block rendering while loading
-  if (!user || profileLoading) {
+  // Block rendering while loading or if user is admin (redirect in progress)
+  if (!user || user?.role === 'admin' || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
