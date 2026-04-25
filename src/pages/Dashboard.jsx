@@ -140,7 +140,7 @@ export default function Dashboard() {
     return null;
   }
 
-  // If no profile after loading, will redirect via useEffect
+  // If no profile after loading, redirect to onboarding
   if (profiles.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">

@@ -21,7 +21,9 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
     ai_personality: business?.ai_personality || "",
     timezone: business?.timezone || "",
     business_hours: business?.business_hours || "",
-    average_job_value: business?.average_job_value || 500,
+    phone_number: business?.phone_number || "",
+    twilio_number_sid: business?.twilio_number_sid || "",
+    booking_url: business?.booking_url || "",
     requires_manual_review: business?.requires_manual_review || false,
   });
   const queryClient = useQueryClient();
@@ -157,7 +159,7 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl">{businessName}</DialogTitle>
+              <DialogTitle className="text-xl">{editingName ? businessName : business.business_name}</DialogTitle>
               <Button
                 size="icon"
                 variant="ghost"
@@ -190,7 +192,6 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                   <div>
                     <label className="text-xs text-muted-foreground block mb-1.5">Industry</label>
                     <select value={editData.industry} onChange={(e) => setEditData({...editData, industry: e.target.value})} className="w-full px-2 py-1.5 rounded border border-border text-sm">
-                      <option value="general">General</option>
                       <option value="hvac">HVAC</option>
                       <option value="plumbing">Plumbing</option>
                       <option value="roofing">Roofing</option>
@@ -202,6 +203,7 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                       <option value="dental">Dental</option>
                       <option value="fitness">Fitness</option>
                       <option value="automotive">Automotive</option>
+                      <option value="other">Other</option>
                     </select>
                   </div>
                   <div>
@@ -212,76 +214,23 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                     <label className="text-xs text-muted-foreground block mb-1.5">Business Hours</label>
                     <Input value={editData.business_hours} onChange={(e) => setEditData({...editData, business_hours: e.target.value})} className="text-sm" />
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1.5">Avg Job Value ($)</label>
-                    <Input type="number" value={editData.average_job_value} onChange={(e) => setEditData({...editData, average_job_value: Number(e.target.value)})} className="text-sm" />
-                  </div>
+
                 </div>
 
-                <div className="border-t border-border pt-4 space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-xs font-semibold text-muted-foreground">Business Phone Number</p>
-                  </div>
-                  {business.phone_number ? (
-                    <div className="flex items-center justify-between p-2 bg-muted rounded">
-                      <p className="text-sm font-mono">{business.phone_number}</p>
-                      <button
-                        onClick={() => copyToClipboard(business.phone_number, "phone")}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {copied === "phone" ? "✓" : <Copy className="w-3 h-3" />}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic">Not provisioned</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <PhoneCall className="w-4 h-4 text-muted-foreground" />
-                    <p className="text-xs font-semibold text-muted-foreground">Twilio Phone SID</p>
-                  </div>
-                  {business.twilio_number_sid ? (
-                    <div className="flex items-center justify-between p-2 bg-muted rounded">
-                      <p className="text-sm font-mono text-xs">{business.twilio_number_sid}</p>
-                      <button
-                        onClick={() => copyToClipboard(business.twilio_number_sid, "twilio")}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {copied === "twilio" ? "✓" : <Copy className="w-3 h-3" />}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic">Not configured</p>
-                  )}
-                </div>
-
-                {business.booking_url && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
-                      <p className="text-xs font-semibold text-muted-foreground">Booking URL</p>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-muted rounded">
-                      <a
-                        href={business.booking_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary underline truncate"
-                      >
-                        {business.booking_url}
-                      </a>
-                      <button
-                        onClick={() => copyToClipboard(business.booking_url, "booking")}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {copied === "booking" ? "✓" : <Copy className="w-3 h-3" />}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <div className="space-y-4 pt-4 border-t border-border">
+                   <div>
+                     <label className="text-xs text-muted-foreground block mb-1.5">Business Phone Number</label>
+                     <Input value={editData.phone_number} onChange={(e) => setEditData({...editData, phone_number: e.target.value})} placeholder="+1..." className="text-sm" />
+                   </div>
+                   <div>
+                     <label className="text-xs text-muted-foreground block mb-1.5">Twilio Phone SID</label>
+                     <Input value={editData.twilio_number_sid} onChange={(e) => setEditData({...editData, twilio_number_sid: e.target.value})} placeholder="Not configured" className="text-sm" />
+                   </div>
+                   <div>
+                     <label className="text-xs text-muted-foreground block mb-1.5">Booking URL</label>
+                     <Input value={editData.booking_url} onChange={(e) => setEditData({...editData, booking_url: e.target.value})} placeholder="https://calendly.com/..." className="text-sm" />
+                   </div>
+                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                    <div>
@@ -294,8 +243,10 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                    <div>
                      <label className="text-xs text-muted-foreground block mb-1.5">Approval Status</label>
                      <div className="flex items-center gap-2">
-                       <input type="checkbox" checked={!editData.requires_manual_review} onChange={(e) => setEditData({...editData, requires_manual_review: !e.target.checked})} className="rounded" />
-                       <span className="text-sm">{editData.requires_manual_review ? "Pending Review" : "Approved"}</span>
+                       <Badge className={editData.requires_manual_review ? "bg-destructive/20 text-destructive" : "bg-accent/20 text-accent"}>
+                         {editData.requires_manual_review ? "Pending Review" : "Approved"}
+                       </Badge>
+                       <input type="checkbox" checked={!editData.requires_manual_review} onChange={(e) => setEditData({...editData, requires_manual_review: !e.target.checked})} className="rounded" title="Toggle approval status" />
                      </div>
                    </div>
                  </div>

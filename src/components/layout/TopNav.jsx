@@ -33,8 +33,7 @@ export default function TopNav() {
   }
 
   const handleLogout = async () => {
-    await base44.auth.logout();
-    navigate("/");
+    await base44.auth.logout("/");
   };
 
   const isAdminPage = location.pathname === "/admin" || location.pathname === "/admin/compliance";
