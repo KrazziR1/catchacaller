@@ -30,6 +30,7 @@ import AdvancedReporting from '@/pages/AdvancedReporting';
 import CalendarIntegration from '@/pages/CalendarIntegration';
 import ComplianceAudit from '@/pages/ComplianceAudit';
 import ComplianceDashboard from '@/pages/ComplianceDashboard';
+import SalesResources from '@/pages/SalesResources';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
       <Route path="/checkout-success" element={<CheckoutSuccess />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/compliance" element={<ComplianceDashboard />} />
+      <Route path="/sales-resources" element={<SalesResources />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/missed-calls" element={<MissedCalls />} />
