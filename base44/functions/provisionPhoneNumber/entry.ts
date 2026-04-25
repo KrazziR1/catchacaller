@@ -54,18 +54,23 @@ Deno.serve(async (req) => {
     // Rate limit check
     const rateCheck = checkRateLimit(user.email);
     if (!rateCheck.allowed) {
+      console.warn(`Rate limit exceeded for ${user.email}`);
       return Response.json({ error: "Too many provision requests. Try again in 1 hour." }, { status: 429 });
     }
 
-    const { paymentMethodId, area_code } = await req.json().catch(() => ({}));
+    const payload = await req.json().catch(() => ({}));
+    const { paymentMethodId, area_code } = payload;
     
     // Validate area code if provided
-    if (area_code && !/^\d{3}$/.test(area_code)) {
+    if (area_code && (typeof area_code !== 'string' || !/^\d{3}$/.test(area_code))) {
       return Response.json({ error: "Invalid area code format" }, { status: 400 });
     }
 
-    // Prevent duplicate provisioning
+    // Verify user owns a profile
     const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: user.email });
+    if (profiles.length === 0) {
+      return Response.json({ error: "No business profile found" }, { status: 400 });
+    }
     const profile = profiles[0];
 
     if (profile?.twilio_number_sid) {
@@ -162,12 +167,15 @@ Deno.serve(async (req) => {
      await base44.asServiceRole.entities.BusinessProfile.update(profile.id, updateData);
     }
 
+    console.info(`Phone provisioned for ${user.email}: ${purchaseData.phone_number}`);
     return Response.json({
       success: true,
       phone_number: purchaseData.phone_number,
       sid: purchaseData.sid,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`Provision error for ${user.email}:`, error.message);
+    // Don't expose detailed error to client
+    return Response.json({ error: "Provisioning failed. Please try again or contact support." }, { status: 500 });
   }
 });

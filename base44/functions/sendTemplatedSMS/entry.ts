@@ -36,22 +36,21 @@ Deno.serve(async (req) => {
     // Rate limit check
     const rateCheck = checkSMSRateLimit(user.email);
     if (!rateCheck.allowed) {
+      console.warn(`SMS rate limit exceeded for ${user.email}`);
       return Response.json({ error: "SMS rate limit exceeded (100 per hour)" }, { status: 429 });
     }
 
-    const payload = await req.json();
-    
+    const payload = await req.json().catch(() => ({}));
     const { conversation_id, template_id, conversation_ids } = payload;
     
+    // Validate inputs
+    if (!template_id || typeof template_id !== 'string') {
+      return Response.json({ error: 'Invalid template_id' }, { status: 400 });
+    }
+
     // Handle single or bulk SMS
     const convoIds = conversation_ids || [conversation_id];
     
-    const template = await base44.asServiceRole.entities.SMSTemplate.get(template_id);
-    if (!template) {
-      return Response.json({ error: 'Template not found' }, { status: 404 });
-    }
-
-    // Validate payload
     if (!convoIds || !Array.isArray(convoIds) || convoIds.length === 0) {
       return Response.json({ error: 'conversation_id or conversation_ids required' }, { status: 400 });
     }
@@ -60,11 +59,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Cannot send to more than 50 conversations at once' }, { status: 400 });
     }
 
-    const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
+    // Verify user owns profile
+    const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: user.email });
+    if (profiles.length === 0) {
+      return Response.json({ error: 'No business profile found' }, { status: 400 });
+    }
     const profile = profiles[0];
     
-    if (!profile) {
-      return Response.json({ error: 'No business profile' }, { status: 400 });
+    const template = await base44.asServiceRole.entities.SMSTemplate.get(template_id);
+    if (!template) {
+      return Response.json({ error: 'Template not found' }, { status: 404 });
     }
 
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
@@ -134,9 +138,10 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.info(`Templated SMS sent by ${user.email}: ${convoIds.length} conversations, ${results.filter(r => r.status === 'sent').length} successful`);
     return Response.json({ status: 'completed', results });
   } catch (error) {
-    console.error('Template SMS error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`Template SMS error for ${user.email}:`, error.message);
+    return Response.json({ error: 'Failed to send SMS' }, { status: 500 });
   }
 });
