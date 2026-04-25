@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft } from "lucide-react";
+import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen } from "lucide-react";
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
 
 export default function Admin() {
@@ -116,10 +116,16 @@ export default function Admin() {
             <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
             <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Landing
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/sales-resources")} className="gap-2">
+              <BookOpen className="w-4 h-4" />
+              Sales Resources
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Landing
+            </Button>
+          </div>
         </div>
 
         {/* KPI Cards */}
