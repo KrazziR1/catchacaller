@@ -9,8 +9,9 @@ const scripts = [
     industry: "Universal Script",
     opening: "Hey [Name], my name is [Your Name] — I'm local here in [City].",
     problem: "I recently started a service that I'm offering completely free to 10 businesses for a couple of weeks. I wanted to reach out to see if you'd be interested.",
-    solution: "What we do is: If a lead calls your business phone number and you don't answer, we immediately send them a text from your business and answer basic questions and ultimately guide them to either book a service with you using your current booking software OR we at least start and continue the conversation to a point where you can step in and take over the conversation once you're available. I really have this built out so that businesses can customize the experience.\n\nThis service is designed to convert missed calls to actual calls for service.",
-    cta: "By any chance, do you have 2 minutes to see if we'd be a good fit for your [prospect_industry] business? I want to be mindful of your time today, so instead of diving into all the details, I can send you a link to our website for you to check out when you're free. If you want to give us a try, text or call me and we can get you set up completely free — all I'm looking for is feedback on what we're doing great and how we can improve.",
+    solution: "By any chance, do you have 2 minutes to see if we'd be a good fit for [business]?",
+    subtext: "We offer a service where if a lead calls your business phone number and you don't answer, we immediately send them a text from your business and answer basic questions and ultimately guide them to either book a service with you using your current booking software OR we at least start and continue the conversation to a point where you can step in and take over the conversation once you're available. I really have this built out so that businesses can customize the experience. This service is designed to convert missed calls to actual calls for service.",
+    cta: "I want to be mindful of your time today, so instead of diving into all the details, I can send you a link to our website for you to check out when you're free. If you want to give us a try, text or call me and we can get you set up completely free — all I'm looking for is feedback on what we're doing great and how we can improve.",
   },
 ];
 
@@ -90,9 +91,9 @@ export default function ColdCallingScripts() {
 
             {/* Solution */}
             <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">✨ SOLUTION (Show Value)</h3>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">✨ SOLUTION (Transition Question)</h3>
               <div className="bg-muted/50 p-4 rounded-lg border border-border">
-                <p className="text-sm leading-relaxed">{script.solution}</p>
+                <p className="text-sm leading-relaxed font-medium">{script.solution}</p>
               </div>
               <Button
                 variant="ghost"
@@ -101,6 +102,30 @@ export default function ColdCallingScripts() {
                 onClick={() => handleCopy(script.solution, `solution-${idx}`)}
               >
                 {copied === `solution-${idx}` ? (
+                  <>
+                    <Check className="w-4 h-4" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" /> Copy
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Subtext */}
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">💡 (If They Say Yes — Explain)</h3>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="text-sm leading-relaxed text-blue-900">{script.subtext}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 gap-2"
+                onClick={() => handleCopy(script.subtext, `subtext-${idx}`)}
+              >
+                {copied === `subtext-${idx}` ? (
                   <>
                     <Check className="w-4 h-4" /> Copied
                   </>

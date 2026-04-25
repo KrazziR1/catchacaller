@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useNavigate } from "react-router-dom";
 import { Search, Plus, MessageSquare, Edit2, Trash2, Send, Settings, Zap } from "lucide-react";
 import { toast } from "sonner";
 import BulkSMSDialog from "./BulkSMSDialog";
@@ -27,6 +28,7 @@ const statusColors = {
 };
 
 export default function ColdCallDashboard() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterState, setFilterState] = useState("all");
@@ -126,6 +128,17 @@ export default function ColdCallDashboard() {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }) => base44.entities.ColdCallProspect.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cold-call-prospects"] });
+      toast.success("Status updated");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update status");
+    },
+  });
+
   const handleDNCCheck = async () => {
     if (!formData.phone_number || !formData.state) {
       toast.error("Enter phone number and state first");
@@ -166,7 +179,7 @@ export default function ColdCallDashboard() {
           <h1 className="text-3xl font-extrabold tracking-tight">Cold Call Tracking</h1>
           <p className="text-muted-foreground mt-1">Manage prospects, send SMS templates, and track conversions</p>
         </div>
-        <Button variant="outline" onClick={() => window.history.back()} className="gap-2 rounded-xl">
+        <Button variant="outline" onClick={() => navigate("/admin")} className="gap-2 rounded-xl">
           ← Back to Admin
         </Button>
         <div className="flex gap-2">
@@ -272,7 +285,15 @@ export default function ColdCallDashboard() {
                   {filtered.map((prospect) => (
                     <tr key={prospect.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4">
-                        <p className="font-medium">{prospect.business_name}</p>
+                        <button
+                          onClick={() => {
+                            setSelectedProspect(prospect);
+                            setShowEditDialog(true);
+                          }}
+                          className="font-medium text-primary hover:underline cursor-pointer"
+                        >
+                          {prospect.business_name}
+                        </button>
                       </td>
                       <td className="py-3 px-4">
                         <p className="font-mono text-xs">{prospect.phone_number}</p>
@@ -283,9 +304,22 @@ export default function ColdCallDashboard() {
                         </p>
                       </td>
                       <td className="py-3 px-4">
-                        <Badge className={statusColors[prospect.status]}>
-                          {prospect.status.replace(/_/g, " ")}
-                        </Badge>
+                        <Select value={prospect.status} onValueChange={(newStatus) => {
+                          updateStatusMutation.mutate({ id: prospect.id, status: newStatus });
+                        }}>
+                          <SelectTrigger className="w-40 h-8 rounded-lg text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="contacted">Contacted</SelectItem>
+                            <SelectItem value="interested">Interested</SelectItem>
+                            <SelectItem value="not_interested">Not Interested</SelectItem>
+                            <SelectItem value="signed_up_trial">Signed Up (Trial)</SelectItem>
+                            <SelectItem value="actively_using">Actively Using</SelectItem>
+                            <SelectItem value="discontinued_trial">Discontinued</SelectItem>
+                            <SelectItem value="do_not_call">Do Not Call</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="py-3 px-4">
                         <p className="text-xs capitalize">{prospect.industry}</p>
