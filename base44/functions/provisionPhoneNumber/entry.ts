@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 
       // Store the charge ID for future refunds
       const charges = await stripe.charges.list({ payment_intent: paymentIntent.id, limit: 1 });
-      const chargeId = charges.data[0]?.id;
+      var chargeId = charges.data[0]?.id;
     }
 
     // Derive the base URL from the incoming request host

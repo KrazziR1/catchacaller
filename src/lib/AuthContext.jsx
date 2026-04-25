@@ -83,12 +83,7 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     setIsLoadingAuth(true);
     try {
-      const currentUser = await Promise.race([
-        base44.auth.me(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth check timeout')), 3000)
-        )
-      ]);
+      const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
       localStorage.setItem('base44_user_cached', JSON.stringify(currentUser));

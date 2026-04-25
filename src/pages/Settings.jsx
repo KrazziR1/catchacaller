@@ -39,12 +39,13 @@ export default function Settings() {
   });
 
   const { data: subscriptions = [] } = useQuery({
-    queryKey: ["subscription"],
-    queryFn: () => base44.entities.Subscription.list("-created_date", 1),
+    queryKey: ["subscription", user?.email],
+    queryFn: () => user?.email ? base44.entities.Subscription.filter({ user_email: user.email }) : Promise.resolve([]),
+    enabled: !!user?.email,
   });
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then((u) => setUser(u || { email: '' })).catch(() => setUser({ email: '' }));
   }, []);
 
   const profile = profiles[0];
