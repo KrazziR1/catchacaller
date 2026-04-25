@@ -9,9 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter } from "lucide-react";
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
-import AdminKPICharts from "@/components/admin/AdminKPICharts";
-import ActivityHeatmap from "@/components/admin/ActivityHeatmap";
-import ManualReviewQueue from "@/components/admin/ManualReviewQueue";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -24,43 +21,24 @@ export default function Admin() {
   useEffect(() => {
     base44.auth.me().then((u) => {
       setUser(u);
-      // Redirect if not admin
       if (u && u.role !== "admin") {
         navigate("/dashboard");
       }
+    }).catch(() => {
+      // If auth check fails, redirect to home
+      navigate("/");
     });
   }, [navigate]);
 
-  const { data: businesses = [], isLoading: businessesLoading } = useQuery({
-    queryKey: ["admin-businesses"],
-    queryFn: () => base44.asServiceRole.entities.BusinessProfile.list("-created_date", 500),
-    enabled: !!user && user.role === "admin",
-  });
+  // Placeholder data
+  const businesses = [];
+  const subscriptions = [];
+  const missedCalls = [];
+  const onboardingProgress = [];
 
-  const { data: subscriptions = [], isLoading: subscriptionsLoading } = useQuery({
-    queryKey: ["admin-subscriptions"],
-    queryFn: () => base44.asServiceRole.entities.Subscription.list("-created_date", 500),
-    enabled: !!user && user.role === "admin",
-  });
-
-  const { data: missedCalls = [], isLoading: callsLoading } = useQuery({
-    queryKey: ["admin-missed-calls"],
-    queryFn: () => base44.asServiceRole.entities.MissedCall.list("-created_date", 1000),
-    enabled: !!user && user.role === "admin",
-  });
-
-  const { data: onboardingProgress = [], isLoading: onboardingLoading } = useQuery({
-    queryKey: ["admin-onboarding"],
-    queryFn: () => base44.asServiceRole.entities.OnboardingProgress.list("-created_date", 500),
-    enabled: !!user && user.role === "admin",
-  });
-
+  // Don't wait for user, show page immediately
   if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return null;
   }
 
   if (user.role !== "admin") {
@@ -116,15 +94,8 @@ export default function Admin() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
-              <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
-            </div>
-          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
+          <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
         </div>
 
         {/* KPI Cards */}
@@ -182,19 +153,7 @@ export default function Admin() {
           </Card>
         </div>
 
-        {/* Manual Review Queue */}
-        <div className="mb-8">
-          <ManualReviewQueue businesses={businesses} />
-        </div>
 
-        {/* Charts & Heatmap */}
-        <div className="mb-8">
-          <AdminKPICharts subscriptions={subscriptions} businesses={businesses} missedCalls={missedCalls} />
-        </div>
-
-        <div className="mb-8">
-          <ActivityHeatmap businesses={businesses} missedCalls={missedCalls} />
-        </div>
 
         {/* Onboarding Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -265,11 +224,7 @@ export default function Admin() {
             </div>
           </CardHeader>
           <CardContent>
-            {businessesLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              </div>
-            ) : filteredBusinesses.length === 0 ? (
+            {businesses.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No businesses found</p>
             ) : (
               <div className="overflow-x-auto">

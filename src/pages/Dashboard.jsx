@@ -22,7 +22,12 @@ import LeadScoringDistribution from "@/components/dashboard/LeadScoringDistribut
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState({ email: 'demo@catchacaller.com', role: 'admin', full_name: 'Demo Admin' });
+  const [user, setUser] = useState(null);
+
+  // Fetch real user on mount
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   // Enable polling for new lead notifications
   useLeadNotifications();
@@ -33,12 +38,11 @@ export default function Dashboard() {
       try {
         const result = await Promise.race([
           base44.entities.BusinessProfile.list("-created_date", 1),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
         ]);
         return result;
       } catch (e) {
         console.warn('Profile fetch failed:', e.message);
-        // In demo mode, return empty array to show demo dashboard
         return [];
       }
     },
@@ -111,27 +115,52 @@ export default function Dashboard() {
     retry: 0,
   });
 
-  // Gate: redirect to appropriate page based on user type
-  useEffect(() => {
-    if (!profileLoading && profiles.length === 0) {
-      if (user?.role === 'admin') {
-        navigate("/admin");
-      } else {
-        navigate("/onboarding");
-      }
-    }
-  }, [profileLoading, profiles, navigate, user]);
-
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Show dashboard immediately in demo mode; allow queries to load in background
-  if (!user) {
+  // Admin bypass: show admin panel instead of user dashboard
+  if (user?.role === 'admin' && !profileLoading && profiles.length === 0) {
+    return (
+      <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
+        <div className="mb-8 mt-6">
+          <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
+          <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-card rounded-lg p-6 border border-border">
+            <p className="text-sm text-muted-foreground">Total Businesses</p>
+            <p className="text-3xl font-bold mt-2">0</p>
+          </div>
+          <div className="bg-card rounded-lg p-6 border border-border">
+            <p className="text-sm text-muted-foreground">Active Subscriptions</p>
+            <p className="text-3xl font-bold mt-2">0</p>
+          </div>
+          <div className="bg-card rounded-lg p-6 border border-border">
+            <p className="text-sm text-muted-foreground">Monthly Revenue</p>
+            <p className="text-3xl font-bold mt-2">$0</p>
+          </div>
+          <div className="bg-card rounded-lg p-6 border border-border">
+            <p className="text-sm text-muted-foreground">Total Calls</p>
+            <p className="text-3xl font-bold mt-2">0</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Block rendering while loading if not admin
+  if (!user || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
+  }
+
+  // Redirect non-admins without profile to onboarding
+  if (profiles.length === 0) {
+    navigate("/onboarding");
+    return null;
   }
 
 
