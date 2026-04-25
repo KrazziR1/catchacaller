@@ -15,19 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!authChecked) {
-        console.warn('Auth check timeout, using demo mode');
-        setUser({ email: 'demo@catchacaller.com', role: 'admin', full_name: 'Demo User' });
-        setIsAuthenticated(true);
-        setIsLoadingAuth(false);
-        setIsLoadingPublicSettings(false);
-        setAuthChecked(true);
-      }
-    }, 5000);
-    
     checkAppState();
-    return () => clearTimeout(timer);
   }, []);
 
   const checkAppState = async () => {
@@ -46,14 +34,10 @@ export const AuthProvider = ({ children }) => {
       });
       
       try {
-        const publicSettings = await Promise.race([
-          appClient.get(`/prod/public-settings/by-id/${appParams.appId}`),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Settings timeout')), 3000))
-        ]);
+        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
         setAppPublicSettings(publicSettings);
-        setIsLoadingPublicSettings(false);
         
-        // Check if user is authenticated if token exists
+        // If we got the app public settings successfully, check if user is authenticated
         if (appParams.token) {
           await checkUserAuth();
         } else {
@@ -61,18 +45,37 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(false);
           setAuthChecked(true);
         }
+        setIsLoadingPublicSettings(false);
       } catch (appError) {
-        console.warn('App state check failed (non-critical):', appError?.message);
-        setIsLoadingPublicSettings(false);
+        console.error('App state check failed:', appError);
         
-        // In demo/preview mode, skip public settings and proceed to auth check
-        if (appParams.token) {
-          await checkUserAuth();
+        // Handle app-level errors
+        if (appError.status === 403 && appError.data?.extra_data?.reason) {
+          const reason = appError.data.extra_data.reason;
+          if (reason === 'auth_required') {
+            setAuthError({
+              type: 'auth_required',
+              message: 'Authentication required'
+            });
+          } else if (reason === 'user_not_registered') {
+            setAuthError({
+              type: 'user_not_registered',
+              message: 'User not registered for this app'
+            });
+          } else {
+            setAuthError({
+              type: reason,
+              message: appError.message
+            });
+          }
         } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
+          setAuthError({
+            type: 'unknown',
+            message: appError.message || 'Failed to load app'
+          });
         }
+        setIsLoadingPublicSettings(false);
+        setIsLoadingAuth(false);
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -84,12 +87,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkUserAuth = async () => {
     try {
-      // Now check if the user is authenticated (with timeout)
       setIsLoadingAuth(true);
-      const currentUser = await Promise.race([
-        base44.auth.me(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 4000))
-      ]);
+      const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
@@ -100,13 +99,8 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
       setAuthChecked(true);
       
-      // In preview/demo, allow demo user
-      if (error.message === 'Auth timeout' || error.status === undefined) {
-        console.warn('Auth timeout, using demo user');
-        setUser({ email: 'demo@catchacaller.com', role: 'admin', full_name: 'Demo User' });
-        setIsAuthenticated(true);
-        setAuthChecked(true);
-      } else if (error.status === 401 || error.status === 403) {
+      // If user auth fails, it might be an expired token
+      if (error.status === 401 || error.status === 403) {
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
