@@ -180,10 +180,11 @@ export default function Onboarding() {
 
   const getPreviewMessage = () => {
     const name = form.business_name || "your business";
+    const stopInstruction = " Reply STOP to opt out of future messages.";
     if (form.ai_personality === "professional") {
-      return `Thank you for contacting ${name}. We missed your call and would be happy to assist you. What can we help you with today?`;
+      return `Thank you for contacting ${name}. We missed your call and would be happy to assist you. What can we help you with today?${stopInstruction}`;
     }
-    return `Hi! 👋 Sorry we missed your call — we're ${name}. What can we help you with today?`;
+    return `Hi! 👋 Sorry we missed your call — we're ${name}. What can we help you with today?${stopInstruction}`;
   };
 
   const step = steps[currentStep];
@@ -316,7 +317,10 @@ export default function Onboarding() {
                             className="mt-0.5"
                           />
                           <span className="text-xs font-medium leading-relaxed">
-                            I understand I am responsible for SMS compliance and will only send messages to individuals who have called my business.
+                            I understand I am responsible for SMS compliance, will only send messages to individuals who have called my business, and accept our{" "}
+                            <a href="/terms" target="_blank" className="text-primary underline font-semibold">Terms</a>,{" "}
+                            <a href="/privacy" target="_blank" className="text-primary underline font-semibold">Privacy Policy</a>, and{" "}
+                            <a href="/dpa" target="_blank" className="text-primary underline font-semibold">DPA</a>.
                           </span>
                         </label>
                       </div>

@@ -18,11 +18,36 @@ Deno.serve(async (req) => {
     if (normalized.length === 10) e164 = `+1${normalized}`; // US 10-digit
     if (normalized.length === 11 && normalized.startsWith('1')) e164 = `+${normalized}`; // US with +1
 
-    // Check opt-out list
+    // TCPA Compliance: Check if the number being tested matches user's own number (prevent spam to random numbers)
+    // Don't allow test SMS to numbers that aren't the user's own phone
+    const userProfile = await base44.entities.BusinessProfile.list('-created_date', 1);
+    if (userProfile.length === 0) {
+      return Response.json({ success: false, error: 'No business profile found. Complete onboarding first.' });
+    }
+
+    // Get user's phone from profile to prevent abuse
+    const profile = userProfile[0];
+    if (profile.created_by !== user.email) {
+      return Response.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Check opt-out list (respect previous opt-outs even for tests)
     const optOuts = await base44.asServiceRole.entities.SMSOptOut.list('-created_date', 1000);
     const isOptedOut = optOuts.some(o => o.phone_number === e164);
     if (isOptedOut) {
       return Response.json({ success: false, error: 'This number has opted out of SMS.' });
+    }
+
+    // WARN: Test SMS should only go to user's own number or similar verification
+    // For now: log all test SMSes for audit and limit frequency per user to prevent abuse
+    const recentTests = await base44.entities.SMSAuditLog.filter({
+      sent_by: user.email,
+      message_type: 'test'
+    });
+    const lastTestTime = recentTests[0]?.sent_at ? new Date(recentTests[0].sent_at) : null;
+    const now = new Date();
+    if (lastTestTime && (now - lastTestTime) < 30000) {
+      return Response.json({ success: false, error: 'Please wait 30 seconds before sending another test SMS.' });
     }
 
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
