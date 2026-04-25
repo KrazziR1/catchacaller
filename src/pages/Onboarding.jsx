@@ -23,6 +23,7 @@ const stripePromise = typeof window !== 'undefined'
   : Promise.resolve(null);
 
 const steps = [
+  { key: "signup", icon: Building2, title: "Create Your Account", subtitle: "Your login for CatchACaller" },
   { key: "business", icon: Building2, title: "Your Business", subtitle: "Let's get your profile set up" },
   { key: "phone", icon: PhoneCall, title: "Phone Numbers", subtitle: "Your business line & personal cell for call forwarding" },
   { key: "ai", icon: Bot, title: "AI Personality", subtitle: "How should your AI respond to leads?" },
@@ -58,11 +59,10 @@ export default function Onboarding() {
     email_notifications_enabled: true,
   });
 
-  useEffect(() => {
-    base44.auth.isAuthenticated().then((authed) => {
-      if (!authed) base44.auth.redirectToLogin("/onboarding");
-    });
-  }, []);
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupError, setSignupError] = useState(null);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const [savingError, setSavingError] = useState(null);
 
@@ -200,15 +200,34 @@ export default function Onboarding() {
   };
 
   const next = () => {
-    if (currentStep === 3) {
+    if (currentStep === 0) {
+      // Sign up
+      handleSignup();
+      return;
+    }
+    if (currentStep === 4) {
       saveMutation.mutate();
       return;
     }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Profile was already created in step 3, just redirect
       navigate("/dashboard");
+    }
+  };
+
+  const handleSignup = async () => {
+    setIsSigningUp(true);
+    setSignupError(null);
+    try {
+      // Use Base44's built-in signup via redirectToLogin with registration flow
+      const result = await base44.auth.redirectToLogin("/onboarding", { signup: true });
+      // If we get here, they're authenticated - move to next step
+      setCurrentStep(1);
+    } catch (err) {
+      setSignupError(err.message || "Signup failed. Try again.");
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
@@ -309,8 +328,42 @@ export default function Onboarding() {
             {/* Step content */}
             <div className="space-y-4">
 
-              {/* STEP 0: Business Info */}
+              {/* STEP 0: Sign Up */}
               {currentStep === 0 && (
+                <>
+                  <div>
+                    <Label>Email Address</Label>
+                    <Input
+                      type="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      className="mt-1.5 h-12 rounded-xl"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <Label>Password</Label>
+                    <Input
+                      type="password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      placeholder="Create a strong password"
+                      className="mt-1.5 h-12 rounded-xl"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1.5">At least 8 characters</p>
+                  </div>
+                  {signupError && (
+                    <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-xs text-destructive">{signupError}</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* STEP 1: Business Info */}
+              {currentStep === 1 && (
                 <>
                   <div>
                     <Label>Business Name</Label>
@@ -407,8 +460,8 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 1: Phone */}
-              {currentStep === 1 && (
+              {/* STEP 2: Phone */}
+              {currentStep === 2 && (
                 <>
                   <div className="space-y-5 mb-4">
                     <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex gap-3">
@@ -532,8 +585,8 @@ export default function Onboarding() {
                 </>
               )}
 
-                    {/* STEP 2: AI Personality */}
-              {currentStep === 2 && (
+              {/* STEP 3: AI Personality */}
+              {currentStep === 3 && (
                 <>
                   <p className="text-sm text-muted-foreground -mt-2">Choose how your AI communicates with leads. You can change this anytime.</p>
                   <div className="grid gap-3">
@@ -558,8 +611,8 @@ export default function Onboarding() {
                 </>
               )}
 
-              {/* STEP 3: Booking URL — marked as critical but optional */}
-              {currentStep === 3 && (
+              {/* STEP 4: Booking URL — marked as critical but optional */}
+              {currentStep === 4 && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 flex gap-3">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -598,8 +651,8 @@ export default function Onboarding() {
                 </div>
               )}
 
-              {/* STEP 4: Template Preview */}
-              {currentStep === 4 && (
+              {/* STEP 5: Template Preview */}
+              {currentStep === 5 && (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground -mt-2">This is the first message your leads will receive within seconds of a missed call.</p>
                   <div className="bg-slate-900 rounded-2xl p-5">
@@ -625,8 +678,8 @@ export default function Onboarding() {
 
 
 
-              {/* STEP 5: Launch / Expectations */}
-              {currentStep === 5 && (
+              {/* STEP 6: Launch / Expectations */}
+              {currentStep === 6 && (
                 <div className="space-y-5">
                   <div className="text-center py-2">
                     <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-3">
@@ -718,7 +771,7 @@ export default function Onboarding() {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
-              {currentStep === 3 && (
+              {currentStep === 4 && (
                 <Button
                   variant="outline"
                   onClick={() => setCurrentStep(currentStep + 1)}
@@ -727,7 +780,7 @@ export default function Onboarding() {
                   {form.booking_url ? 'Continue' : 'Skip'} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               )}
-              {currentStep === 5 ? (
+              {currentStep === 6 ? (
                 <Button
                   onClick={() => navigate("/dashboard")}
                   className="rounded-xl h-11 px-6 bg-accent hover:bg-accent/90"
@@ -737,11 +790,11 @@ export default function Onboarding() {
               ) : (
                 <Button
                   onClick={next}
-                  disabled={!isStepValid() || saveMutation.isPending}
+                  disabled={!isStepValid() || saveMutation.isPending || isSigningUp || (currentStep === 0 && (!signupEmail || !signupPassword))}
                   className="rounded-xl h-11 px-6"
                 >
-                  {saveMutation.isPending ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  {saveMutation.isPending || isSigningUp ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
                   ) : (
                     <>Continue <ArrowRight className="ml-2 w-4 h-4" /></>
                   )}
