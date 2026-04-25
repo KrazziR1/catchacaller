@@ -25,6 +25,8 @@ import CheckoutSuccess from '@/pages/CheckoutSuccess';
 import SMSPolicy from '@/pages/SMSPolicy';
 import Unsubscribe from '@/pages/Unsubscribe';
 import DPA from '@/pages/DPA';
+import AdvancedReporting from '@/pages/AdvancedReporting';
+import CalendarIntegration from '@/pages/CalendarIntegration';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -60,6 +62,8 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/webhooks" element={<WebhookMonitor />} />
         <Route path="/waitlist" element={<WaitlistAdmin />} />
+        <Route path="/reporting" element={<AdvancedReporting />} />
+        <Route path="/calendar" element={<CalendarIntegration />} />
       </Route>
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, PhoneMissed, MessageSquare, 
-  FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight, Users, Activity
+  FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight, Users, Activity, BarChart3, Calendar
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
@@ -11,6 +11,8 @@ const navItems = [
   { icon: PhoneMissed, label: "Missed Calls", path: "/missed-calls" },
   { icon: MessageSquare, label: "Conversations", path: "/conversations" },
   { icon: FileText, label: "Templates", path: "/templates" },
+  { icon: BarChart3, label: "Reporting", path: "/reporting" },
+  { icon: Calendar, label: "Calendar", path: "/calendar" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
