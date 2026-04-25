@@ -17,8 +17,11 @@ export default function SMSPolicy() {
 
           <section>
             <h2 className="text-xl font-bold mb-3">Why You Received a Message</h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mb-3">
               You received an automated SMS because you previously called a business that uses CatchACaller. The message is a follow-up to your missed call. You have not been added to any marketing list.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              If you live in California or New York, the business may have sent you an initial opt-in confirmation request asking you to confirm you want to receive SMS updates. If you replied YES to that message, you are now receiving regular follow-up messages. If you did not reply, no further messages should be sent to you.
             </p>
           </section>
 
@@ -40,9 +43,12 @@ export default function SMSPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold mb-3">TCPA Compliance</h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <h2 className="text-xl font-bold mb-3">TCPA & State-Specific Compliance</h2>
+            <p className="text-muted-foreground leading-relaxed mb-3">
               All business customers using CatchACaller agree in our Terms of Service to comply with the Telephone Consumer Protection Act (TCPA) and all applicable carrier regulations. Our platform enforces permanent opt-out suppression and TCPA-mandated disclosures on all outbound messages.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              We automatically enforce stricter rules for certain states. In California and New York, businesses must obtain your explicit consent via SMS confirmation before sending regular follow-up messages. All messages include clear opt-out instructions. Your consent to receive SMS expires 90 days from the date you called the business, after which the business must obtain fresh consent to continue messaging you.
             </p>
           </section>
 

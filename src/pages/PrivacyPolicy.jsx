@@ -4,7 +4,7 @@ export default function PrivacyPolicy() {
       <div className="max-w-3xl mx-auto px-6 py-16">
         <a href="/" className="text-sm text-primary hover:underline mb-8 block">← Back to Home</a>
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">Privacy Policy</h1>
-        <p className="text-sm text-muted-foreground mb-10">Last updated: April 24, 2026</p>
+        <p className="text-sm text-muted-foreground mb-10">Last updated: April 25, 2026</p>
 
         <div className="prose prose-sm max-w-none space-y-8 text-foreground">
 
@@ -40,8 +40,11 @@ export default function PrivacyPolicy() {
             <p className="text-muted-foreground leading-relaxed mb-3">
               SMS messages are sent only to individuals who have previously initiated contact by calling a business that uses CatchACaller. These messages are sent on behalf of our business customers (not by CatchACaller directly) as a follow-up to a missed call. Each automated message identifies the sending business and includes opt-out instructions ("Reply STOP to opt out").
             </p>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              We establish an Established Business Relationship (EBR) when you call a business. This relationship is valid for 90 days, during which the business may send you follow-up SMS. For certain states (California, New York, and others with strict SMS laws), we require the business to send you an opt-in confirmation first, asking "Reply YES to receive SMS updates about your service request, or STOP to decline." You must explicitly confirm before further messages are sent.
+            </p>
             <p className="text-muted-foreground leading-relaxed">
-              Our business customers are responsible for ensuring they have a lawful basis to send SMS messages to their callers. Opt-out requests are honored immediately and permanently — once a caller opts out, no further messages will be sent from that business's number. We comply with the Telephone Consumer Protection Act (TCPA) and all applicable carrier regulations.
+              Our business customers are responsible for ensuring they have a lawful basis to send SMS messages to their callers. Opt-out requests (STOP replies) are honored immediately and permanently — once you opt out, no further messages will be sent from that business's number. Explicit opt-in confirmations (YES replies) are also honored and recorded. We comply with the Telephone Consumer Protection Act (TCPA) and all applicable state and carrier regulations.
             </p>
           </section>
 
