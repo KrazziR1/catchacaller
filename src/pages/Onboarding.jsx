@@ -155,7 +155,7 @@ export default function Onboarding() {
       const isValidFormat = e164Regex.test(form.phone_number);
       
       // Additional validation: reject common test numbers (555)
-      const isTestNumber = form.phone_number.includes('555');
+      const isTestNumber = /^\+1555/.test(form.phone_number);
       
       return isValidFormat && !isTestNumber;
     }

@@ -163,14 +163,22 @@ export default function ConversationDetail({ conversation, profile, subscription
       {/* Input */}
       <div className="p-4 border-t border-border space-y-3">
        <div className="flex gap-2">
-         <Input
-           value={reply}
-           onChange={(e) => setReply(e.target.value)}
-           placeholder="Type a message..."
-           onKeyDown={(e) => e.key === 'Enter' && handleAddMessage()}
-           className="rounded-xl text-sm"
-         />
-         <Button onClick={handleAddMessage} disabled={!reply.trim()} size="icon" className="rounded-xl">
+         <div className="flex-1">
+           <textarea
+             value={reply}
+             onChange={(e) => setReply(e.target.value)}
+             placeholder="Type a message (Shift+Enter for new line)..."
+             onKeyDown={(e) => {
+               if (e.key === 'Enter' && !e.shiftKey) {
+                 e.preventDefault();
+                 handleAddMessage();
+               }
+             }}
+             className="w-full rounded-xl text-sm p-2 border border-input bg-transparent resize-none"
+             rows={2}
+           />
+         </div>
+         <Button onClick={handleAddMessage} disabled={!reply.trim()} size="icon" className="rounded-xl h-10">
            <Send className="w-4 h-4" />
          </Button>
        </div>

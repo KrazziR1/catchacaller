@@ -44,7 +44,7 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
 
   const sendBulkMutation = useMutation({
     mutationFn: async () => {
-      await Promise.all(
+      const results = await Promise.allSettled(
         Array.from(selectedProspects).map(prospectId => {
           const prospect = prospects.find(p => p.id === prospectId);
           return base44.functions.invoke("sendColdCallSMSWithCompliance", {
@@ -54,6 +54,12 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
           });
         })
       );
+      
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        throw new Error(`Failed to send to ${failed.length}/${selectedProspects.size} prospects`);
+      }
+      return results;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cold-call-sms"] });
@@ -71,6 +77,18 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
   const handleSend = async () => {
     if (!editedMessage.trim() || selectedProspects.size === 0) {
       toast.error("Edit the message and select at least one prospect");
+      return;
+    }
+
+    // Filter out DNC prospects
+    const dncProspects = prospects.filter(p => 
+      p.is_dnc_flagged || p.status === 'do_not_call' || selectedProspects.has(p.id)
+    ).filter(p => selectedProspects.has(p.id));
+
+    if (dncProspects.length > 0) {
+      const filtered = dncProspects.filter(p => !p.is_dnc_flagged && p.status !== 'do_not_call');
+      setSelectedProspects(new Set(filtered.map(p => p.id)));
+      toast.warning(`Removed ${dncProspects.length} DNC/opted-out prospects`);
       return;
     }
 

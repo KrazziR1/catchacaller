@@ -12,10 +12,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Prospect not found' }, { status: 404 });
     }
 
-    // Calculate lead score (0-100)
+    // Calculate lead score (0-100) with industry weighting
     let score = 0;
 
-    // Status weighting (40 points)
+    // Status weighting (40 points base, industry-adjusted)
+    const industryMultipliers = {
+      'hvac': 1.1, 'plumbing': 1.1, 'roofing': 1.1,
+      'real_estate': 1.2, 'legal': 1.3,
+      'med_spa': 1.0, 'dental': 1.0,
+      'general': 1.0
+    };
+    const multiplier = industryMultipliers[prospect.industry] || 1.0;
+
     const statusScores = {
       'do_not_call': -100,
       'not_interested': 10,
@@ -25,7 +33,7 @@ Deno.serve(async (req) => {
       'actively_using': 100,
       'discontinued_trial': 30
     };
-    score += statusScores[prospect.status] || 0;
+    score += (statusScores[prospect.status] || 0) * multiplier;
 
     // Engagement metrics (30 points)
     if (prospect.engagement_metrics) {
@@ -33,16 +41,18 @@ Deno.serve(async (req) => {
       score += Math.min(prospect.engagement_metrics.booking_link_clicks * 10, 15);
     }
 
-    // Recent contact (20 points)
+    // Recent contact with recency decay (20 points)
     if (prospect.date_contacted) {
       const daysSinceContact = Math.floor((new Date() - new Date(prospect.date_contacted)) / (1000 * 60 * 60 * 24));
-      if (daysSinceContact <= 7) score += 20;
-      else if (daysSinceContact <= 30) score += 10;
+      let recencyScore = 20;
+      // Decay: lose 1 point per 9 days (fully decayed after 180 days)
+      recencyScore = Math.max(0, 20 - (daysSinceContact / 9));
+      score += recencyScore;
     }
 
-    // Consent & DNC flags (-10 points each)
-    if (prospect.is_dnc_flagged) score -= 10;
-    if (!prospect.has_consent) score -= 5;
+    // Consent & DNC flags
+    if (prospect.is_dnc_flagged) score -= 30;
+    if (!prospect.has_consent) score -= 10;
 
     // Clamp between 0-100
     const finalScore = Math.max(0, Math.min(100, score));

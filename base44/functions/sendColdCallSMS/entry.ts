@@ -21,6 +21,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid phone format' }, { status: 400 });
     }
 
+    // Block test numbers (555)
+    if (/^\+1555/.test(phone_number)) {
+      return Response.json({ error: 'Cannot send to test numbers (555)' }, { status: 400 });
+    }
+
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const fromPhone = Deno.env.get('TWILIO_PHONE_NUMBER');

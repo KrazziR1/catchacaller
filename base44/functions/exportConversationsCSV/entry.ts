@@ -9,6 +9,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Verify active subscription
+    const subs = await base44.asServiceRole.entities.Subscription.filter({
+      user_email: user.email
+    });
+    const sub = subs[0];
+    if (!sub || !['active', 'trialing'].includes(sub.status)) {
+      return Response.json({ error: 'Subscription required for exports' }, { status: 403 });
+    }
+
     // Fetch all conversations and missed calls for this user
     const conversations = await base44.entities.Conversation.filter(
       { created_by: user.email },
