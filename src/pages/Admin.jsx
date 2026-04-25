@@ -127,8 +127,10 @@ export default function Admin() {
   // Filter out demo calls (test phone numbers that start with +1-555 or are null)
   const realCalls = missedCalls.filter(c => c.caller_phone && !c.caller_phone.includes("555"));
   const totalCalls = realCalls.length;
-  const onboardingComplete = onboardingProgress.filter((p) => p.is_complete).length;
-  const onboardingInProgress = onboardingProgress.filter((p) => !p.is_complete).length;
+  // Only count onboarding progress for users with active subscriptions
+  const activeEmails = new Set(subscriptions.filter(s => ["active", "trialing"].includes(s.status)).map(s => s.user_email));
+  const onboardingComplete = onboardingProgress.filter((p) => p.is_complete && activeEmails.has(p.user_email)).length;
+  const onboardingInProgress = onboardingProgress.filter((p) => !p.is_complete && activeEmails.has(p.user_email)).length;
 
   const onboardingSteps = [
     "Plan Selection",

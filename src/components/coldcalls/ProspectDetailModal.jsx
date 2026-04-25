@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 const discontinuationReasons = [
@@ -25,6 +27,12 @@ export default function ProspectDetailModal({ prospect, open, onOpenChange }) {
   const [reasonText, setReasonText] = useState(prospect?.discontinuation_reason || "");
 
   const queryClient = useQueryClient();
+
+  const { data: smsLogs = [] } = useQuery({
+    queryKey: ["prospect-sms", prospect?.id],
+    queryFn: () => base44.entities.ColdCallSMSLog.filter({ prospect_id: prospect?.id }, "-sent_at", 100),
+    enabled: !!prospect?.id,
+  });
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.ColdCallProspect.update(prospect.id, data),
@@ -51,12 +59,21 @@ export default function ProspectDetailModal({ prospect, open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{prospect?.business_name}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Messages ({smsLogs.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="space-y-4 py-4">
           <div>
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
@@ -132,7 +149,26 @@ export default function ProspectDetailModal({ prospect, open, onOpenChange }) {
               {new Date(prospect?.date_contacted).toLocaleDateString()}
             </p>
           </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-3 py-4">
+            {smsLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No messages sent yet</p>
+            ) : (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {smsLogs.map((log) => (
+                  <div key={log.id} className={`p-3 rounded-lg ${log.direction === 'outbound' ? 'bg-primary/10 ml-8' : 'bg-muted mr-8'}`}>
+                    <p className="text-xs font-mono text-muted-foreground mb-2">
+                      {new Date(log.sent_at).toLocaleString()} • {log.direction === 'outbound' ? 'Sent' : 'Received'}
+                    </p>
+                    <p className="text-sm leading-relaxed">{log.message_body}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{log.status}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

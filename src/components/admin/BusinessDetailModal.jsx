@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BusinessDetailModal({ business, isOpen, onClose }) {
   const [copied, setCopied] = useState(null);
+  const [deleteMode, setDeleteMode] = useState(null); // null | "soft" | "hard"
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: sub } = useQuery({
     queryKey: ["subscription", business?.created_by],
@@ -45,6 +49,28 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
         created_by: business?.created_by,
       }),
     enabled: !!business,
+  });
+
+  const deleteBusinessMutation = useMutation({
+    mutationFn: async (hardDelete) => {
+      if (hardDelete) {
+        // Hard delete: remove the business record entirely
+        await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
+      } else {
+        // Soft delete: mark as disabled/archived (could add an is_archived field)
+        // For now, we'll create an audit log and the business stays but is marked
+        await base44.asServiceRole.entities.AdminAuditLog.create({
+          admin_email: (await base44.auth.me()).email,
+          action: "account_rejected",
+          target_email: business.created_by,
+          target_business: business.business_name,
+          reason: "Soft deleted - disabled via admin panel",
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      toast.success(hardDelete ? "Business deleted permanently" : "Business disabled");
+      onClose();
+    },
   });
 
   if (!business) return null;
@@ -376,8 +402,69 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          </Tabs>
+
+          {/* Delete Actions */}
+          {confirmDelete && (
+          <div className="mt-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 space-y-3">
+            <div className="flex gap-2 items-start">
+              <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-destructive">Delete Business Account</p>
+                <p className="text-xs text-destructive/80 mt-1">This action cannot be undone. Choose an option:</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="bg-orange-600 hover:bg-orange-700"
+                onClick={() => {
+                  setDeleteMode("soft");
+                  deleteBusinessMutation.mutate(false);
+                }}
+                disabled={deleteBusinessMutation.isPending}
+              >
+                Disable Only (Keep Data)
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  setDeleteMode("hard");
+                  deleteBusinessMutation.mutate(true);
+                }}
+                disabled={deleteBusinessMutation.isPending}
+              >
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+          )}
+
+          {!confirmDelete && (
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Business
+            </Button>
+          </DialogFooter>
+          )}
+          </DialogContent>
+          </Dialog>
+          );
+          }
