@@ -20,15 +20,16 @@ export default function Landing() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    base44.auth.me().then((user) => {
-      if (user && user.role === "admin") {
-        navigate("/admin", { replace: true });
-      } else if (user) {
-        navigate("/dashboard", { replace: true });
-      }
-    }).catch(() => {
-      // Not authenticated, show landing
-    });
+    base44.auth.isAuthenticated().then((authed) => {
+      if (!authed) return; // Show landing for non-authenticated users
+      base44.auth.me().then((user) => {
+        if (user?.role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (user) {
+          navigate("/dashboard", { replace: true });
+        }
+      }).catch(() => {});
+    }).catch(() => {});
   }, [navigate]);
 
   return (

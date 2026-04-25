@@ -15,23 +15,38 @@ export default function BulkAccountActions({ selectedAccounts, onComplete }) {
   const actionMutation = useMutation({
     mutationFn: async (actionType) => {
       const user = await base44.auth.me();
-      const promises = Array.from(selectedAccounts).map(accountId =>
-        base44.asServiceRole.entities.AdminAuditLog.create({
+      const promises = Array.from(selectedAccounts).map(async (accountId) => {
+        // Update the business profile to mark as reviewed
+        try {
+          const businesses = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: accountId });
+          if (businesses.length > 0) {
+            await base44.asServiceRole.entities.BusinessProfile.update(businesses[0].id, {
+              requires_manual_review: false,
+            });
+          }
+        } catch (e) {
+          console.warn('Business update failed:', e);
+        }
+        // Create audit log
+        return base44.asServiceRole.entities.AdminAuditLog.create({
           admin_email: user.email,
           action: actionType === 'approve' ? 'account_approved' : 'account_rejected',
           target_email: accountId,
           reason: reason || `Bulk ${actionType}`,
           refund_issued: false
-        })
-      );
-      await Promise.all(promises);
+        });
+      });
+      await Promise.allSettled(promises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
-      toast.success(`${action === 'approve' ? 'Approved' : 'Rejected'} ${selectedAccounts.size} accounts`);
+      toast.success(`${action === 'approve' ? 'Approved' : 'Rejected'} ${selectedAccounts.size} account${selectedAccounts.size > 1 ? 's' : ''}`);
       setAction(null);
       setReason("");
       onComplete();
+    },
+    onError: (error) => {
+      toast.error(error.message || `Failed to ${action} accounts`);
     },
   });
 
@@ -78,11 +93,18 @@ export default function BulkAccountActions({ selectedAccounts, onComplete }) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setAction(null)}>Cancel</Button>
             <Button
-              onClick={() => actionMutation.mutate(action)}
-              disabled={actionMutation.isPending}
-              variant={action === 'approve' ? 'default' : 'destructive'}
+             onClick={() => actionMutation.mutate(action)}
+             disabled={actionMutation.isPending}
+             variant={action === 'approve' ? 'default' : 'destructive'}
             >
-              {action === 'approve' ? 'Approve' : 'Reject'} All
+             {actionMutation.isPending ? (
+               <>
+                 <span className="inline-block mr-2 h-4 w-4 animate-spin border-2 border-current border-t-transparent rounded-full" />
+                 Processing...
+               </>
+             ) : (
+               `${action === 'approve' ? 'Approve' : 'Reject'} ${selectedAccounts.size} Account${selectedAccounts.size > 1 ? 's' : ''}`
+             )}
             </Button>
           </DialogFooter>
         </DialogContent>

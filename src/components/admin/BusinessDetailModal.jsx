@@ -7,15 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail, Trash2, AlertTriangle, Edit2 } from "lucide-react";
+import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail, Trash2, AlertTriangle, Edit2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BusinessDetailModal({ business, isOpen, onClose }) {
   const [copied, setCopied] = useState(null);
-  const [deleteMode, setDeleteMode] = useState(null); // null | "soft" | "hard"
+  const [deleteMode, setDeleteMode] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [businessName, setBusinessName] = useState(business?.business_name || "");
+  const [editData, setEditData] = useState({
+    industry: business?.industry || "",
+    ai_personality: business?.ai_personality || "",
+    timezone: business?.timezone || "",
+    business_hours: business?.business_hours || "",
+    average_job_value: business?.average_job_value || 500,
+    requires_manual_review: business?.requires_manual_review || false,
+  });
   const queryClient = useQueryClient();
 
   const { data: sub } = useQuery({
@@ -69,15 +77,24 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
     },
   });
 
+  const updateBusinessMutation = useMutation({
+    mutationFn: (data) =>
+      base44.asServiceRole.entities.BusinessProfile.update(business.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
+      toast.success("Business updated");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update business");
+    },
+  });
+
   const deleteBusinessMutation = useMutation({
     mutationFn: async (hardDelete) => {
       try {
         if (hardDelete) {
-          // Hard delete: remove the business record entirely
           await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
         } else {
-          // Soft delete: mark as disabled/archived (could add an is_archived field)
-          // For now, we'll create an audit log and the business stays but is marked
           await base44.asServiceRole.entities.AdminAuditLog.create({
             admin_email: (await base44.auth.me()).email,
             action: "account_rejected",
@@ -171,22 +188,33 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">Industry</p>
-                    <Badge variant="outline" className="mt-1 capitalize">
-                      {business.industry}
-                    </Badge>
+                    <label className="text-xs text-muted-foreground block mb-1.5">Industry</label>
+                    <select value={editData.industry} onChange={(e) => setEditData({...editData, industry: e.target.value})} className="w-full px-2 py-1.5 rounded border border-border text-sm">
+                      <option value="general">General</option>
+                      <option value="hvac">HVAC</option>
+                      <option value="plumbing">Plumbing</option>
+                      <option value="roofing">Roofing</option>
+                      <option value="med_spa">Med Spa</option>
+                      <option value="legal">Legal</option>
+                      <option value="hospitality">Hospitality</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="real_estate">Real Estate</option>
+                      <option value="dental">Dental</option>
+                      <option value="fitness">Fitness</option>
+                      <option value="automotive">Automotive</option>
+                    </select>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Timezone</p>
-                    <p className="text-sm font-medium mt-1">{business.timezone}</p>
+                    <label className="text-xs text-muted-foreground block mb-1.5">Timezone</label>
+                    <Input value={editData.timezone} onChange={(e) => setEditData({...editData, timezone: e.target.value})} className="text-sm" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Business Hours</p>
-                    <p className="text-sm font-medium mt-1">{business.business_hours}</p>
+                    <label className="text-xs text-muted-foreground block mb-1.5">Business Hours</label>
+                    <Input value={editData.business_hours} onChange={(e) => setEditData({...editData, business_hours: e.target.value})} className="text-sm" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Avg Job Value</p>
-                    <p className="text-sm font-medium mt-1">${business.average_job_value}</p>
+                    <label className="text-xs text-muted-foreground block mb-1.5">Avg Job Value ($)</label>
+                    <Input type="number" value={editData.average_job_value} onChange={(e) => setEditData({...editData, average_job_value: Number(e.target.value)})} className="text-sm" />
                   </div>
                 </div>
 
@@ -256,21 +284,21 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                 )}
 
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
-                  <div>
-                    <p className="text-xs text-muted-foreground">AI Personality</p>
-                    <Badge variant="outline" className="mt-1 capitalize text-xs">
-                      {business.ai_personality || "—"}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Approval Status</p>
-                    {business.requires_manual_review ? (
-                      <Badge className="bg-destructive/20 text-destructive mt-1 text-xs">Pending Review</Badge>
-                    ) : (
-                      <Badge className="bg-accent/20 text-accent mt-1 text-xs">Approved</Badge>
-                    )}
-                  </div>
-                </div>
+                   <div>
+                     <label className="text-xs text-muted-foreground block mb-1.5">AI Personality</label>
+                     <select value={editData.ai_personality} onChange={(e) => setEditData({...editData, ai_personality: e.target.value})} className="w-full px-2 py-1.5 rounded border border-border text-sm">
+                       <option value="friendly">Friendly</option>
+                       <option value="professional">Professional</option>
+                     </select>
+                   </div>
+                   <div>
+                     <label className="text-xs text-muted-foreground block mb-1.5">Approval Status</label>
+                     <div className="flex items-center gap-2">
+                       <input type="checkbox" checked={!editData.requires_manual_review} onChange={(e) => setEditData({...editData, requires_manual_review: !e.target.checked})} className="rounded" />
+                       <span className="text-sm">{editData.requires_manual_review ? "Pending Review" : "Approved"}</span>
+                     </div>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
 
@@ -512,9 +540,17 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
           )}
 
           {!confirmDelete && (
-          <DialogFooter className="mt-6">
+          <DialogFooter className="mt-6 gap-2">
             <Button variant="outline" onClick={onClose}>
               Close
+            </Button>
+            <Button
+              onClick={() => updateBusinessMutation.mutate(editData)}
+              disabled={updateBusinessMutation.isPending}
+              className="gap-2"
+            >
+              <Save className="w-4 h-4" />
+              {updateBusinessMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
             <Button
               variant="destructive"
