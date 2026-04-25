@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save, CreditCard, ExternalLink, Loader2 } from "lucide-react";
+import { Building2, Phone, Globe, Calendar, Bot, DollarSign, Save, CreditCard, ExternalLink, Loader2, Webhook, CheckCircle2, AlertCircle } from "lucide-react";
 import PhoneProvision from "@/components/PhoneProvision";
 import TeamManagement from "@/components/team/TeamManagement";
 import CRMSettings from "@/components/crm/CRMSettings";
@@ -49,6 +49,20 @@ export default function Settings() {
   const subscription = subscriptions[0];
 
   const [loading, setLoading] = useState(false);
+  const [webhookStatus, setWebhookStatus] = useState(null); // null | 'loading' | 'success' | 'error'
+  const [webhookError, setWebhookError] = useState(null);
+
+  const handleConfigureWebhooks = async () => {
+    setWebhookStatus('loading');
+    setWebhookError(null);
+    const res = await base44.functions.invoke("configureWebhooks", {});
+    if (res.data?.success) {
+      setWebhookStatus('success');
+    } else {
+      setWebhookStatus('error');
+      setWebhookError(res.data?.error || 'Something went wrong');
+    }
+  };
 
   const handleManageBilling = async () => {
     setLoading(true);
@@ -293,6 +307,57 @@ export default function Settings() {
         <Separator />
 
         <CRMSettings profile={profile} subscription={subscription} />
+
+        <Separator />
+
+        {/* Twilio Webhook Configuration */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                <Webhook className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Twilio Webhooks</CardTitle>
+                <CardDescription>Connect your Twilio number to CatchACaller — no manual setup needed</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Click the button below to automatically configure your Twilio phone number to send missed calls and inbound SMS to this app. Make sure your phone number is saved above first.
+            </p>
+            {webhookStatus === 'success' && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20">
+                <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                <p className="text-sm font-medium text-accent">Webhooks configured! Your number is now connected.</p>
+              </div>
+            )}
+            {webhookStatus === 'error' && (
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">{webhookError}</p>
+              </div>
+            )}
+            <Button
+              onClick={handleConfigureWebhooks}
+              disabled={webhookStatus === 'loading' || !formData.phone_number}
+              variant="outline"
+              className="w-full rounded-xl"
+            >
+              {webhookStatus === 'loading' ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Configuring...</>
+              ) : webhookStatus === 'success' ? (
+                <><CheckCircle2 className="w-4 h-4 mr-2 text-accent" />Webhooks Active</>
+              ) : (
+                <><Webhook className="w-4 h-4 mr-2" />Configure Webhooks Automatically</>
+              )}
+            </Button>
+            {!formData.phone_number && (
+              <p className="text-xs text-muted-foreground text-center">Add your phone number above, then save settings first.</p>
+            )}
+          </CardContent>
+        </Card>
 
         <Separator />
 

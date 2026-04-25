@@ -46,9 +46,11 @@ Deno.serve(async (req) => {
     // Step 2: Purchase the number and set webhooks immediately
     const purchaseRes = await twilioFetch("/IncomingPhoneNumbers.json", "POST", {
       PhoneNumber: numberToBuy,
-      VoiceUrl: `${BASE_URL}/twilioWebhook`,
+      VoiceUrl: `${BASE_URL}/missedCallWebhook`,
       VoiceMethod: "POST",
-      SmsUrl: `${BASE_URL}/twilioInboundSMS`,
+      StatusCallback: `${BASE_URL}/missedCallWebhook`,
+      StatusCallbackMethod: "POST",
+      SmsUrl: `${BASE_URL}/inboundSMS`,
       SmsMethod: "POST",
       FriendlyName: `CatchACaller - ${user.email}`,
     });
