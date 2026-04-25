@@ -16,14 +16,29 @@ export default function ManualReviewQueue({ businesses }) {
   const flaggedBusinesses = businesses.filter((b) => b.requires_manual_review);
 
   const approveMutation = useMutation({
-    mutationFn: (businessId) =>
-      base44.asServiceRole.entities.BusinessProfile.update(businessId, {
+    mutationFn: async (businessId) => {
+      const business = businesses.find((b) => b.id === businessId);
+      await base44.asServiceRole.entities.BusinessProfile.update(businessId, {
         requires_manual_review: false,
-      }),
+      });
+      // Log approval action
+      try {
+        await base44.asServiceRole.entities.AdminAuditLog.create({
+          admin_email: (await base44.auth.me()).email,
+          action: 'account_approved',
+          target_email: business.created_by,
+          target_business: business.business_name,
+          reason: notes || 'Account approved',
+        });
+      } catch (e) {
+        console.warn('Audit logging failed (non-critical):', e);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-businesses"] });
       setReviewingId(null);
       setNotes("");
+      setRefundSelected(false);
       toast.success("Account approved");
     },
     onError: (error) => {

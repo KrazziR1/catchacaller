@@ -1,0 +1,40 @@
+{
+  "name": "AdminAuditLog",
+  "type": "object",
+  "properties": {
+    "admin_email": {
+      "type": "string",
+      "description": "Email of the admin who took the action"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "account_approved",
+        "account_rejected"
+      ],
+      "description": "Type of action taken"
+    },
+    "target_email": {
+      "type": "string",
+      "description": "Email of the account being acted upon"
+    },
+    "target_business": {
+      "type": "string",
+      "description": "Business name of the account"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the action"
+    },
+    "refund_issued": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a refund was issued"
+    }
+  },
+  "required": [
+    "admin_email",
+    "action",
+    "target_email"
+  ]
+}

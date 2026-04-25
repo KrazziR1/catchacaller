@@ -95,6 +95,10 @@
       "type": "string",
       "format": "date-time",
       "description": "Timestamp when user explicitly acknowledged SMS compliance terms in onboarding"
+    },
+    "stripe_provisioning_charge_id": {
+      "type": "string",
+      "description": "Stripe charge ID for $2.99 provisioning fee (if paid)"
     }
   },
   "required": [

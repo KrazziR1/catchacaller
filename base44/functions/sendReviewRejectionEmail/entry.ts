@@ -16,31 +16,47 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'email is required' }, { status: 400 });
     }
 
-    // Issue refund if requested
+    let refundSucceeded = false;
+
+    // Issue refund if requested — use stored charge ID from profile
     if (issueRefund) {
       try {
-        const stripe = await import('npm:stripe');
-        const stripeClient = new stripe.default(Deno.env.get('STRIPE_SECRET_KEY'));
-        
-        // Find customer by email
-        const customers = await stripeClient.customers.list({ email, limit: 1 });
-        if (customers.data.length > 0) {
-          const customerId = customers.data[0].id;
-          // Find the charge for provisioning ($2.99 = 299 cents)
-          const charges = await stripeClient.charges.list({ customer: customerId, limit: 10 });
-          const provisioningCharge = charges.data.find(c => c.amount === 299 && c.description?.includes('provision'));
+        // Find the business profile to get the stored charge ID
+        const allProfiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 500);
+        const profile = allProfiles.find(p => p.created_by === email);
+
+        if (profile?.stripe_provisioning_charge_id) {
+          const stripe = await import('npm:stripe');
+          const stripeClient = new stripe.default(Deno.env.get('STRIPE_SECRET_KEY'));
           
-          if (provisioningCharge) {
-            await stripeClient.refunds.create({ charge: provisioningCharge.id });
-          }
+          // Refund using the stored charge ID — guaranteed to be the correct charge
+          await stripeClient.refunds.create({
+            charge: profile.stripe_provisioning_charge_id,
+          });
+          refundSucceeded = true;
         }
       } catch (refundErr) {
-        console.warn('Refund processing failed (non-critical):', refundErr.message);
+        console.error('Refund processing failed:', refundErr.message);
+        // Don't mention refund in email if it failed
       }
     }
 
+    // Log admin action for audit trail
+    try {
+      await base44.asServiceRole.entities.AdminAuditLog.create({
+        admin_email: user.email,
+        action: 'account_rejected',
+        target_email: email,
+        target_business: business_name,
+        reason: reason || 'Account does not meet compliance requirements',
+        refund_issued: refundSucceeded,
+      });
+    } catch (auditErr) {
+      console.warn('Audit logging failed (non-critical):', auditErr.message);
+    }
+
     const subject = 'CatchACaller Account Review – Action Required';
-    const refundLine = issueRefund ? '\n\nWe have issued a refund of $2.99 for your provisioning fee, which should appear in your account within 3-5 business days.' : '';
+    const refundLine = refundSucceeded ? '\n\nWe have issued a refund of $2.99 for your provisioning fee, which should appear in your account within 3-5 business days.' : '';
     const body = `Hi,
 
 Thank you for signing up for CatchACaller. After reviewing your account, we're unable to activate your service at this time.

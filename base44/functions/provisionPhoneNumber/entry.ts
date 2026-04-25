@@ -74,6 +74,10 @@ Deno.serve(async (req) => {
           error: `Payment failed: ${paymentIntent.last_payment_error?.message || "Unknown error"}` 
         }, { status: 402 });
       }
+
+      // Store the charge ID for future refunds
+      const charges = await stripe.charges.list({ payment_intent: paymentIntent.id, limit: 1 });
+      const chargeId = charges.data[0]?.id;
     }
 
     // Derive the base URL from the incoming request host
@@ -113,10 +117,14 @@ Deno.serve(async (req) => {
 
     // Step 3: Save to BusinessProfile (we already fetched profile earlier)
     if (profile) {
-      await base44.asServiceRole.entities.BusinessProfile.update(profile.id, {
-        phone_number: purchaseData.phone_number,
-        twilio_number_sid: purchaseData.sid,
-      });
+     const updateData = {
+       phone_number: purchaseData.phone_number,
+       twilio_number_sid: purchaseData.sid,
+     };
+     if (chargeId) {
+       updateData.stripe_provisioning_charge_id = chargeId;
+     }
+     await base44.asServiceRole.entities.BusinessProfile.update(profile.id, updateData);
     }
 
     return Response.json({
