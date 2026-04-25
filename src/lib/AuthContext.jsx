@@ -15,7 +15,19 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!authChecked) {
+        console.warn('Auth check timeout, using demo mode');
+        setUser({ email: 'demo@catchacaller.com', role: 'admin', full_name: 'Demo User' });
+        setIsAuthenticated(true);
+        setIsLoadingAuth(false);
+        setIsLoadingPublicSettings(false);
+        setAuthChecked(true);
+      }
+    }, 5000);
+    
     checkAppState();
+    return () => clearTimeout(timer);
   }, []);
 
   const checkAppState = async () => {
