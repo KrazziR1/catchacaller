@@ -7,9 +7,14 @@ import {
 
 const features = [
   {
+    icon: Smartphone,
+    title: "Live Call Forwarding",
+    description: "Incoming calls ring your personal cell instantly. If you miss it, SMS follows within 2 seconds.",
+  },
+  {
     icon: Zap,
-    title: "Instant AI Response",
-    description: "SMS sent within 3 seconds of a missed call—24/7, no setup required.",
+    title: "Automatic SMS Fallback",
+    description: "When you don't answer, AI sends a friendly message keeping the lead warm.",
   },
   {
     icon: Brain,
@@ -30,11 +35,6 @@ const features = [
     icon: Users,
     title: "Team Collaboration",
     description: "Invite team members, assign conversations, manage from one dashboard.",
-  },
-  {
-    icon: Calendar,
-    title: "Calendar Booking",
-    description: "Auto-integrate Calendly, Google Calendar, or Acuity Scheduling.",
   },
 ];
 

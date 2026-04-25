@@ -166,7 +166,7 @@ export default function Settings() {
               </div>
               <div>
                 <CardTitle className="text-lg">Business Information</CardTitle>
-                <CardDescription>Your company details for SMS personalization</CardDescription>
+                <CardDescription>Your business number, personal cell for forwarding, and company details</CardDescription>
               </div>
             </div>
           </CardHeader>

@@ -24,7 +24,7 @@ const stripePromise = typeof window !== 'undefined'
 
 const steps = [
   { key: "business", icon: Building2, title: "Your Business", subtitle: "Let's get your profile set up" },
-  { key: "phone", icon: PhoneCall, title: "Your Phone Number", subtitle: "The number you want to monitor for missed calls" },
+  { key: "phone", icon: PhoneCall, title: "Phone Numbers", subtitle: "Your business line & personal cell for call forwarding" },
   { key: "ai", icon: Bot, title: "AI Personality", subtitle: "How should your AI respond to leads?" },
   { key: "booking", icon: CalendarCheck, title: "Booking Link", subtitle: "Critical — where should leads go to book?" },
   { key: "template", icon: MessageSquare, title: "Your First Message", subtitle: "Preview what leads will receive instantly" },
@@ -411,9 +411,19 @@ export default function Onboarding() {
               {/* STEP 1: Phone */}
               {currentStep === 1 && (
                 <>
+                  <div className="space-y-5 mb-4">
+                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex gap-3">
+                      <PhoneCall className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900">How call forwarding works</p>
+                        <p className="text-xs text-blue-800 mt-1">Your business number receives a call → Instantly rings your personal cell → If you miss it, SMS automatically follows within 2 seconds</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="space-y-4">
                     <div>
-                      <Label>Your Cell Phone (for incoming calls)</Label>
+                      <Label>Your Personal Cell Phone *</Label>
                       <div className="flex gap-2 mt-1.5">
                         <Input
                           value={form.owner_phone_number}
@@ -438,7 +448,7 @@ export default function Onboarding() {
                           </Button>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1.5">Your personal number where missed calls will be forwarded. Format: +1 (555) 123-4567</p>
+                      <p className="text-xs text-muted-foreground mt-1.5">Calls will ring this number immediately. Make sure it's a phone you check regularly. Format: +1 (555) 123-4567</p>
                     </div>
                     <div className="border-t border-border pt-4">
                       <p className="text-sm font-semibold mb-3">Do you have an existing Twilio account with a phone number?</p>
