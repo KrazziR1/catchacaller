@@ -28,7 +28,6 @@ const steps = [
   { key: "ai", icon: Bot, title: "AI Personality", subtitle: "How should your AI respond to leads?" },
   { key: "booking", icon: CalendarCheck, title: "Booking Link", subtitle: "Critical — where should leads go to book?" },
   { key: "template", icon: MessageSquare, title: "Your First Message", subtitle: "Preview what leads will receive instantly" },
-  { key: "test", icon: Send, title: "Test It Live", subtitle: "Send yourself a real SMS to see it in action" },
   { key: "launch", icon: Sparkles, title: "You're Live!", subtitle: "Here's what to expect in the next 24 hours" },
 ];
 
@@ -624,92 +623,10 @@ export default function Onboarding() {
                 </div>
               )}
 
-              {/* STEP 5: Test SMS */}
-              {currentStep === 5 && (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground -mt-2">Optional: Send yourself a test SMS to see exactly what your leads will experience.</p>
-                  <div>
-                    <Label>Your Mobile Number (optional)</Label>
-                    <div className="flex gap-2 mt-1.5">
-                      <Input
-                        value={testPhone}
-                        onChange={(e) => {
-                          let val = e.target.value.replace(/\D/g, '');
-                          if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
-                          if (val && !val.startsWith('+')) val = '+' + val;
-                          setTestPhone(val);
-                        }}
-                        placeholder="+1 (555) 123-4567"
-                        className="mt-0 h-12 rounded-xl flex-1"
-                        autoFocus
-                      />
-                      {testPhone && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            setTestPhone('');
-                            setTestStatus('idle');
-                            setTestError(null);
-                          }}
-                          className="rounded-xl h-12 px-3 mt-0"
-                        >
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">Format: +1 (555) 123-4567 — automatically formatted</p>
-                  </div>
-                  {testPhone && !form.phone_number && (
-                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex gap-3">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-semibold text-amber-800">Phone number required</p>
-                        <p className="text-xs text-amber-700 mt-1">Complete the phone setup step first to test SMS.</p>
-                      </div>
-                    </div>
-                  )}
-                  {testPhone && (
-                    <Button
-                      onClick={sendTestMutation}
-                      disabled={testStatus === "sending" || testStatus === "sent" || !form.phone_number}
-                      className="w-full rounded-xl h-11"
-                      variant={testStatus === "sent" ? "outline" : "default"}
-                    >
-                      {testStatus === "sending" && <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</>}
-                      {testStatus === "sent" && <><CheckCircle2 className="w-4 h-4 mr-2 text-accent" />Test SMS Sent!</>}
-                      {testStatus === "idle" && <><Send className="w-4 h-4 mr-2" />Send Test SMS</>}
-                      {testStatus === "error" && <><Send className="w-4 h-4 mr-2" />Retry Test SMS</>}
-                      </Button>
-                      )}
-                      {testPhone && !form.phone_number && (
-                      <p className="text-xs text-destructive">Please complete the phone setup step first</p>
-                      )}
-                  {testStatus === "sent" && (
-                    <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
-                      <p className="text-sm font-semibold text-accent">Check your phone! 📱</p>
-                      <p className="text-xs text-muted-foreground mt-1">You should receive the message within a few seconds.</p>
-                    </div>
-                  )}
-                  {testStatus === "error" && (
-                    <p className="text-xs text-destructive">{testError}</p>
-                  )}
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <p className="text-sm font-semibold mb-2">Want to skip?</p>
-                    <p className="text-xs text-muted-foreground mb-3">That's fine! You can always test from your dashboard after launch.</p>
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentStep(currentStep + 1)}
-                      className="w-full rounded-xl h-10"
-                    >
-                      Skip to Launch →
-                    </Button>
-                  </div>
-                </div>
-              )}
 
-              {/* STEP 6: Launch / Expectations */}
-              {currentStep === 6 && (
+
+              {/* STEP 5: Launch / Expectations */}
+              {currentStep === 5 && (
                 <div className="space-y-5">
                   <div className="text-center py-2">
                     <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-3">
@@ -806,12 +723,11 @@ export default function Onboarding() {
                   variant="outline"
                   onClick={() => setCurrentStep(currentStep + 1)}
                   className="rounded-xl h-11 px-6"
-                  disabled={!form.booking_url}
                 >
                   {form.booking_url ? 'Continue' : 'Skip'} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               )}
-              {currentStep === 6 ? (
+              {currentStep === 5 ? (
                 <Button
                   onClick={() => navigate("/dashboard")}
                   className="rounded-xl h-11 px-6 bg-accent hover:bg-accent/90"
