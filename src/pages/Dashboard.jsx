@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import useLeadNotifications from "@/hooks/useLeadNotifications";
+import { useQuery } from "@tanstack/react-query";
 import { PhoneMissed, MessageSquare, CalendarCheck, DollarSign, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,8 +89,8 @@ export default function Dashboard() {
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Block rendering while loading user
-  if (!user) {
+  // Block rendering while loading user or waiting for redirect
+  if (!user || user.role === 'admin') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -97,9 +98,13 @@ export default function Dashboard() {
     );
   }
 
-  // If admin or no profile, don't render (useEffect will redirect)
-  if (user.role === 'admin' || profiles.length === 0) {
-    return null;
+  // If no profile, redirect via useEffect (show loading)
+  if (profiles.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
   }
 
   // Check subscription status for regular users

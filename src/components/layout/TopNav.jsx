@@ -36,14 +36,6 @@ export default function TopNav() {
     await base44.auth.logout("/");
   };
 
-  const handleLandingClick = () => {
-    if (user.role === "admin") {
-      navigate("/admin");
-    } else {
-      navigate("/");
-    }
-  };
-
   const isAdminPage = location.pathname === "/admin" || location.pathname === "/admin/compliance";
   const isDashboardPage = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard");
   const isLandingPage = location.pathname === "/";
@@ -53,40 +45,63 @@ export default function TopNav() {
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         {/* Left: Navigation Tabs */}
         <div className="flex items-center gap-2">
-          {/* Landing Link */}
-          <Button
-            variant={(isLandingPage && user.role !== "admin") || (isAdminPage && user.role === "admin") ? "default" : "ghost"}
-            size="sm"
-            onClick={handleLandingClick}
-            className="gap-2"
-          >
-            CatchACaller
-          </Button>
-
-          {/* Dashboard Link (visible for all logged-in users with business) */}
-          {businessProfile && (
+          {/* Landing Link - Only show when on landing page */}
+          {isLandingPage && (
             <Button
-              variant={isDashboardPage ? "default" : "ghost"}
+              variant="default"
               size="sm"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => {}}
+              disabled
               className="gap-2"
             >
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+              CatchACaller
             </Button>
           )}
 
-          {/* Admin Panel Link (visible only for admins) */}
+          {/* Dashboard Link (visible for logged-in users with business profile) */}
+          {businessProfile && !isLandingPage && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="gap-2"
+              >
+                CatchACaller
+              </Button>
+              <Button
+                variant={isDashboardPage ? "default" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/dashboard")}
+                className="gap-2"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Button>
+            </>
+          )}
+
+          {/* Admin Panel Link - visible when admin on any page */}
           {user.role === "admin" && (
-            <Button
-              variant={isAdminPage ? "default" : "ghost"}
-              size="sm"
-              onClick={() => navigate("/admin")}
-              className="gap-2"
-            >
-              <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Admin</span>
-            </Button>
+            <>
+              <Button
+                variant={isLandingPage ? "default" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/")}
+                className="gap-2"
+              >
+                CatchACaller
+              </Button>
+              <Button
+                variant={isAdminPage ? "default" : "ghost"}
+                size="sm"
+                onClick={() => navigate("/admin")}
+                className="gap-2"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin Panel</span>
+              </Button>
+            </>
           )}
         </div>
 
