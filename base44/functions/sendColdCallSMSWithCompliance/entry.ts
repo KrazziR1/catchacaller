@@ -27,8 +27,8 @@ Deno.serve(async (req) => {
     }
 
     // Get prospect details
-    const prospect = await base44.asServiceRole.entities.ColdCallProspect.list();
-    const currentProspect = prospect.find(p => p.id === prospect_id);
+    const prospects = await base44.asServiceRole.entities.ColdCallProspect.list();
+    const currentProspect = prospects.find(p => p.id === prospect_id);
     
     if (!currentProspect) {
       return Response.json({ error: 'Prospect not found' }, { status: 404 });

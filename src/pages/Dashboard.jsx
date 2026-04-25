@@ -152,7 +152,7 @@ export default function Dashboard() {
   // Check subscription status for regular users
   const trialExpired = subscription && subscription.trial_end_date && 
     new Date(subscription.trial_end_date) < new Date() &&
-    subscription.status === 'trial';
+    ['trial', 'incomplete'].includes(subscription.status);
 
   const isSubscriptionBlocked = (subscription && !["active", "trial"].includes(subscription.status)) || trialExpired;
 
@@ -198,7 +198,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      <p className="text-sm text-muted-foreground">Demo mode - no data loaded</p>
+      <div className="space-y-6">
+        <RecentCallsTable calls={calls} />
+        <ConversionChart conversations={conversations} calls={calls} />
+        <LeadSourceBreakdown missedCalls={calls} />
+        <SMSMetrics />
+        <LeadScoringDistribution conversations={conversations} />
+        <LeadPipeline conversations={conversations} subscription={subscription} profile={profile} user={user} />
+        {subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name) && (
+          <>
+            <PipelineAnalytics conversations={conversations} subscription={subscription} />
+            {subscription.plan_name === 'Pro' && <CalendarBookingWidget profile={profile} />}
+          </>
+        )}
+        <ExportReports conversations={conversations} missedCalls={calls} />
+      </div>
     </div>
   );
 }

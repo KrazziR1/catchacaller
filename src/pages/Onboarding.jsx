@@ -510,10 +510,9 @@ export default function Onboarding() {
                         </p>
                       </div>
                     )}
-                    </div>
-                    </div>
-                    </>
-                    )}
+                  </div>
+                </>
+              )}
 
                     {/* STEP 2: AI Personality */}
               {currentStep === 2 && (

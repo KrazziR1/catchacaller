@@ -80,10 +80,11 @@ export default function Settings() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      const { average_job_value, ...cleanData } = data;
       if (profile) {
-        return base44.entities.BusinessProfile.update(profile.id, data);
+        return base44.entities.BusinessProfile.update(profile.id, cleanData);
       } else {
-        return base44.entities.BusinessProfile.create(data);
+        return base44.entities.BusinessProfile.create(cleanData);
       }
     },
     onSuccess: () => {
