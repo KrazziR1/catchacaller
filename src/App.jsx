@@ -9,6 +9,8 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Landing from '@/pages/Landing';
 import Dashboard from '@/pages/Dashboard';
 import MissedCalls from '@/pages/MissedCalls';
+import InstallPrompt from '@/components/pwa/InstallPrompt';
+import NotificationPermission from '@/components/pwa/NotificationPermission';
 import Conversations from '@/pages/Conversations';
 import Templates from '@/pages/Templates';
 import Settings from '@/pages/Settings';
@@ -77,6 +79,8 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <InstallPrompt />
+        <NotificationPermission />
       </QueryClientProvider>
     </AuthProvider>
   )
