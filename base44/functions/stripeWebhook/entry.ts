@@ -37,28 +37,47 @@ Deno.serve(async (req) => {
       });
 
       if (existing.length > 0) {
+        // Update existing subscription
         await base44.asServiceRole.entities.Subscription.update(existing[0].id, {
-          status: data.status,
-          plan_name: planName,
-          current_period_end: currentPeriodEnd,
-          trial_end_date: trialEndDate,
-        });
-      } else {
-        // Fetch customer email from Stripe if not on the event object
-        let userEmail = data.customer_email || '';
-        if (!userEmail && data.customer) {
-          const customer = await stripe.customers.retrieve(data.customer);
-          userEmail = customer.email || '';
-        }
-        await base44.asServiceRole.entities.Subscription.create({
-          user_email: userEmail,
-          stripe_customer_id: data.customer,
           stripe_subscription_id: data.id,
           status: data.status,
           plan_name: planName,
           current_period_end: currentPeriodEnd,
           trial_end_date: trialEndDate,
+          stripe_customer_id: data.customer,
         });
+      } else {
+        // Check if trial subscription exists for this customer and link it
+        let userEmail = data.customer_email || '';
+        if (!userEmail && data.customer) {
+          const customer = await stripe.customers.retrieve(data.customer);
+          userEmail = customer.email || '';
+        }
+        
+        // Look for existing trial subscription by email
+        const trialSubs = await base44.asServiceRole.entities.Subscription.filter({ user_email: userEmail });
+        if (trialSubs.length > 0 && trialSubs[0].status === 'trial') {
+          // Update trial subscription to paid plan
+          await base44.asServiceRole.entities.Subscription.update(trialSubs[0].id, {
+            stripe_subscription_id: data.id,
+            stripe_customer_id: data.customer,
+            status: data.status,
+            plan_name: planName,
+            current_period_end: currentPeriodEnd,
+            trial_end_date: trialEndDate,
+          });
+        } else {
+          // Create new subscription
+          await base44.asServiceRole.entities.Subscription.create({
+            user_email: userEmail,
+            stripe_customer_id: data.customer,
+            stripe_subscription_id: data.id,
+            status: data.status,
+            plan_name: planName,
+            current_period_end: currentPeriodEnd,
+            trial_end_date: trialEndDate,
+          });
+        }
       }
     } else if (eventType === 'customer.subscription.deleted') {
       const existing = await base44.asServiceRole.entities.Subscription.filter({

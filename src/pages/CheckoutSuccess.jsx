@@ -4,17 +4,35 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(5);
   const [destination, setDestination] = useState("/dashboard");
+  const [message, setMessage] = useState("Your subscription is now active.");
 
   useEffect(() => {
-    base44.entities.BusinessProfile.list().then((profiles) => {
-      if (!profiles || profiles.length === 0) setDestination("/onboarding");
-    });
+    const init = async () => {
+      const [profiles, user] = await Promise.all([
+        base44.entities.BusinessProfile.list(),
+        base44.auth.me(),
+      ]);
+      
+      if (!profiles || profiles.length === 0) {
+        setDestination("/onboarding");
+      } else if (user?.email) {
+        const subs = await base44.entities.Subscription.filter({ user_email: user.email });
+        if (subs.length > 0) {
+          const sub = subs[0];
+          if (sub.status === 'active') {
+            setMessage("Your subscription is active and your 7-day trial is included.");
+          } else if (sub.status === 'trial') {
+            setMessage("You're on your 7-day free trial. No charge yet.");
+          }
+        }
+      }
+    };
+    init();
   }, []);
 
   useEffect(() => {
@@ -42,7 +60,7 @@ export default function CheckoutSuccess() {
         </div>
         <h1 className="text-2xl font-bold mb-2">Welcome to CatchACaller!</h1>
         <p className="text-muted-foreground mb-6">
-           Your subscription is now active. You have 7 days to try it risk-free.
+           {message}
          </p>
         <div className="bg-primary/10 rounded-lg p-4 mb-6">
           <p className="text-sm font-mono text-primary">
