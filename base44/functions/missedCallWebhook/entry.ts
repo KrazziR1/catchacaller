@@ -84,7 +84,11 @@ Deno.serve(async (req) => {
       });
       callerState = stateRes.data?.state || 'UNKNOWN';
     } catch (e) {
-      console.warn('State lookup failed (non-critical):', e.message);
+      console.error('State lookup failed - cannot determine compliance requirements:', e.message);
+      // CRITICAL: Block SMS if state detection fails
+      // Better to reject than risk sending to CA/NY without explicit consent
+      console.log(`Blocked SMS to ${callerPhone} - state detection failure`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
     // --- Create LeadConsent record with 90-day EBR expiration ---

@@ -1,12 +1,28 @@
 import twilio from 'npm:twilio';
 
+// Normalize any phone format to E.164 (+1XXXXXXXXXX)
+function normalizePhone(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('1') && digits.length === 11) return `+${digits}`;
+  if (digits.length === 10) return `+1${digits}`;
+  return `+${digits}`;
+}
+
 // Get caller's state via Twilio PhoneNumber lookup API
 Deno.serve(async (req) => {
   try {
-    const { phone_number } = await req.json();
+    const payload = await req.json().catch(() => ({}));
+    const rawPhone = payload.phone_number;
 
+    if (!rawPhone || typeof rawPhone !== 'string') {
+      return Response.json({ error: 'Invalid phone_number' }, { status: 400 });
+    }
+
+    // Normalize phone to E.164 format
+    const phone_number = normalizePhone(rawPhone);
     if (!phone_number) {
-      return Response.json({ error: 'phone_number required' }, { status: 400 });
+      return Response.json({ error: 'Invalid phone number format' }, { status: 400 });
     }
 
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
@@ -34,6 +50,7 @@ Deno.serve(async (req) => {
       });
     }
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(`State lookup error for phone:`, error.message);
+    return Response.json({ error: 'State lookup failed' }, { status: 500 });
   }
 });

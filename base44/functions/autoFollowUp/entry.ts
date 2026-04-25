@@ -50,6 +50,16 @@ Deno.serve(async (req) => {
         if ((c.follow_up_count || 0) >= 1) return false;
         if (optOutNumbers.has(c.caller_phone)) return false;
         const lastActivity = new Date(c.last_message_at || c.created_date).getTime();
+        
+        // IDEMPOTENCY: Prevent duplicate follow-ups if function runs twice
+        const alreadySentInWindow = (c.messages || []).some(m => 
+          m.sender === 'ai' && 
+          m.content && m.content.toLowerCase().includes('following up') &&
+          new Date(m.timestamp).getTime() >= windowStart &&
+          new Date(m.timestamp).getTime() <= windowEnd
+        );
+        if (alreadySentInWindow) return false;
+        
         return lastActivity >= windowStart && lastActivity <= windowEnd;
       });
 

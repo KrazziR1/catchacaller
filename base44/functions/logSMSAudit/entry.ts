@@ -32,8 +32,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid message_body' }, { status: 400 });
     }
 
-    // Truncate message to prevent overflow
-    const truncatedBody = message_body.substring(0, 1600);
+    // Validate message length - don't silently truncate
+    if (message_body.length > 1600) {
+      console.error(`SMS message too long: ${message_body.length} chars (max 1600)`);
+      return Response.json({ 
+        error: 'SMS message exceeds maximum length',
+        max_length: 1600,
+        provided_length: message_body.length
+      }, { status: 400 });
+    }
+
+    const truncatedBody = message_body;
 
     // Log to audit trail - CRITICAL for compliance
     const audit = await base44.asServiceRole.entities.SMSAuditLog.create({
