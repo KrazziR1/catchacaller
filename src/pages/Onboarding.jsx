@@ -99,11 +99,11 @@ export default function Onboarding() {
     onSuccess: async (data) => {
       if (!profileId) setProfileId(data.id);
       queryClient.invalidateQueries({ queryKey: ["business-profile"] });
-      // Auto-configure webhooks for manually entered numbers
       await configureWebhooksIfNeeded();
-      // Send confirmation email
       await sendConfirmationEmail(data);
-      setCurrentStep(currentStep + 1);
+    },
+    onError: (error) => {
+      console.error("Save failed:", error);
     },
   });
 
@@ -116,20 +116,31 @@ export default function Onboarding() {
 
   const [webhookConfigStatus, setWebhookConfigStatus] = useState("idle"); // idle | loading | done | error
 
-  const sendTestMutation = async () => {
+  const testSmsMutation = useMutation({
+    mutationFn: () =>
+      base44.functions.invoke("sendTestSMS", {
+        to_phone: testPhone,
+        business_name: form.business_name,
+        ai_personality: form.ai_personality,
+      }),
+    onSuccess: (res) => {
+      if (res.data?.success) {
+        setTestStatus("sent");
+      } else {
+        setTestStatus("error");
+        setTestError(res.data?.error || "Failed to send. Check your phone number format.");
+      }
+    },
+    onError: (error) => {
+      setTestStatus("error");
+      setTestError(error.message || "Failed to send test SMS");
+    },
+  });
+
+  const sendTestMutation = () => {
     setTestStatus("sending");
     setTestError(null);
-    const res = await base44.functions.invoke("sendTestSMS", {
-      to_phone: testPhone,
-      business_name: form.business_name,
-      ai_personality: form.ai_personality,
-    });
-    if (res.data?.success) {
-      setTestStatus("sent");
-    } else {
-      setTestStatus("error");
-      setTestError(res.data?.error || "Failed to send. Check your phone number format.");
-    }
+    testSmsMutation.mutate();
   };
 
   const isStepValid = () => {
@@ -167,17 +178,22 @@ export default function Onboarding() {
 
   const next = () => {
     if (currentStep === 4) {
-      // Save profile before moving to template step
       saveMutation.mutate();
       return;
     }
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Last step — go to dashboard
       navigate("/dashboard");
     }
   };
+
+  // Advance to next step after save completes
+  useEffect(() => {
+    if (saveMutation.isSuccess && currentStep === 4) {
+      setCurrentStep(5);
+    }
+  }, [saveMutation.isSuccess, currentStep]);
 
   const back = () => setCurrentStep(currentStep - 1);
 
