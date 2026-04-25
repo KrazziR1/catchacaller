@@ -207,7 +207,8 @@ export default function Onboarding() {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigate("/dashboard");
+      // Force a brief wait to ensure profile is fully persisted
+      setTimeout(() => navigate("/dashboard"), 300);
     }
   };
 
@@ -332,7 +333,6 @@ export default function Onboarding() {
                         <SelectItem value="automotive">Automotive</SelectItem>
                         <SelectItem value="dental">Dental / Healthcare</SelectItem>
                         <SelectItem value="fitness">Fitness / Wellness</SelectItem>
-                        <SelectItem value="general">General</SelectItem>
                         <SelectItem value="hospitality">Hospitality</SelectItem>
                         <SelectItem value="hvac">HVAC</SelectItem>
                         <SelectItem value="legal">Legal</SelectItem>
@@ -641,7 +641,16 @@ export default function Onboarding() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1.5">Format: +1 (555) 123-4567 — automatically formatted</p>
                   </div>
-                  {testPhone && (
+                  {testPhone && !form.phone_number && (
+                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800">Phone number required</p>
+                        <p className="text-xs text-amber-700 mt-1">Complete the phone setup step first to test SMS.</p>
+                      </div>
+                    </div>
+                  )}
+                  {testPhone && form.phone_number && (
                     <Button
                       onClick={sendTestMutation}
                       disabled={testStatus === "sending" || testStatus === "sent"}
@@ -652,8 +661,11 @@ export default function Onboarding() {
                       {testStatus === "sent" && <><CheckCircle2 className="w-4 h-4 mr-2 text-accent" />Test SMS Sent!</>}
                       {testStatus === "idle" && <><Send className="w-4 h-4 mr-2" />Send Test SMS</>}
                       {testStatus === "error" && <><Send className="w-4 h-4 mr-2" />Retry Test SMS</>}
-                    </Button>
-                  )}
+                      </Button>
+                      )}
+                      {testPhone && !form.phone_number && testStatus === "error" && (
+                      <p className="text-xs text-destructive">{testError}</p>
+                      )}
                   {testStatus === "sent" && (
                     <div className="p-4 rounded-xl bg-accent/10 border border-accent/20">
                       <p className="text-sm font-semibold text-accent">Check your phone! 📱</p>
