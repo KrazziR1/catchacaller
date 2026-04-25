@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import useLeadNotifications from "@/hooks/useLeadNotifications";
 import { PhoneMissed, MessageSquare, CalendarCheck, DollarSign, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,9 @@ import ExportReports from "@/components/dashboard/ExportReports";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+
+  // Enable polling for new lead notifications
+  useLeadNotifications();
 
   useEffect(() => {
     base44.auth.me().then(setUser);
