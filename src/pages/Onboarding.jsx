@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   PhoneCall, Building2, Bot, CalendarCheck,
   CheckCircle2, ArrowRight, ArrowLeft, Zap,
-  CreditCard, MessageSquare, Send, Loader2,
+  CreditCard, MessageSquare, Loader2,
   AlertTriangle, Sparkles, Clock, TrendingUp, ShieldCheck
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,9 +38,6 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [testPhone, setTestPhone] = useState("");
-  const [testStatus, setTestStatus] = useState("idle"); // idle | sending | sent | error
-  const [testError, setTestError] = useState(null);
   const [profileId, setProfileId] = useState(null);
   const [smsComplianceAgreed, setSmsComplianceAgreed] = useState(false);
   const [hasTwilioAccount, setHasTwilioAccount] = useState(null);
@@ -69,6 +66,11 @@ export default function Onboarding() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       setSavingError(null);
+      // Re-check compliance at save time to ensure SMS agreement still checked
+      if (!smsComplianceAgreed) {
+        throw new Error("You must agree to SMS compliance to continue.");
+      }
+      
       // Check for compliance keywords if "other" industry
       if (form.industry === 'other') {
         try {
@@ -98,9 +100,10 @@ export default function Onboarding() {
     onSuccess: async (data) => {
       if (!profileId) setProfileId(data.id);
       queryClient.invalidateQueries({ queryKey: ["business-profile"] });
-      await configureWebhooksIfNeeded();
-      await createTrialSubscription();
-      await sendConfirmationEmail(data);
+      // Fire background tasks without blocking — non-critical
+      configureWebhooksIfNeeded().catch(err => console.error('Webhook config failed:', err));
+      createTrialSubscription().catch(err => console.error('Trial creation failed:', err));
+      sendConfirmationEmail(data).catch(err => console.error('Email failed:', err));
     },
     onError: (error) => {
       setSavingError(error.message || 'Failed to save profile. Please try again.');
@@ -118,32 +121,7 @@ export default function Onboarding() {
     }
   };
 
-  const testSmsMutation = useMutation({
-    mutationFn: () =>
-      base44.functions.invoke("sendTestSMS", {
-        to_phone: testPhone,
-        business_name: form.business_name,
-        ai_personality: form.ai_personality,
-      }),
-    onSuccess: (res) => {
-      if (res.data?.success) {
-        setTestStatus("sent");
-      } else {
-        setTestStatus("error");
-        setTestError(res.data?.error || "Failed to send. Check your phone number format.");
-      }
-    },
-    onError: (error) => {
-      setTestStatus("error");
-      setTestError(error.message || "Failed to send test SMS");
-    },
-  });
 
-  const sendTestMutation = () => {
-    setTestStatus("sending");
-    setTestError(null);
-    testSmsMutation.mutate();
-  };
 
   const isStepValid = () => {
     if (currentStep === 0) return !!signupEmail && signupPassword.length >= 8;
@@ -224,13 +202,18 @@ export default function Onboarding() {
     setIsSigningUp(true);
     setSignupError(null);
     try {
-      // Use Base44's built-in signup via redirectToLogin with registration flow
-      const result = await base44.auth.redirectToLogin("/onboarding", { signup: true });
-      // If we get here, they're authenticated - move to next step
-      setCurrentStep(1);
+      // redirectToLogin navigates away — this won't return
+      // For now, just validate and move forward; Base44 handles auth
+      if (!signupEmail || signupPassword.length < 8) {
+        setSignupError("Invalid email or password (min 8 chars)");
+        setIsSigningUp(false);
+        return;
+      }
+      // TODO: Implement actual signup API call when available
+      // For now, assume user will complete signup via redirectToLogin
+      base44.auth.redirectToLogin("/onboarding", { signup: true });
     } catch (err) {
       setSignupError(err.message || "Signup failed. Try again.");
-    } finally {
       setIsSigningUp(false);
     }
   };
