@@ -65,6 +65,26 @@ Deno.serve(async (req) => {
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
+    // --- Verify valid consent exists before responding ---
+    const consents = await base44.asServiceRole.entities.LeadConsent.filter({
+      phone_number: callerPhone,
+      is_valid: true,
+    });
+    if (consents.length === 0) {
+      console.log(`No valid consent for ${callerPhone}, skipping response`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // --- Validate state compliance ---
+    const stateCheck = await base44.asServiceRole.functions.invoke('validateStateCompliance', {
+      caller_state: consents[0].caller_state,
+      phone_number: callerPhone,
+    });
+    if (!stateCheck.data?.is_compliant) {
+      console.log(`${callerPhone} in ${stateCheck.data?.state} does not meet compliance, skipping`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
     // --- Load the correct business profile by the "To" number (multi-tenant isolation) ---
     const allProfiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 500);
     const profile = allProfiles.find(p => normalizePhone(p.phone_number) === toPhone);

@@ -63,6 +63,31 @@ Deno.serve(async (req) => {
     const callTime = now.toISOString();
     const startTime = Date.now();
 
+    // --- Create LeadConsent record (establish legal opt-in) ---
+    let callerState = 'UNKNOWN';
+    try {
+      // Try to get caller state via Twilio lookup (optional enhancement)
+      // For now: mark as established via called_business
+      callerState = 'UNKNOWN';
+    } catch (e) {
+      console.warn('State lookup failed (non-critical):', e.message);
+    }
+
+    await base44.asServiceRole.entities.LeadConsent.create({
+      phone_number: callerPhone,
+      called_at: callTime,
+      consent_type: 'called_business',
+      caller_state: callerState,
+      is_valid: true,
+    });
+
+    // --- Check DNC ---
+    const dncCheckRes = await base44.asServiceRole.functions.invoke('checkDNC', { phone_number: callerPhone });
+    if (dncCheckRes.data?.is_dnc) {
+      console.log(`${callerPhone} is on DNC list, skipping SMS`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
     // --- Create MissedCall record (owned by this profile's user) ---
     const missedCall = await base44.asServiceRole.entities.MissedCall.create({
       caller_phone: callerPhone,

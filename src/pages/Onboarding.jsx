@@ -65,7 +65,18 @@ export default function Onboarding() {
   }, []);
 
   const saveMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
+      // Check for compliance keywords if "other" industry
+      if (form.industry === 'other') {
+        const keywordCheck = await base44.functions.invoke('checkComplianceKeywords', {
+          business_name: form.business_name,
+          industry: form.industry,
+        });
+        if (keywordCheck.data?.requires_manual_review) {
+          form.is_high_risk_industry = true;
+        }
+      }
+
       const dataToSave = {
         ...form,
         terms_accepted_at: new Date().toISOString(),
@@ -264,7 +275,7 @@ export default function Onboarding() {
                   <div>
                     <Label>Industry</Label>
                     <Select value={form.industry} onValueChange={(v) => {
-                      const isHighRisk = ['debt_collection', 'political'].includes(v);
+                      const isHighRisk = v === 'other';
                       setForm({ ...form, industry: v, is_high_risk_industry: isHighRisk });
                     }}>
                       <SelectTrigger className="mt-1.5 h-12 rounded-xl"><SelectValue /></SelectTrigger>
@@ -281,19 +292,16 @@ export default function Onboarding() {
                         <SelectItem value="dental">Dental / Healthcare</SelectItem>
                         <SelectItem value="fitness">Fitness / Wellness</SelectItem>
                         <SelectItem value="automotive">Automotive</SelectItem>
-                        <SelectItem value="debt_collection">Debt Collection (Regulated)</SelectItem>
-                        <SelectItem value="political">Political Campaigns (Regulated)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   {form.is_high_risk_industry && (
-                    <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex gap-3">
-                      <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                    <div className="p-4 rounded-xl bg-orange-50 border border-orange-200 flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm font-bold text-red-800">⚠️ Regulated Industry</p>
-                        <p className="text-xs text-red-700 mt-1">
-                          {form.industry === 'debt_collection' && "Debt collection has strict TCPA rules. Your account will require manual review before activation."}
-                          {form.industry === 'political' && "Political campaigns have strict FCC/TCPA requirements. Your account will require manual review before activation."}
+                        <p className="text-sm font-bold text-orange-800">⚠️ Manual Review Required</p>
+                        <p className="text-xs text-orange-700 mt-1">
+                          Custom or unlisted industries require manual compliance review before activation. You'll hear from us within 24 hours.
                         </p>
                       </div>
                     </div>

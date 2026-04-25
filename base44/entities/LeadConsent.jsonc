@@ -1,0 +1,41 @@
+{
+  "name": "LeadConsent",
+  "type": "object",
+  "properties": {
+    "phone_number": {
+      "type": "string",
+      "description": "Lead's phone number (E.164 format)"
+    },
+    "called_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the lead called the business"
+    },
+    "consent_type": {
+      "type": "string",
+      "enum": [
+        "called_business"
+      ],
+      "default": "called_business",
+      "description": "How consent was established"
+    },
+    "caller_state": {
+      "type": "string",
+      "description": "US state of the caller (2-letter code)"
+    },
+    "is_valid": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether consent is still valid (not revoked)"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to the associated conversation"
+    }
+  },
+  "required": [
+    "phone_number",
+    "called_at",
+    "consent_type"
+  ]
+}
