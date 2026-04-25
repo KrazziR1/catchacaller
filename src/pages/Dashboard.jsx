@@ -24,20 +24,19 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  // Fetch real user on mount
+  // Fetch real user on mount and handle redirects
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => setUser(null));
-  }, []);
+    base44.auth.me().then((u) => {
+      setUser(u);
+      // Redirect admin immediately
+      if (u?.role === 'admin') {
+        navigate("/admin", { replace: true });
+      }
+    }).catch(() => setUser(null));
+  }, [navigate]);
 
   // Enable polling for new lead notifications
   useLeadNotifications();
-
-  // Admin redirect: navigate admins to /admin page immediately
-  useEffect(() => {
-    if (user && user.role === 'admin') {
-      navigate("/admin", { replace: true });
-    }
-  }, [user, navigate]);
 
   // Redirect to onboarding if no profile exists after loading
   useEffect(() => {
@@ -48,93 +47,46 @@ export default function Dashboard() {
 
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ["business-profile", user?.email],
-    queryFn: async () => {
-      try {
-        const result = await Promise.race([
-          base44.entities.BusinessProfile.list("-created_date", 1),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
-        ]);
-        return result;
-      } catch (e) {
-        console.warn('Profile fetch failed:', e.message);
-        return [];
-      }
-    },
+    queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
     enabled: !!user?.email && user?.role !== 'admin',
     staleTime: 5 * 60 * 1000,
-    retry: 0,
+    retry: 1,
   });
 
-  const { data: subscriptions = [], isLoading: subscriptionLoading } = useQuery({
+  const { data: subscriptions = [] } = useQuery({
     queryKey: ["subscription", user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      try {
-        return await Promise.race([
-          base44.entities.Subscription.filter({ user_email: user.email }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]);
-      } catch (e) {
-        console.warn('Subscription fetch failed:', e.message);
-        return [];
-      }
-    },
+    queryFn: () => base44.entities.Subscription.filter({ user_email: user.email }),
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
-    retry: 0,
+    retry: 1,
   });
 
   const { data: calls = [] } = useQuery({
     queryKey: ["missed-calls"],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.MissedCall.list("-call_time", 50),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]);
-      } catch (e) {
-        return [];
-      }
-    },
-    retry: 0,
+    queryFn: () => base44.entities.MissedCall.list("-call_time", 50),
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
   });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.Conversation.list("-created_date", 50),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]);
-      } catch (e) {
-        return [];
-      }
-    },
+    queryFn: () => base44.entities.Conversation.list("-created_date", 50),
     staleTime: 2 * 60 * 1000,
-    retry: 0,
+    retry: 1,
   });
 
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.SMSTemplate.list("-created_date", 100),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]);
-      } catch (e) {
-        return [];
-      }
-    },
-    retry: 0,
+    queryFn: () => base44.entities.SMSTemplate.list("-created_date", 100),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
   // Block rendering while loading user
-  if (!user || profileLoading) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
