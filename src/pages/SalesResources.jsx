@@ -4,12 +4,13 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Phone, MessageSquare, TrendingUp, Zap, ArrowLeft } from "lucide-react";
+import { Copy, Check, Phone, MessageSquare, TrendingUp, Zap, ArrowLeft, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import ColdCallingScripts from "@/components/sales/ColdCallingScripts";
 import ValuePropositions from "@/components/sales/ValuePropositions";
 import TwilioExplainer from "@/components/sales/TwilioExplainer";
 import FollowUpTemplates from "@/components/sales/FollowUpTemplates";
+import PricingROI from "@/components/sales/PricingROI";
 
 export default function SalesResources() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export default function SalesResources() {
 
         {/* Tabs */}
         <Tabs defaultValue="cold-calling" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="cold-calling" className="gap-2">
               <Phone className="w-4 h-4" />
               <span className="hidden sm:inline">Cold Calling</span>
@@ -56,6 +57,10 @@ export default function SalesResources() {
             <TabsTrigger value="value-props" className="gap-2">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Value Props</span>
+            </TabsTrigger>
+            <TabsTrigger value="pricing-roi" className="gap-2">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Pricing ROI</span>
             </TabsTrigger>
             <TabsTrigger value="twilio" className="gap-2">
               <Zap className="w-4 h-4" />
@@ -73,6 +78,10 @@ export default function SalesResources() {
 
           <TabsContent value="value-props">
             <ValuePropositions />
+          </TabsContent>
+
+          <TabsContent value="pricing-roi">
+            <PricingROI />
           </TabsContent>
 
           <TabsContent value="twilio">

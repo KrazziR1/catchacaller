@@ -15,7 +15,17 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
   useEffect(() => {
-    checkAppState();
+    // Check if we already have an active session from another tab
+    const hasSessionToken = sessionStorage.getItem('base44_auth_checked') === 'true';
+    const hasStoredToken = localStorage.getItem('base44_access_token') || localStorage.getItem('token');
+    
+    if (hasSessionToken && hasStoredToken) {
+      // Token exists from another tab, skip full check and go straight to user auth
+      checkUserAuth();
+    } else {
+      // Full app state check
+      checkAppState();
+    }
   }, []);
 
   const checkAppState = async () => {
@@ -45,8 +55,19 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
+      // Persist auth state to localStorage for session persistence across tabs
+      if (currentUser) {
+        sessionStorage.setItem('base44_auth_checked', 'true');
+      }
     } catch (error) {
-      console.warn('User auth check failed:', error?.message);
+      // Only redirect to login if not a callback/token issue
+      if (error?.message?.includes('Unauthorized') || error?.message?.includes('HTTPException')) {
+        console.warn('Auth token invalid, clearing and redirecting to login');
+        localStorage.removeItem('base44_access_token');
+        sessionStorage.removeItem('base44_auth_checked');
+      } else {
+        console.warn('User auth check failed:', error?.message);
+      }
       setIsLoadingAuth(false);
       setAuthError({ type: 'auth_required' });
       setAuthChecked(true);
