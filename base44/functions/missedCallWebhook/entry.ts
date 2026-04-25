@@ -63,21 +63,28 @@ Deno.serve(async (req) => {
     const callTime = now.toISOString();
     const startTime = Date.now();
 
-    // --- Create LeadConsent record (establish legal opt-in) ---
+    // --- Get caller state via Twilio lookup ---
     let callerState = 'UNKNOWN';
     try {
-      // Try to get caller state via Twilio lookup (optional enhancement)
-      // For now: mark as established via called_business
-      callerState = 'UNKNOWN';
+      const stateRes = await base44.asServiceRole.functions.invoke('getCallerState', {
+        phone_number: callerPhone,
+      });
+      callerState = stateRes.data?.state || 'UNKNOWN';
     } catch (e) {
       console.warn('State lookup failed (non-critical):', e.message);
     }
 
-    await base44.asServiceRole.entities.LeadConsent.create({
+    // --- Create LeadConsent record with 90-day EBR expiration ---
+    const ebsExpirationDate = new Date(callTime);
+    ebsExpirationDate.setDate(ebsExpirationDate.getDate() + 90);
+
+    const consent = await base44.asServiceRole.entities.LeadConsent.create({
       phone_number: callerPhone,
       called_at: callTime,
       consent_type: 'called_business',
       caller_state: callerState,
+      ebs_expiration_date: ebsExpirationDate.toISOString(),
+      explicit_sms_consent: false, // Will be set to true only after caller confirms
       is_valid: true,
     });
 
@@ -97,7 +104,29 @@ Deno.serve(async (req) => {
       estimated_value: profile.average_job_value || 500,
     });
 
-    // --- Build initial SMS message ---
+    // --- For CA/NY: Send opt-in confirmation first instead of business message ---
+    const requiresExplicitConsent = ['CA', 'NY'].includes(callerState);
+
+    if (requiresExplicitConsent) {
+      // Send opt-in confirmation request FIRST
+      const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
+      const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
+      const fromPhone = toPhone;
+      const client = twilio(accountSid, authToken);
+
+      const optInMessage = `Hi! This is ${profile.business_name} reaching out. We'd like to send you SMS updates about your service request. Reply YES to confirm, or STOP to decline.`;
+
+      await client.messages.create({
+        body: optInMessage,
+        from: fromPhone,
+        to: callerPhone,
+      });
+
+      console.log(`CA/NY opt-in confirmation sent to ${callerPhone}`);
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // --- Build initial SMS message for non-strict states ---
     const name = profile.business_name;
     const personality = profile.ai_personality || 'friendly';
     const bookingLine = profile.booking_url ? ` Book here: ${profile.booking_url}` : '';

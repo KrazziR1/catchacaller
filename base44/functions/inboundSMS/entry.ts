@@ -52,11 +52,21 @@ Deno.serve(async (req) => {
     }
 
     if (optInKeywords.includes(upperText)) {
+      // Handle explicit SMS consent for CA/NY
+      const consents = await base44.asServiceRole.entities.LeadConsent.filter({ phone_number: callerPhone });
+      if (consents.length > 0) {
+        await base44.asServiceRole.entities.LeadConsent.update(consents[0].id, {
+          explicit_sms_consent: true,
+          explicit_consent_at: new Date().toISOString(),
+        });
+      }
+      // Also remove from opt-out if they were previously opted out
       const existing = await base44.asServiceRole.entities.SMSOptOut.filter({ phone_number: callerPhone });
       for (const record of existing) {
         await base44.asServiceRole.entities.SMSOptOut.delete(record.id);
       }
-      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+      // Don't send a response to YES (let the AI handle it in next step)
+      // Fall through to continue with conversation
     }
 
     // --- Check if opted out ---

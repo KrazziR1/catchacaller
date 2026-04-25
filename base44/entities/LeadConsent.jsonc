@@ -23,6 +23,21 @@
       "type": "string",
       "description": "US state of the caller (2-letter code)"
     },
+    "ebs_expiration_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the established business relationship expires (90 days from call)"
+    },
+    "explicit_sms_consent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether caller has explicitly confirmed SMS consent (required for CA/NY)"
+    },
+    "explicit_consent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When explicit SMS consent was confirmed"
+    },
     "is_valid": {
       "type": "boolean",
       "default": true,

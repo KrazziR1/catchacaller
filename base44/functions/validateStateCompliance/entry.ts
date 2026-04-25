@@ -47,16 +47,30 @@ Deno.serve(async (req) => {
     const rules = STATE_RULES[stateCode] || STATE_RULES.DEFAULT;
 
     // Check if valid consent exists for stricter states
-    let has_valid_consent = true;
-    if (rules.requires_explicit_consent) {
-      const consents = await base44.asServiceRole.entities.LeadConsent.filter({
-        phone_number,
-        is_valid: true,
-      });
-      has_valid_consent = consents.length > 0;
+    let has_valid_consent = false;
+    let ebs_expired = false;
+
+    const consents = await base44.asServiceRole.entities.LeadConsent.filter({
+      phone_number,
+      is_valid: true,
+    });
+
+    if (consents.length > 0) {
+      const consent = consents[0];
+      // Check if EBR has expired (90 days)
+      const ebsExp = new Date(consent.ebs_expiration_date);
+      const now = new Date();
+      ebs_expired = now > ebsExp;
+
+      // For strict states, also require explicit SMS consent
+      if (rules.requires_explicit_consent) {
+        has_valid_consent = consent.explicit_sms_consent && !ebs_expired;
+      } else {
+        has_valid_consent = !ebs_expired;
+      }
     }
 
-    const is_compliant = !rules.requires_explicit_consent || has_valid_consent;
+    const is_compliant = !rules.requires_explicit_consent ? !ebs_expired : has_valid_consent;
 
     return Response.json({
       state: stateCode,
