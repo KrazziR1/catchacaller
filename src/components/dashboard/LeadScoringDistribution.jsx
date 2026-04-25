@@ -13,16 +13,22 @@ export default function LeadScoringDistribution({ conversations = [] }) {
     };
 
     conversations.forEach(conv => {
+      if (!conv || typeof conv !== 'object') return;
+      
       let score = 50;
 
       if (conv.last_message_at) {
-        const hoursSince = differenceInHours(new Date(), new Date(conv.last_message_at));
-        if (hoursSince < 1) score += 20;
-        else if (hoursSince < 24) score += 10;
-        else if (hoursSince < 72) score += 5;
+        try {
+          const hoursSince = differenceInHours(new Date(), new Date(conv.last_message_at));
+          if (hoursSince < 1) score += 20;
+          else if (hoursSince < 24) score += 10;
+          else if (hoursSince < 72) score += 5;
+        } catch {
+          // Invalid date, skip time bonus
+        }
       }
 
-      const msgCount = conv.messages?.length || 0;
+      const msgCount = Array.isArray(conv.messages) ? conv.messages.length : 0;
       if (msgCount > 10) score += 15;
       else if (msgCount > 5) score += 10;
       else if (msgCount > 2) score += 5;

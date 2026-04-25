@@ -103,6 +103,22 @@ Deno.serve(async (req) => {
       } catch (error) {
         console.error(`Error syncing to ${integration.platform}:`, error);
         results.push({ platform: integration.platform, status: 'error', error: error.message });
+        
+        // Log sync failure for audit trail
+        try {
+          await base44.asServiceRole.functions.invoke('logSMSAudit', {
+            phone_number: conversation.caller_phone,
+            business_phone: profile.phone_number,
+            message_body: `CRM sync failed for ${integration.platform}: ${error.message}`,
+            message_type: 'campaign',
+            conversation_id: conversation.id,
+            status: 'failed',
+            consent_type: 'called_business',
+            sent_by: 'sync_error',
+          });
+        } catch (auditErr) {
+          console.warn(`Sync error audit logging failed (non-critical):`, auditErr.message);
+        }
       }
     }
 

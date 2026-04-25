@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
       caller_phone: callerPhone,
       caller_name: CallerName || null,
       status: 'active',
+      pipeline_stage: 'new',
       messages: [{
         sender: 'ai',
         content: smsBody,

@@ -3,19 +3,27 @@ import { AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function LeadScoring({ conversation }) {
+  if (!conversation || typeof conversation !== 'object') {
+    return null;
+  }
+
   // Calculate lead score (0-100)
   let score = 50; // baseline
 
   // Time since last message (fresher is better)
   if (conversation.last_message_at) {
-    const hoursSinceMsg = differenceInHours(new Date(), new Date(conversation.last_message_at));
-    if (hoursSinceMsg < 1) score += 20;
-    else if (hoursSinceMsg < 24) score += 10;
-    else if (hoursSinceMsg < 72) score += 5;
+    try {
+      const hoursSinceMsg = differenceInHours(new Date(), new Date(conversation.last_message_at));
+      if (hoursSinceMsg < 1) score += 20;
+      else if (hoursSinceMsg < 24) score += 10;
+      else if (hoursSinceMsg < 72) score += 5;
+    } catch {
+      // Invalid date, skip time bonus
+    }
   }
 
   // Message engagement (more messages = more interest)
-  const messageCount = conversation.messages?.length || 0;
+  const messageCount = Array.isArray(conversation.messages) ? conversation.messages.length : 0;
   if (messageCount > 10) score += 15;
   else if (messageCount > 5) score += 10;
   else if (messageCount > 2) score += 5;

@@ -157,6 +157,7 @@ Write the SMS reply text only. No quotes, no labels.`;
         last_message_at: now,
         last_inbound_at: now,
         status: 'active',
+        pipeline_stage: 'new',
       });
     }
 
