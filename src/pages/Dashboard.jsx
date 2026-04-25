@@ -94,32 +94,24 @@ export default function Dashboard() {
         <StatCard
           title="Missed Calls"
           value={totalCalls}
-          change="12%"
-          changeType="up"
           icon={PhoneMissed}
           delay={0}
         />
         <StatCard
           title="Leads Engaged"
           value={repliedCalls}
-          change="8%"
-          changeType="up"
           icon={MessageSquare}
           delay={0.05}
         />
         <StatCard
           title="Bookings"
           value={bookedCalls}
-          change="23%"
-          changeType="up"
           icon={CalendarCheck}
           delay={0.1}
         />
         <StatCard
           title="Revenue Recovered"
           value={`$${totalRevenue.toLocaleString()}`}
-          change="15%"
-          changeType="up"
           icon={DollarSign}
           delay={0.15}
         />

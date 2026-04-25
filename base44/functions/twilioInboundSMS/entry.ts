@@ -63,7 +63,7 @@ ${profile?.booking_url ? `If they seem ready to book, include this link: ${profi
 Tone: ${profile?.ai_personality || "friendly"}. Do NOT use emojis excessively. Keep it concise.`,
     });
 
-    const aiReply = typeof aiResponse === 'string' ? aiResponse : aiResponse?.data || aiResponse?.message || '';
+    const aiReply = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.data ?? aiResponse?.message ?? '');
 
     // Append AI reply
     messages.push({

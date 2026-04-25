@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -55,7 +55,7 @@ const steps = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
   const queryClient = useQueryClient();
 
   const [currentStep, setCurrentStep] = useState(0);

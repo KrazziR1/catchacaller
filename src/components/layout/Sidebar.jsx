@@ -3,7 +3,7 @@ import {
   LayoutDashboard, PhoneMissed, MessageSquare, 
   FileText, Settings, PhoneCall, LogOut, ChevronLeft, ChevronRight, Users, Activity
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 const navItems = [
@@ -11,14 +11,24 @@ const navItems = [
   { icon: PhoneMissed, label: "Missed Calls", path: "/missed-calls" },
   { icon: MessageSquare, label: "Conversations", path: "/conversations" },
   { icon: FileText, label: "Templates", path: "/templates" },
-  { icon: Activity, label: "Webhooks", path: "/webhooks" },
   { icon: Settings, label: "Settings", path: "/settings" },
+];
+
+const adminNavItems = [
+  { icon: Activity, label: "Webhooks", path: "/webhooks" },
   { icon: Users, label: "Waitlist", path: "/waitlist" },
 ];
 
 export default function Sidebar() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then((u) => {
+      if (u?.role === 'admin') setIsAdmin(true);
+    });
+  }, []);
 
   return (
     <aside className={`${collapsed ? "w-[72px]" : "w-64"} h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 shrink-0`}>
@@ -33,8 +43,8 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 px-3 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        {[...navItems, ...(isAdmin ? adminNavItems : [])].map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link

@@ -21,7 +21,13 @@ Deno.serve(async (req) => {
     const data = event.data.object;
 
     if (eventType === 'customer.subscription.created' || eventType === 'customer.subscription.updated') {
-      const planName = data.items.data[0]?.price?.nickname || 'Unknown';
+      const priceId = data.items.data[0]?.price?.id;
+      const planMap = {
+        'price_1TPruHFsxP0HXZ0ANSkOGCp0': 'Starter',
+        'price_1TPrvMFsxP0HXZ0Apho3zV1j': 'Growth',
+        'price_1TPrvzFsxP0HXZ0AP2nb21Ne': 'Pro',
+      };
+      const planName = planMap[priceId] || data.items.data[0]?.price?.nickname || 'Starter';
       const currentPeriodEnd = new Date(data.current_period_end * 1000).toISOString();
       const trialEndDate = data.trial_end ? new Date(data.trial_end * 1000).toISOString() : null;
 

@@ -6,7 +6,7 @@ import { CheckCircle2, Circle, Phone, Settings, MessageSquare, Send } from 'luci
 
 const steps = [
   { id: 'phone', label: 'Provision Phone Number', icon: Phone, check: (p) => !!p.phone_number && !!p.twilio_number_sid },
-  { id: 'ai', label: 'Set AI Personality', icon: Settings, check: (p) => !!p.ai_personality },
+  { id: 'ai', label: 'Set AI Personality', icon: Settings, check: (p) => !!p.ai_personality && p.ai_personality !== 'friendly' },
   { id: 'templates', label: 'Create SMS Templates', icon: MessageSquare, check: (t) => t && t.length > 0 },
   { id: 'first_message', label: 'Send First SMS', icon: Send, check: (c) => c && c.length > 0 },
 ];

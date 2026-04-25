@@ -88,6 +88,9 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["business-profile"] });
       toast.success("Settings saved successfully");
     },
+    onError: () => {
+      toast.error("Failed to save settings. Please try again.");
+    },
   });
 
   const handleSave = () => saveMutation.mutate(formData);
@@ -126,7 +129,7 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground mb-1">Status</p>
                   <div className="flex items-center gap-2">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      subscription.status === 'active' ? 'bg-accent/20 text-accent' : 'bg-destructive/20 text-destructive'
+                    ['active', 'trialing'].includes(subscription.status) ? 'bg-accent/20 text-accent' : 'bg-destructive/20 text-destructive'
                     }`}>
                       {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
                     </span>
