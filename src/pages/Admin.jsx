@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen } from "lucide-react";
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
+import TopNav from "@/components/layout/TopNav";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -76,7 +77,9 @@ export default function Admin() {
     };
     return sum + (planPrices[s.plan_name] || 0);
   }, 0);
-  const totalCalls = missedCalls.length;
+  // Filter out demo calls (test phone numbers that start with +1-555-0)
+  const realCalls = missedCalls.filter(c => !c.caller_phone || !c.caller_phone.startsWith("+1-555-0"));
+  const totalCalls = realCalls.length;
   const onboardingComplete = onboardingProgress.filter((p) => p.is_complete).length;
   const onboardingInProgress = onboardingProgress.filter((p) => !p.is_complete).length;
 
@@ -108,7 +111,9 @@ export default function Admin() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-6 lg:p-8">
+    <div className="min-h-screen bg-background">
+      <TopNav />
+      <div className="p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-10 flex items-start justify-between">
@@ -116,16 +121,10 @@ export default function Admin() {
             <h1 className="text-3xl font-extrabold tracking-tight">Admin Panel</h1>
             <p className="text-muted-foreground mt-1">Site-wide analytics and business management</p>
           </div>
-          <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate("/sales-resources")} className="gap-2">
               <BookOpen className="w-4 h-4" />
               Sales Resources
             </Button>
-            <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Go to Dashboard
-            </Button>
-          </div>
         </div>
 
         {/* KPI Cards */}
@@ -345,6 +344,7 @@ export default function Admin() {
           isOpen={!!selectedBusiness}
           onClose={() => setSelectedBusiness(null)}
         />
+      </div>
       </div>
     </div>
   );

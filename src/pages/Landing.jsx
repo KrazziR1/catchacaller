@@ -1,3 +1,4 @@
+import TopNav from "@/components/layout/TopNav";
 import LandingNav from "@/components/landing/LandingNav";
 import HeroSection from "@/components/landing/HeroSection";
 import Stats from "@/components/landing/Stats";
@@ -15,6 +16,7 @@ import Footer from "@/components/landing/Footer";
 export default function Landing() {
   return (
     <div className="min-h-screen">
+      <TopNav />
       <LandingNav />
       <HeroSection />
       <Stats />
