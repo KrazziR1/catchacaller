@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const client = twilio(accountSid, authToken);
 
-    const message = `Hi! This is ${business_name} reaching out. We'd like to send you SMS updates about your service request. Reply YES to confirm, or STOP to decline.`;
+    const message = `Hi! This is ${business_name}. Reply YES to receive SMS updates about your service request, or STOP if you prefer not to receive messages.`;
 
     await client.messages.create({
       body: message,

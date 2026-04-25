@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       const fromPhone = toPhone;
       const client = twilio(accountSid, authToken);
 
-      const optInMessage = `Hi! This is ${profile.business_name} reaching out. We'd like to send you SMS updates about your service request. Reply YES to confirm, or STOP to decline.`;
+      const optInMessage = `Hi! This is ${profile.business_name}. Reply YES to receive SMS updates about your service request, or STOP if you prefer not to receive messages.`;
 
       await client.messages.create({
         body: optInMessage,
