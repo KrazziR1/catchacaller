@@ -11,8 +11,9 @@ import {
   PhoneCall, Building2, Bot, CalendarCheck,
   CheckCircle2, ArrowRight, ArrowLeft, Zap,
   CreditCard, MessageSquare, Send, Loader2,
-  AlertTriangle, Sparkles, Clock, TrendingUp
+  AlertTriangle, Sparkles, Clock, TrendingUp, ShieldCheck
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import PhoneProvision from "@/components/PhoneProvision";
 
 const plans = [
@@ -64,6 +65,7 @@ export default function Onboarding() {
   const [testStatus, setTestStatus] = useState("idle"); // idle | sending | sent | error
   const [testError, setTestError] = useState(null);
   const [profileId, setProfileId] = useState(null);
+  const [smsComplianceAgreed, setSmsComplianceAgreed] = useState(false);
 
   const [form, setForm] = useState({
     business_name: "",
@@ -121,7 +123,7 @@ export default function Onboarding() {
 
   const isStepValid = () => {
     if (currentStep === 0) return !!selectedPlan;
-    if (currentStep === 1) return !!form.business_name;
+    if (currentStep === 1) return !!form.business_name && smsComplianceAgreed;
     if (currentStep === 2) return !!form.phone_number;
     return true;
   };
@@ -304,6 +306,31 @@ export default function Onboarding() {
                       className="mt-1.5 h-12 rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground mt-1.5">Used to calculate recovered revenue in your dashboard</p>
+                  </div>
+
+                  {/* SMS Compliance Acknowledgment */}
+                  <div className={`p-4 rounded-xl border-2 transition-all ${smsComplianceAgreed ? "border-accent bg-accent/5" : "border-border bg-muted/30"}`}>
+                    <div className="flex items-start gap-3">
+                      <ShieldCheck className={`w-5 h-5 shrink-0 mt-0.5 ${smsComplianceAgreed ? "text-accent" : "text-muted-foreground"}`} />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold mb-1">SMS Compliance Acknowledgment</p>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          By enabling automated SMS, you confirm that your callers have a legitimate expectation of follow-up contact from your business, and you agree to comply with the{" "}
+                          <a href="/terms" target="_blank" className="text-primary underline">TCPA and our Terms of Service</a>.
+                          You are solely responsible for your use of SMS features in compliance with applicable law.
+                        </p>
+                        <label className="flex items-start gap-2.5 cursor-pointer">
+                          <Checkbox
+                            checked={smsComplianceAgreed}
+                            onCheckedChange={(checked) => setSmsComplianceAgreed(!!checked)}
+                            className="mt-0.5"
+                          />
+                          <span className="text-xs font-medium leading-relaxed">
+                            I understand I am responsible for SMS compliance and will only send messages to individuals who have called my business.
+                          </span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
