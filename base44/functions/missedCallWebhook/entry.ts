@@ -104,10 +104,27 @@ Deno.serve(async (req) => {
       estimated_value: profile.average_job_value || 500,
     });
 
+    // --- COMPLIANCE: Validate before sending ANY SMS ---
+    const complianceCheck = await base44.asServiceRole.functions.invoke(
+      'validateComplianceBeforeAnyContact',
+      {
+        phone_number: callerPhone,
+        contact_type: 'sms',
+        caller_state: callerState,
+      }
+    );
+
+    if (!complianceCheck.data?.can_contact) {
+      console.log(
+        `SMS blocked for ${callerPhone}: ${complianceCheck.data?.reason}`
+      );
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
     // --- For CA/NY: Send opt-in confirmation first instead of business message ---
     const requiresExplicitConsent = ['CA', 'NY'].includes(callerState);
 
-    if (requiresExplicitConsent) {
+    if (requiresExplicitConsent && !consent.explicit_sms_consent) {
       // Send opt-in confirmation request FIRST
       const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
       const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');

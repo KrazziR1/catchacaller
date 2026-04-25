@@ -75,23 +75,28 @@ Deno.serve(async (req) => {
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // --- Verify valid consent exists before responding ---
+    // --- COMPLIANCE: Validate before responding to lead ---
+    const complianceCheck = await base44.asServiceRole.functions.invoke(
+      'validateComplianceBeforeAnyContact',
+      {
+        phone_number: callerPhone,
+        contact_type: 'sms',
+      }
+    );
+
+    if (!complianceCheck.data?.can_contact) {
+      console.log(
+        `SMS reply blocked for ${callerPhone}: ${complianceCheck.data?.reason}`
+      );
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
     const consents = await base44.asServiceRole.entities.LeadConsent.filter({
       phone_number: callerPhone,
       is_valid: true,
     });
     if (consents.length === 0) {
       console.log(`No valid consent for ${callerPhone}, skipping response`);
-      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
-    }
-
-    // --- Validate state compliance ---
-    const stateCheck = await base44.asServiceRole.functions.invoke('validateStateCompliance', {
-      caller_state: consents[0].caller_state,
-      phone_number: callerPhone,
-    });
-    if (!stateCheck.data?.is_compliant) {
-      console.log(`${callerPhone} in ${stateCheck.data?.state} does not meet compliance, skipping`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
