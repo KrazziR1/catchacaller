@@ -273,7 +273,7 @@ export default function Onboarding() {
               {/* STEP 0: Plan Selection */}
               {currentStep === 0 && (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground -mt-2">Choose the plan you'll use after your 7-day free trial. Your trial starts once you complete onboarding.</p>
+                  <p className="text-sm text-muted-foreground -mt-2">Choose your plan — you'll get 7 days to try it. Just pay the $2.99 provisioning fee to get started.</p>
                   <div className="space-y-3">
                     {plans.map((plan) => (
                       <button
@@ -303,7 +303,7 @@ export default function Onboarding() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-center text-muted-foreground">Your 7-day free trial starts after onboarding completes. No charges during the trial period.</p>
+                  <p className="text-xs text-center text-muted-foreground">$2.99 provisioning fee covers your setup. After 7 days, your selected plan begins.</p>
                 </div>
               )}
 
@@ -457,7 +457,7 @@ export default function Onboarding() {
                       <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
                         <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
                         <p className="text-xs text-blue-800 mt-2">
-                          One-time provisioning fee: <span className="font-semibold">$2.99</span> (charged separately). Ongoing monthly cost: ~$1-2/month plus SMS fees (starts after trial).
+                          Just <span className="font-semibold">$2.99</span> to provision your dedicated number. Monthly costs start after your 7-day trial.
                         </p>
                       </div>
                     )}
