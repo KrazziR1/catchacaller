@@ -1,0 +1,47 @@
+{
+  "name": "ColdCallComplianceLog",
+  "type": "object",
+  "properties": {
+    "prospect_id": {
+      "type": "string",
+      "description": "Reference to ColdCallProspect"
+    },
+    "phone_number": {
+      "type": "string",
+      "description": "Phone number involved"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "dnc_check_performed",
+        "dnc_flagged",
+        "sms_sent",
+        "stop_received",
+        "state_compliance_check"
+      ],
+      "description": "Compliance action taken"
+    },
+    "state": {
+      "type": "string",
+      "description": "State where action occurred"
+    },
+    "details": {
+      "type": "string",
+      "description": "Additional compliance details"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the action occurred"
+    },
+    "performed_by": {
+      "type": "string",
+      "description": "Email of admin who performed action (if manual)"
+    }
+  },
+  "required": [
+    "prospect_id",
+    "phone_number",
+    "action"
+  ]
+}

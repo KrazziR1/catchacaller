@@ -47,7 +47,7 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
       await Promise.all(
         Array.from(selectedProspects).map(prospectId => {
           const prospect = prospects.find(p => p.id === prospectId);
-          return base44.functions.invoke("sendColdCallSMS", {
+          return base44.functions.invoke("sendColdCallSMSWithCompliance", {
             prospect_id: prospectId,
             phone_number: prospect.phone_number,
             message_body: editedMessage,

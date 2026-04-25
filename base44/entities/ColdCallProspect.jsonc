@@ -55,6 +55,37 @@
       "default": "contacted",
       "description": "Current status in sales funnel"
     },
+    "is_dnc_flagged": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether number is on Do-Not-Call registry"
+    },
+    "dnc_checked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When DNC check was last performed"
+    },
+    "has_consent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether we have documented consent to contact"
+    },
+    "consent_type": {
+      "type": "string",
+      "enum": [
+        "explicit_opt_in",
+        "called_us_first",
+        "pending_verification",
+        "none"
+      ],
+      "default": "none",
+      "description": "Type of consent for outreach"
+    },
+    "consent_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When consent was established"
+    },
     "discontinuation_reason_category": {
       "type": "string",
       "enum": [

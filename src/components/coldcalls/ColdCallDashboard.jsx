@@ -46,6 +46,8 @@ export default function ColdCallDashboard() {
     state: "",
     industry: "general",
   });
+  const [dncCheckResult, setDncCheckResult] = useState(null);
+  const [dncChecking, setDncChecking] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -111,6 +113,26 @@ export default function ColdCallDashboard() {
       toast.error(error.message || "Failed to delete");
     },
   });
+
+  const handleDNCCheck = async () => {
+    if (!formData.phone_number || !formData.state) {
+      toast.error("Enter phone number and state first");
+      return;
+    }
+
+    setDncChecking(true);
+    try {
+      const result = await base44.functions.invoke("checkDNCStatus", {
+        phone_number: formData.phone_number,
+        state: formData.state,
+      });
+      setDncCheckResult(result.data);
+    } catch (error) {
+      toast.error("DNC check failed: " + error.message);
+    } finally {
+      setDncChecking(false);
+    }
+  };
 
   const filtered = prospects.filter((p) => {
     const matchesSearch =
@@ -318,12 +340,31 @@ export default function ColdCallDashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Phone Number *</Label>
-                <Input
-                  value={formData.phone_number}
-                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                  placeholder="+1 (555) 123-4567"
-                  className="mt-1.5 rounded-lg"
-                />
+                <div className="flex gap-2 mt-1.5">
+                  <Input
+                    value={formData.phone_number}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone_number: e.target.value });
+                      setDncCheckResult(null);
+                    }}
+                    placeholder="+1 (555) 123-4567"
+                    className="rounded-lg"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDNCCheck}
+                    disabled={dncChecking || !formData.phone_number}
+                    className="rounded-lg whitespace-nowrap"
+                  >
+                    {dncChecking ? "Checking..." : "Check DNC"}
+                  </Button>
+                </div>
+                {dncCheckResult && (
+                  <div className={`mt-2 p-2 rounded-lg text-xs ${dncCheckResult.isDNC ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+                    {dncCheckResult.isDNC ? `⚠️ On DNC list: ${dncCheckResult.reason}` : "✓ Not on DNC list"}
+                  </div>
+                )}
               </div>
               <div>
                 <Label>Email</Label>
@@ -384,8 +425,14 @@ export default function ColdCallDashboard() {
               Cancel
             </Button>
             <Button
-              onClick={() => createProspectMutation.mutate(formData)}
-              disabled={!formData.business_name || !formData.phone_number || !formData.city || !formData.state}
+              onClick={() => {
+                if (dncCheckResult?.isDNC) {
+                  toast.error("Cannot add prospect on DNC list");
+                  return;
+                }
+                createProspectMutation.mutate(formData);
+              }}
+              disabled={!formData.business_name || !formData.phone_number || !formData.city || !formData.state || (dncCheckResult?.isDNC)}
             >
               Add Prospect
             </Button>
