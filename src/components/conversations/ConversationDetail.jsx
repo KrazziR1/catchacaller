@@ -138,7 +138,7 @@ export default function ConversationDetail({ conversation, profile, subscription
           </div>
         ) : (
           conversation.messages.map((msg, i) => {
-            const senderLabel = msg.sender === 'human' ? 'You' : msg.sender === 'ai' ? 'AI' : 'Lead';
+            const senderLabel = msg.sender === 'human' ? '💬 You' : msg.sender === 'ai' ? '🤖 AI' : '👤 Lead';
             const isMineOrAI = msg.sender === 'human' || msg.sender === 'ai';
             return (
               <div key={i} className={`flex flex-col ${isMineOrAI ? 'items-end' : 'items-start'}`}>

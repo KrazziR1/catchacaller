@@ -46,7 +46,7 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
   const sendBulkMutation = useMutation({
     mutationFn: async () => {
       const prospectIds = Array.from(selectedProspects);
-      
+
       // Process in batches of 5 to avoid Twilio rate limits
       const results = await processBatchWithConcurrency(
         prospectIds,
@@ -60,10 +60,14 @@ export default function BulkSMSDialog({ prospects, templates, open, onOpenChange
         },
         5
       );
-      
+
+      // Use allSettled to track successful + failed separately
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
       const failed = results.filter(r => r.status === 'rejected');
+
       if (failed.length > 0) {
-        throw new Error(`Failed to send to ${failed.length}/${selectedProspects.size} prospects`);
+        console.warn(`Bulk SMS: ${succeeded} succeeded, ${failed.length} failed`, failed);
+        throw new Error(`Sent to ${succeeded} prospects, but ${failed.length} failed`);
       }
       return results;
     },

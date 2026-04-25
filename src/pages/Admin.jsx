@@ -13,6 +13,7 @@ import ColdCallDashboard from "@/components/coldcalls/ColdCallDashboard";
 import TopNav from "@/components/layout/TopNav";
 import PaginationControls from "@/components/admin/PaginationControls";
 import BulkAccountActions from "@/components/admin/BulkAccountActions";
+import ManualReviewQueue from "@/components/admin/ManualReviewQueue";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -202,8 +203,11 @@ export default function Admin() {
           </div>
         </div>
 
+        {/* Compliance Review Queue */}
+        <ManualReviewQueue businesses={businesses} />
+
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-8">
           <Card className="rounded-2xl">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

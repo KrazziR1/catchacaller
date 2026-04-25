@@ -315,34 +315,6 @@ export default function Settings() {
 
         <NotificationPreferences />
 
-        {/* Revenue Settings */}
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-chart-4/10 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-chart-4" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Revenue Tracking</CardTitle>
-                <CardDescription>Set your average job value for ROI calculations</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div>
-              <Label>Average Job Value ($)</Label>
-              <Input
-                type="number"
-                value={formData.average_job_value}
-                onChange={(e) => setFormData({ ...formData, average_job_value: parseFloat(e.target.value) || 0 })}
-                placeholder="500"
-                className="mt-1.5 w-40"
-              />
-              <p className="text-xs text-muted-foreground mt-1.5">Used to estimate recovered revenue per booking</p>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="flex justify-end pt-4">
           <Button onClick={handleSave} className="rounded-xl h-12 px-8" disabled={saveMutation.isPending}>
             <Save className="w-4 h-4 mr-2" />
