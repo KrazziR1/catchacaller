@@ -27,10 +27,10 @@ export default function Dashboard() {
   // Fetch real user on mount and handle redirects
   useEffect(() => {
     base44.auth.me().then((u) => {
-      setUser(u);
-      // Redirect admin immediately
       if (u?.role === 'admin') {
         navigate("/admin", { replace: true });
+      } else {
+        setUser(u);
       }
     }).catch(() => setUser(null));
   }, [navigate]);

@@ -29,32 +29,23 @@ export default function Admin() {
   useEffect(() => {
     base44.auth.me().then((u) => {
       if (!u || u.role !== "admin") {
-        navigate("/dashboard", { replace: true });
+        navigate("/", { replace: true });
       } else {
         setUser(u);
       }
     }).catch(() => {
-      navigate("/dashboard", { replace: true });
+      navigate("/", { replace: true });
     });
   }, [navigate]);
 
   // Fetch actual data with pagination for performance
   const pageSize = 20;
   const { data: businesses = [] } = useQuery({
-    queryKey: ["all-businesses", page],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.BusinessProfile.list("-created_date", 10000),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
-        ]);
-      } catch (err) {
-        console.error('Failed to fetch businesses:', err.message);
-        return [];
-      }
-    },
-    enabled: !!user && user.role === "admin",
-    staleTime: 5 * 60 * 1000,
+   queryKey: ["all-businesses"],
+   queryFn: () => base44.asServiceRole.entities.BusinessProfile.list("-created_date", 10000),
+   enabled: !!user && user.role === "admin",
+   staleTime: 5 * 60 * 1000,
+   retry: 1,
   });
 
   // Paginate results
@@ -62,53 +53,26 @@ export default function Admin() {
 
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["all-subscriptions"],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.Subscription.list("-created_date", 50),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
-        ]);
-      } catch (err) {
-        console.error('Failed to fetch subscriptions:', err.message);
-        return [];
-      }
-    },
+    queryFn: () => base44.asServiceRole.entities.Subscription.list("-created_date", 50),
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const { data: missedCalls = [] } = useQuery({
     queryKey: ["all-missed-calls"],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.MissedCall.list("-call_time", 50),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
-        ]);
-      } catch (err) {
-        console.error('Failed to fetch missed calls:', err.message);
-        return [];
-      }
-    },
+    queryFn: () => base44.asServiceRole.entities.MissedCall.list("-call_time", 50),
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   const { data: onboardingProgress = [] } = useQuery({
     queryKey: ["all-onboarding"],
-    queryFn: async () => {
-      try {
-        return await Promise.race([
-          base44.entities.OnboardingProgress.list("-updated_date", 50),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout')), 10000))
-        ]);
-      } catch (err) {
-        console.error('Failed to fetch onboarding progress:', err.message);
-        return [];
-      }
-    },
+    queryFn: () => base44.asServiceRole.entities.OnboardingProgress.list("-updated_date", 50).catch(() => []),
     enabled: !!user && user.role === "admin",
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
   // Only show if we've confirmed they're admin

@@ -214,8 +214,13 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                     <label className="text-xs text-muted-foreground block mb-1.5">Business Hours</label>
                     <Input value={editData.business_hours} onChange={(e) => setEditData({...editData, business_hours: e.target.value})} className="text-sm" />
                   </div>
-
-                </div>
+                  {editData.industry === 'other' && (
+                    <div className="col-span-2">
+                      <label className="text-xs text-muted-foreground block mb-1.5">Industry Description</label>
+                      <Input value={editData.industry_description || ''} onChange={(e) => setEditData({...editData, industry_description: e.target.value})} placeholder="e.g., Consulting, Coaching" className="text-sm" />
+                    </div>
+                  )}
+                  </div>
 
                 <div className="space-y-4 pt-4 border-t border-border">
                    <div>

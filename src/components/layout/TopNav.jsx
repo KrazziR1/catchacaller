@@ -36,6 +36,15 @@ export default function TopNav() {
     await base44.auth.logout("/");
   };
 
+  const handleLandingClick = (e) => {
+    e.preventDefault();
+    if (user.role === "admin") {
+      navigate("/admin");
+    } else {
+      navigate("/");
+    }
+  };
+
   const isAdminPage = location.pathname === "/admin" || location.pathname === "/admin/compliance";
   const isDashboardPage = location.pathname === "/dashboard" || location.pathname.startsWith("/dashboard");
   const isLandingPage = location.pathname === "/";
@@ -47,9 +56,9 @@ export default function TopNav() {
         <div className="flex items-center gap-2">
           {/* Landing Link */}
           <Button
-            variant={isLandingPage ? "default" : "ghost"}
+            variant={isLandingPage && !user.role === "admin" ? "default" : "ghost"}
             size="sm"
-            onClick={() => navigate("/")}
+            onClick={handleLandingClick}
             className="gap-2"
           >
             CatchACaller

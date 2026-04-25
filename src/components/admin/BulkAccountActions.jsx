@@ -15,26 +15,27 @@ export default function BulkAccountActions({ selectedAccounts, onComplete }) {
   const actionMutation = useMutation({
     mutationFn: async (actionType) => {
       const user = await base44.auth.me();
-      const promises = Array.from(selectedAccounts).map(async (accountId) => {
-        // Update the business profile to mark as reviewed
+      const promises = Array.from(selectedAccounts).map(async (businessId) => {
+        // Get business to find owner email
         try {
-          const businesses = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: accountId });
-          if (businesses.length > 0) {
-            await base44.asServiceRole.entities.BusinessProfile.update(businesses[0].id, {
+          const business = await base44.asServiceRole.entities.BusinessProfile.get(businessId);
+          if (business) {
+            await base44.asServiceRole.entities.BusinessProfile.update(businessId, {
               requires_manual_review: false,
+            });
+            // Create audit log with correct email
+            await base44.asServiceRole.entities.AdminAuditLog.create({
+              admin_email: user.email,
+              action: actionType === 'approve' ? 'account_approved' : 'account_rejected',
+              target_email: business.created_by,
+              target_business: business.business_name,
+              reason: reason || `Bulk ${actionType}`,
+              refund_issued: false
             });
           }
         } catch (e) {
-          console.warn('Business update failed:', e);
+          console.error('Business action failed:', e);
         }
-        // Create audit log
-        return base44.asServiceRole.entities.AdminAuditLog.create({
-          admin_email: user.email,
-          action: actionType === 'approve' ? 'account_approved' : 'account_rejected',
-          target_email: accountId,
-          reason: reason || `Bulk ${actionType}`,
-          refund_issued: false
-        });
       });
       await Promise.allSettled(promises);
     },
