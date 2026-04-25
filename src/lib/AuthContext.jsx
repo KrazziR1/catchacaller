@@ -47,7 +47,19 @@ export const AuthProvider = ({ children }) => {
 
     // No valid cache, do full auth check
     checkAppState();
-  }, []);
+
+    // Safety timeout: if auth check takes >8s, force completion
+    const safetyTimer = setTimeout(() => {
+      if (!authChecked) {
+        console.warn('Auth check timeout - forcing completion');
+        setIsLoadingAuth(false);
+        setIsLoadingPublicSettings(false);
+        setAuthChecked(true);
+      }
+    }, 8000);
+
+    return () => clearTimeout(safetyTimer);
+  }, [authChecked]);
 
   const checkAppState = async () => {
     try {
@@ -69,28 +81,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   const checkUserAuth = async () => {
+    setIsLoadingAuth(true);
     try {
-      setIsLoadingAuth(true);
       const currentUser = await Promise.race([
         base44.auth.me(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+          setTimeout(() => reject(new Error('Auth check timeout')), 3000)
         )
       ]);
       setUser(currentUser);
       setIsAuthenticated(true);
-      // Persist user data to localStorage (survives browser close)
       localStorage.setItem('base44_user_cached', JSON.stringify(currentUser));
       localStorage.setItem('base44_user_cache_time', Date.now().toString());
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
     } catch (error) {
       console.warn('User auth check failed:', error?.message);
-      // Cache is already checked in useEffect, if we're here it means token is invalid
       localStorage.removeItem('base44_user_cached');
       localStorage.removeItem('base44_user_cache_time');
-      setIsLoadingAuth(false);
+      setUser(null);
+      setIsAuthenticated(false);
       setAuthError({ type: 'auth_required' });
+    } finally {
+      setIsLoadingAuth(false);
       setAuthChecked(true);
     }
   };
