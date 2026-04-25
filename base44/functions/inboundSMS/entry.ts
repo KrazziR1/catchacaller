@@ -60,13 +60,12 @@ Deno.serve(async (req) => {
           explicit_consent_at: new Date().toISOString(),
         });
       }
-      // Also remove from opt-out if they were previously opted out
+      // Remove from opt-out list to re-enable SMS
       const existing = await base44.asServiceRole.entities.SMSOptOut.filter({ phone_number: callerPhone });
       for (const record of existing) {
         await base44.asServiceRole.entities.SMSOptOut.delete(record.id);
       }
-      // Don't send a response to YES (let the AI handle it in next step)
-      // Fall through to continue with conversation
+      // Continue to process conversation normally (fall through)
     }
 
     // --- Check if opted out ---
@@ -159,25 +158,47 @@ The lead just sent: "${inboundText}"
 Write the SMS reply text only. No quotes, no labels.`;
 
     const aiResult = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
-    const replyText = typeof aiResult === 'string' ? aiResult.trim() : String(aiResult).trim();
+    let replyText = typeof aiResult === 'string' ? aiResult.trim() : String(aiResult).trim();
+
+    // Ensure STOP line is present (CRITICAL for TCPA compliance)
+    if (!replyText.includes('STOP')) {
+      replyText += '\n' + stopLine;
+    }
+
+    // Validate message length (SMS: max 1600 chars)
+    if (replyText.length > 1600) {
+      console.warn(`SMS too long for ${callerPhone}: ${replyText.length} chars`);
+      replyText = replyText.substring(0, 1597) + '...';
+    }
 
     // --- Send SMS via Twilio, replying FROM the business's own number ---
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
     const client = twilio(accountSid, authToken);
 
-    await client.messages.create({
-      body: replyText,
-      from: toPhone, // Reply from the number the lead texted
-      to: callerPhone,
-    });
+    let smsStatus = 'sent';
+    try {
+      const msg = await client.messages.create({
+        body: replyText,
+        from: toPhone, // Reply from the number the lead texted
+        to: callerPhone,
+      });
+      // Verify send was successful
+      if (!msg.sid) {
+        smsStatus = 'failed';
+        console.error(`Failed to get Twilio SID for ${callerPhone}`);
+      }
+    } catch (twilioError) {
+      smsStatus = 'failed';
+      console.error(`Twilio send error for ${callerPhone}:`, twilioError.message);
+    }
 
     // --- Update conversation record ---
     const now = new Date().toISOString();
     const newMessages = [...(conversation?.messages || [])];
 
     newMessages.push({ sender: 'lead', content: inboundText, timestamp: now });
-    newMessages.push({ sender: 'ai', content: replyText, timestamp: now, sms_status: 'sent' });
+    newMessages.push({ sender: 'ai', content: replyText, timestamp: now, sms_status: smsStatus });
 
     if (conversation) {
       await base44.asServiceRole.entities.Conversation.update(conversation.id, {
@@ -187,8 +208,7 @@ Write the SMS reply text only. No quotes, no labels.`;
         status: conversation.status === 'unresponsive' ? 'active' : conversation.status,
       });
     } else {
-      // Create new conversation scoped to this profile's owner
-      // We set created_by implicitly via asServiceRole — but we tag it with the profile owner
+      // Create new conversation
       await base44.asServiceRole.entities.Conversation.create({
         caller_phone: callerPhone,
         messages: newMessages,
@@ -198,6 +218,17 @@ Write the SMS reply text only. No quotes, no labels.`;
         pipeline_stage: 'new',
       });
     }
+
+    // Log audit trail
+    await base44.asServiceRole.functions.invoke('logSMSAudit', {
+      phone_number: callerPhone,
+      business_phone: toPhone,
+      message_body: replyText,
+      message_type: 'auto_response',
+      status: smsStatus,
+      consent_type: 'called_business',
+      sent_by: 'ai',
+    }).catch(e => console.error('Audit log failed:', e.message));
 
     return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
   } catch (error) {

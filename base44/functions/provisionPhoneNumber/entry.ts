@@ -6,6 +6,30 @@ const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
+// Rate limiting map
+const provisionLimits = new Map();
+
+function checkRateLimit(userId) {
+  const now = Date.now();
+  const limit = 5; // max 5 provisions per hour
+  const window = 3600000; // 1 hour
+  
+  if (!provisionLimits.has(userId)) {
+    provisionLimits.set(userId, []);
+  }
+  
+  const timestamps = provisionLimits.get(userId);
+  const filtered = timestamps.filter(ts => now - ts < window);
+  provisionLimits.set(userId, filtered);
+  
+  if (filtered.length >= limit) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  filtered.push(now);
+  return { allowed: true, remaining: limit - filtered.length };
+}
+
 const twilioFetch = (path, method = "GET", body = null) => {
   const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
   const opts = {
@@ -27,7 +51,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Rate limit check
+    const rateCheck = checkRateLimit(user.email);
+    if (!rateCheck.allowed) {
+      return Response.json({ error: "Too many provision requests. Try again in 1 hour." }, { status: 429 });
+    }
+
     const { paymentMethodId, area_code } = await req.json().catch(() => ({}));
+    
+    // Validate area code if provided
+    if (area_code && !/^\d{3}$/.test(area_code)) {
+      return Response.json({ error: "Invalid area code format" }, { status: 400 });
+    }
 
     // Prevent duplicate provisioning
     const profiles = await base44.asServiceRole.entities.BusinessProfile.filter({ created_by: user.email });

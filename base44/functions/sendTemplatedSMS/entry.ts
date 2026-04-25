@@ -1,9 +1,44 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import twilio from 'npm:twilio';
 
+// Rate limiting
+const smsSendLimits = new Map();
+
+function checkSMSRateLimit(userId) {
+  const now = Date.now();
+  const limit = 100; // max 100 SMS per hour
+  const window = 3600000;
+  
+  if (!smsSendLimits.has(userId)) {
+    smsSendLimits.set(userId, []);
+  }
+  
+  const timestamps = smsSendLimits.get(userId);
+  const filtered = timestamps.filter(ts => now - ts < window);
+  smsSendLimits.set(userId, filtered);
+  
+  if (filtered.length >= limit) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  filtered.push(now);
+  return { allowed: true, remaining: limit - filtered.length };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit check
+    const rateCheck = checkSMSRateLimit(user.email);
+    if (!rateCheck.allowed) {
+      return Response.json({ error: "SMS rate limit exceeded (100 per hour)" }, { status: 429 });
+    }
+
     const payload = await req.json();
     
     const { conversation_id, template_id, conversation_ids } = payload;
@@ -14,6 +49,15 @@ Deno.serve(async (req) => {
     const template = await base44.asServiceRole.entities.SMSTemplate.get(template_id);
     if (!template) {
       return Response.json({ error: 'Template not found' }, { status: 404 });
+    }
+
+    // Validate payload
+    if (!convoIds || !Array.isArray(convoIds) || convoIds.length === 0) {
+      return Response.json({ error: 'conversation_id or conversation_ids required' }, { status: 400 });
+    }
+
+    if (convoIds.length > 50) {
+      return Response.json({ error: 'Cannot send to more than 50 conversations at once' }, { status: 400 });
     }
 
     const profiles = await base44.asServiceRole.entities.BusinessProfile.list('-created_date', 1);
