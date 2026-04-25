@@ -19,6 +19,9 @@ import WaitlistAdmin from '@/pages/WaitlistAdmin';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
 import CheckoutSuccess from '@/pages/CheckoutSuccess';
+import SMSPolicy from '@/pages/SMSPolicy';
+import Unsubscribe from '@/pages/Unsubscribe';
+import DPA from '@/pages/DPA';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -56,6 +59,9 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/sms-policy" element={<SMSPolicy />} />
+      <Route path="/unsubscribe" element={<Unsubscribe />} />
+      <Route path="/dpa" element={<DPA />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

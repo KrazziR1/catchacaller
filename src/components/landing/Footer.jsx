@@ -36,15 +36,23 @@ export default function Footer() {
             <div>
               <h4 className="font-semibold mb-3">Legal</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li>Privacy</li>
-                <li>Terms</li>
-                <li>SMS Policy</li>
+                <li><a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms" className="hover:text-foreground transition-colors">Terms of Service</a></li>
+                <li><a href="/sms-policy" className="hover:text-foreground transition-colors">SMS Policy</a></li>
+                <li><a href="/dpa" className="hover:text-foreground transition-colors">Data Processing Agreement</a></li>
+                <li><a href="/unsubscribe" className="hover:text-foreground transition-colors">Email Unsubscribe</a></li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="mt-12 pt-8 border-t border-border text-sm text-muted-foreground text-center">
-          © 2026 CatchACaller. All rights reserved.
+        <div className="mt-12 pt-8 border-t border-border text-sm text-muted-foreground text-center space-y-2">
+          <p>© 2026 CatchACaller. All rights reserved.</p>
+          <p className="text-xs">
+            CatchACaller is a technology platform. SMS messages are sent on behalf of our business customers who are solely responsible for compliance with applicable laws including TCPA.{" "}
+            <a href="/privacy" className="underline hover:text-foreground">Privacy Policy</a> ·{" "}
+            <a href="/terms" className="underline hover:text-foreground">Terms</a> ·{" "}
+            <a href="/sms-policy" className="underline hover:text-foreground">SMS Policy</a>
+          </p>
         </div>
       </div>
     </footer>
