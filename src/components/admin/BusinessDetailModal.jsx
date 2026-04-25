@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy } from "lucide-react";
+import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BusinessDetailModal({ business, isOpen, onClose }) {
@@ -127,9 +127,39 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
                     </button>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+                {business.twilio_number_sid && (
+                  <div className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center gap-2">
+                      <PhoneCall className="w-4 h-4 text-chart-1" />
+                      <p className="text-sm font-mono">{business.twilio_number_sid}</p>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(business.twilio_number_sid, "twilio")}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {copied === "twilio" ? "✓" : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                )}
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+                <div>
+                  <p className="text-xs text-muted-foreground">AI Personality</p>
+                  <Badge variant="outline" className="mt-1 capitalize text-xs">
+                    {business.ai_personality || "—"}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Approval Status</p>
+                  {business.requires_manual_review ? (
+                    <Badge className="bg-destructive/20 text-destructive mt-1 text-xs">Pending Review</Badge>
+                  ) : (
+                    <Badge className="bg-accent/20 text-accent mt-1 text-xs">Approved</Badge>
+                  )}
+                </div>
+                </div>
+                </CardContent>
+                </Card>
 
           {/* Subscription */}
           {sub && (

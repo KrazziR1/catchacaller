@@ -24,10 +24,6 @@ export default function Landing() {
       <div id="features">
         <Features />
       </div>
-      <div id="demo">
-        <DemoSection />
-      </div>
-      <DemoCTA />
       <div id="pricing">
         <Pricing />
       </div>

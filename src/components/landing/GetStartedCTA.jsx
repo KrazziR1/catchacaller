@@ -39,7 +39,7 @@ export default function GetStartedCTA() {
           </h2>
 
           <p className="text-muted-foreground text-lg">
-            Set up in 15 minutes. Twilio activation takes 1-2 business days.
+            Twilio activation takes 1-2 business days.
           </p>
 
           <Button

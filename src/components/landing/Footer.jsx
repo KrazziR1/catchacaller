@@ -30,7 +30,7 @@ export default function Footer() {
               <ul className="space-y-2 text-muted-foreground">
                 <li><a href="#contact" onClick={(e) => { e.preventDefault(); document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Contact</a></li>
                 <li><a href="#faq" onClick={(e) => { e.preventDefault(); document.querySelector('#faq')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">FAQ</a></li>
-                <li className="hover:text-foreground transition-colors cursor-pointer">Blog</li>
+                <li><a href="/blog" className="hover:text-foreground transition-colors">Blog</a></li>
               </ul>
             </div>
             <div>

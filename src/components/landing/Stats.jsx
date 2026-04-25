@@ -4,7 +4,7 @@ const stats = [
   { value: "< 3s", label: "Average response time" },
   { value: "67%", label: "Lead reply rate" },
   { value: "38%", label: "Booking conversion" },
-  { value: "$3.1M+", label: "Revenue recovered for customers" },
+  { value: "$42K+", label: "Revenue recovered for customers" },
 ];
 
 export default function Stats() {

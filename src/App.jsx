@@ -18,6 +18,7 @@ import WebhookMonitor from '@/pages/WebhookMonitor';
 import Admin from '@/pages/Admin';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Onboarding from '@/pages/Onboarding';
+import Blog from '@/pages/Blog';
 import WaitlistAdmin from '@/pages/WaitlistAdmin';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
@@ -72,6 +73,8 @@ const AuthenticatedApp = () => {
       <Route path="/sms-policy" element={<SMSPolicy />} />
       <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route path="/dpa" element={<DPA />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:slug" element={<Blog />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
