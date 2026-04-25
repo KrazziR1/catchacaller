@@ -28,9 +28,9 @@ export default function DemoCTA() {
           size="lg"
           className="rounded-xl px-8 h-12 text-base shadow-lg shadow-primary/25"
         >
-          {loading ? 'Redirecting...' : 'Start Free Trial'} <ArrowRight className="ml-2 w-4 h-4" />
+          {loading ? 'Redirecting...' : 'Start Your 7-Day Trial'} <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
-        <p className="text-sm text-muted-foreground mt-4">7 days free. No credit card needed.</p>
+        <p className="text-sm text-muted-foreground mt-4">$2.99 provisioning fee. Month-to-month after trial.</p>
       </div>
     </motion.section>
   );

@@ -42,8 +42,8 @@ export default function CheckoutSuccess() {
         </div>
         <h1 className="text-2xl font-bold mb-2">Welcome to CatchACaller!</h1>
         <p className="text-muted-foreground mb-6">
-          Your subscription is now active. Your 7-day trial starts today.
-        </p>
+           Your subscription is now active. You have 7 days to try it risk-free.
+         </p>
         <div className="bg-primary/10 rounded-lg p-4 mb-6">
           <p className="text-sm font-mono text-primary">
             Redirecting in {countdown} seconds...

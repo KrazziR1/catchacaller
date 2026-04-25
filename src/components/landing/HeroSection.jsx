@@ -43,7 +43,7 @@ export default function HeroSection() {
               className="h-14 px-8 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
               onClick={() => base44.auth.redirectToLogin("/onboarding")}
             >
-              Start Free — 7 Days
+              Start Your 7-Day Trial
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-base font-semibold rounded-xl" onClick={() => document.querySelector('#demo')?.scrollIntoView({ behavior: 'smooth' })}>
@@ -52,19 +52,19 @@ export default function HeroSection() {
           </div>
           
           <div className="flex items-center gap-6 mt-10 text-sm text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              No credit card needed
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              Setup in 15 minutes
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-              Cancel anytime
-            </span>
-          </div>
+             <span className="flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+               Just $2.99 to get started
+             </span>
+             <span className="flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+               Setup in 15 minutes
+             </span>
+             <span className="flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+               Cancel anytime
+             </span>
+           </div>
         </motion.div>
         
         {/* Phone mockup / flow visualization */}

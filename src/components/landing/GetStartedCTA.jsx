@@ -26,9 +26,9 @@ export default function GetStartedCTA() {
           className="space-y-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-sm font-medium text-primary">7-Day Free Trial — No Credit Card</span>
-          </div>
+             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+             <span className="text-sm font-medium text-primary">7-Day Trial — Just $2.99</span>
+           </div>
 
           <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight">
             Stop losing leads to<br />
@@ -52,7 +52,7 @@ export default function GetStartedCTA() {
           </Button>
 
           <p className="text-xs text-muted-foreground">
-            No credit card required. Full access for 7 days.
+            $2.99 provisioning fee. Full access for 7 days. Month-to-month after.
           </p>
         </motion.div>
       </div>
