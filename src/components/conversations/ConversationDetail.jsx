@@ -113,7 +113,7 @@ export default function ConversationDetail({ conversation, profile, subscription
               <div className="text-xs font-medium mb-2">Pipeline Stage</div>
               <PipelineStageSelector conversation={conversation} />
               <div className="mt-2">
-                <AssignmentSelector conversation={conversation} profile={profile} />
+                <AssignmentSelector conversation={conversation} profile={profile} onAssignmentChange={() => queryClient.invalidateQueries({ queryKey: ['conversations'] })} />
               </div>
               <Button
                 size="sm"

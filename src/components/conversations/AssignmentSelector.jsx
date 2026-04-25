@@ -1,43 +1,77 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserCheck } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { User, Loader2 } from "lucide-react";
 
-export default function AssignmentSelector({ conversation, profile }) {
-  const queryClient = useQueryClient();
+export default function AssignmentSelector({ conversation, profile, onAssignmentChange }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser);
+  }, []);
 
   const { data: teamMembers = [] } = useQuery({
-    queryKey: ['team-members', profile?.id],
+    queryKey: ["team-members", profile?.id],
     queryFn: () => base44.entities.TeamMember.filter({ account_id: profile?.id }),
     enabled: !!profile?.id,
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (email) => base44.entities.Conversation.update(conversation.id, { assigned_to: email }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      toast.success('Conversation assigned');
+  const assignMutation = useMutation({
+    mutationFn: (assignedTo) =>
+      base44.entities.Conversation.update(conversation.id, { assigned_to: assignedTo }),
+    onSuccess: (updated) => {
+      onAssignmentChange(updated);
     },
   });
 
+  const handleAssign = (email) => {
+    assignMutation.mutate(email);
+  };
+
+  const handleUnassign = () => {
+    assignMutation.mutate(null);
+  };
+
   return (
-    <div className="flex items-center gap-2">
-      <UserCheck className="w-4 h-4 text-muted-foreground" />
-      <Select value={conversation.assigned_to || ''} onValueChange={(v) => updateMutation.mutate(v)}>
-        <SelectTrigger className="w-40 h-8 text-xs rounded-lg">
-          <SelectValue placeholder="Assign to..." />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={null}>Unassigned</SelectItem>
-          {teamMembers.map(member => (
-            <SelectItem key={member.id} value={member.user_email}>
-              {member.user_email}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="space-y-2">
+      <label className="text-xs font-semibold text-muted-foreground">Assign to Team</label>
+      <div className="flex gap-2">
+        <Select value={conversation.assigned_to || ""} onValueChange={handleAssign}>
+          <SelectTrigger className="h-9 text-sm rounded-lg">
+            <SelectValue placeholder="Select team member..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {teamMembers.map((member) => (
+              <SelectItem key={member.id} value={member.user_email}>
+                {member.user_email.split("@")[0]}
+              </SelectItem>
+            ))}
+            {user && (
+              <SelectItem value={user.email}>
+                Me ({user.full_name})
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+        {conversation.assigned_to && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleUnassign}
+            disabled={assignMutation.isPending}
+            className="h-9 px-2"
+          >
+            {assignMutation.isPending ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Clear"
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
