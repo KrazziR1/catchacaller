@@ -114,23 +114,22 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     // --- Idempotency: Check if we already processed this call (within 60 seconds) ---
-    // Twilio retries webhooks if they timeout. Deduplicate based on CallSid + timestamp
-    const idempotencyKey = body.CallSid || `${From}-${callTime.substring(0, 19)}`;
-    const dedupeWindow = 60000; // 60 second window
+    // Twilio retries webhooks if they timeout. Deduplicate based on CallSid
+    const callSid = body.CallSid;
     
-    // Simple in-process deduplication (production: use Redis)
-    const lastProcessed = await base44.asServiceRole.entities.MissedCall.filter({
-      caller_phone: callerPhone,
-      call_time: {
-        $gte: new Date(Date.now() - dedupeWindow).toISOString()
-      }
-    }).then(calls => calls[0]);
+    if (callSid) {
+      const lastProcessed = await base44.asServiceRole.entities.MissedCall.filter({}).then(calls => 
+        calls.find(c => c.id && c.id.includes(callSid))
+      ).catch(() => null);
 
-    if (lastProcessed && lastProcessed.caller_phone === callerPhone && 
-        Math.abs(new Date(lastProcessed.call_time) - new Date(callTime)) < 5000) {
-      console.log(`Duplicate call detected for ${callerPhone}, skipping`);
-      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+      if (lastProcessed) {
+        console.log(`Duplicate call detected for ${callSid}, skipping`);
+        return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+      }
     }
+    
+    const now = new Date();
+    const callTime = now.toISOString();
 
     // --- Rate limiting: 5 SMS/hour per phone ---
     const rateLimitCheck = checkSMSRateLimit(callerPhone);
@@ -171,21 +170,14 @@ Deno.serve(async (req) => {
       return new Response(twiml, { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    const now = new Date();
-    const callTime = now.toISOString();
     const startTime = Date.now();
 
-    // --- Get caller state via Twilio lookup (with timeout) ---
+    // --- Get caller state via Twilio lookup ---
     let callerState = 'UNKNOWN';
     try {
-      const stateRes = await Promise.race([
-        base44.asServiceRole.functions.invoke('getCallerState', {
-          phone_number: callerPhone,
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('State lookup timeout after 5s')), 5000)
-        )
-      ]);
+      const stateRes = await base44.asServiceRole.functions.invoke('getCallerState', {
+        phone_number: callerPhone,
+      });
       callerState = stateRes.data?.state || 'UNKNOWN';
     } catch (e) {
       console.error('State lookup failed - cannot determine compliance requirements:', e.message);
@@ -209,15 +201,10 @@ Deno.serve(async (req) => {
       is_valid: true,
     });
 
-    // --- Check DNC (with timeout) ---
+    // --- Check DNC ---
     let isDNC = false;
     try {
-      const dncCheckRes = await Promise.race([
-        base44.asServiceRole.functions.invoke('checkDNC', { phone_number: callerPhone }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('DNC check timeout after 5s')), 5000)
-        )
-      ]);
+      const dncCheckRes = await base44.asServiceRole.functions.invoke('checkDNC', { phone_number: callerPhone });
       isDNC = dncCheckRes.data?.is_dnc || false;
     } catch (e) {
       console.warn('DNC check failed (non-critical):', e.message);
@@ -238,29 +225,23 @@ Deno.serve(async (req) => {
       estimated_value: profile.average_job_value || 500,
     });
 
-    // --- COMPLIANCE: Validate before sending ANY SMS (with timeout) ---
+    // --- COMPLIANCE: Validate before sending ANY SMS ---
     let canContact = false;
     let complianceReason = 'unknown';
     try {
-      const complianceCheck = await Promise.race([
-        base44.asServiceRole.functions.invoke(
-          'validateComplianceBeforeAnyContact',
-          {
-            phone_number: callerPhone,
-            contact_type: 'sms',
-            caller_state: callerState,
-          }
-        ),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Compliance check timeout after 5s')), 5000)
-        )
-      ]);
+      const complianceCheck = await base44.asServiceRole.functions.invoke(
+        'validateComplianceBeforeAnyContact',
+        {
+          phone_number: callerPhone,
+          contact_type: 'sms',
+          caller_state: callerState,
+        }
+      );
       canContact = complianceCheck.data?.can_contact || false;
       complianceReason = complianceCheck.data?.reason || 'unknown';
     } catch (e) {
       console.error('Compliance check failed:', e.message);
       // CRITICAL: Block SMS if compliance check fails
-      // Better safe than sorry with regulatory issues
       console.log(`Blocked SMS to ${callerPhone} - compliance check failure`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }

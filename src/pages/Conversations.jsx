@@ -27,7 +27,7 @@ export default function Conversations() {
   const [filters, setFilters] = useState({ stage: '', teamMember: '', urgency: '', dateRange: { from: '' } });
 
   useEffect(() => {
-    base44.auth.me().then(setUser);
+    base44.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
 
   const { data: profiles = [] } = useQuery({
@@ -37,7 +37,7 @@ export default function Conversations() {
 
   const { data: subscriptions = [] } = useQuery({
     queryKey: ['subscription', user?.email],
-    queryFn: () => base44.entities.Subscription.filter({ user_email: user.email }),
+    queryFn: () => user?.email ? base44.entities.Subscription.filter({ user_email: user.email }) : Promise.resolve([]),
     enabled: !!user?.email,
   });
 
