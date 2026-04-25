@@ -39,9 +39,17 @@ Deno.serve(async (req) => {
         const conversation = await base44.asServiceRole.entities.Conversation.get(convId);
         if (!conversation) continue;
 
-        // Check opt-out
-        if (optOutNumbers.has(conversation.caller_phone)) {
-          results.push({ conversation_id: convId, status: 'skipped', reason: 'opted_out' });
+        // Validate full consent before sending
+        const consentCheck = await base44.asServiceRole.functions.invoke('validateConsentBeforeSMS', {
+          phone_number: conversation.caller_phone,
+        });
+
+        if (!consentCheck.data?.can_send) {
+          results.push({
+            conversation_id: convId,
+            status: 'skipped',
+            reason: consentCheck.data?.reason || 'consent_invalid',
+          });
           continue;
         }
 

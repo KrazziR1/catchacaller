@@ -45,13 +45,34 @@ Deno.serve(async (req) => {
       // Only process conversations belonging to this profile's owner
       const profileConversations = allConversations.filter(c => c.created_by === profile.created_by);
 
-      const toFollowUp = profileConversations.filter(c => {
+      let toFollowUp = profileConversations.filter(c => {
         if (c.status !== 'active') return false;
         if ((c.follow_up_count || 0) >= 1) return false;
         if (optOutNumbers.has(c.caller_phone)) return false;
         const lastActivity = new Date(c.last_message_at || c.created_date).getTime();
         return lastActivity >= windowStart && lastActivity <= windowEnd;
       });
+
+      // Filter by valid consent for each conversation
+      const consentValidConvs = [];
+      for (const conv of toFollowUp) {
+        const consentCheck = await base44.asServiceRole.functions.invoke('validateConsentBeforeSMS', {
+          phone_number: conv.caller_phone,
+        });
+        if (consentCheck.data?.can_send) {
+          consentValidConvs.push(conv);
+        } else {
+          results.push({
+            conversation_id: conv.id,
+            phone: conv.caller_phone,
+            business: profile.business_name,
+            status: 'skipped',
+            reason: consentCheck.data?.reason || 'consent_invalid',
+          });
+        }
+      }
+
+      toFollowUp = consentValidConvs;
 
       console.log(`Profile ${profile.business_name}: ${toFollowUp.length} conversations eligible for follow-up`);
 

@@ -22,10 +22,17 @@ Deno.serve(async (req) => {
     
     const client = twilio(accountSid, authToken);
 
-    // Check opt-out
-    const optOuts = await base44.asServiceRole.entities.SMSOptOut.filter({ phone_number: caller_phone });
-    if (optOuts.length > 0) {
-      return Response.json({ status: 'skipped', reason: 'opted_out', phone: caller_phone });
+    // Validate full consent before sending
+    const consentCheck = await base44.asServiceRole.functions.invoke('validateConsentBeforeSMS', {
+      phone_number: caller_phone,
+    });
+
+    if (!consentCheck.data?.can_send) {
+      return Response.json({
+        status: 'skipped',
+        reason: consentCheck.data?.reason || 'consent_invalid',
+        phone: caller_phone,
+      });
     }
     
     const message = `Hi ${caller_name || 'there'}! Your appointment with ${profile.business_name} is confirmed. ${profile.booking_url || 'We will be in touch soon.'} Reply STOP to opt out.`;
