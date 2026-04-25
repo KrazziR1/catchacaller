@@ -27,6 +27,11 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-H9SFC7LCCN');
+      // Suppress Datadog storage warnings
+      if (window.DD_RUM) {
+        window.DD_RUM.configuration = window.DD_RUM.configuration || {};
+        window.DD_RUM.configuration.sessionSampleRate = 0;
+      }
     </script>
 
     <!-- Stripe -->
