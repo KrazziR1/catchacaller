@@ -66,6 +66,7 @@ export default function Onboarding() {
   const [testError, setTestError] = useState(null);
   const [profileId, setProfileId] = useState(null);
   const [smsComplianceAgreed, setSmsComplianceAgreed] = useState(false);
+  const [hasTwilioAccount, setHasTwilioAccount] = useState(null);
 
   const [form, setForm] = useState({
     business_name: "",
@@ -390,47 +391,76 @@ export default function Onboarding() {
               {/* STEP 2: Phone */}
               {currentStep === 2 && (
                 <>
-                  <div>
-                    <Label>Enter Your Phone Number</Label>
-                    <div className="flex gap-2 mt-1.5">
-                      <Input
-                        value={form.phone_number}
-                        onChange={(e) => {
-                          let val = e.target.value.replace(/\D/g, '');
-                          if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
-                          if (val && !val.startsWith('+')) val = '+' + val;
-                          setForm({ ...form, phone_number: val });
-                        }}
-                        placeholder="+1 (555) 123-4567"
-                        className="h-12 rounded-xl"
-                      />
-                      {form.phone_number && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setForm({ ...form, phone_number: '' })}
-                          className="rounded-xl h-12 px-3"
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold mb-3">Do you have an existing Twilio account with a phone number?</p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setHasTwilioAccount(true)}
+                          className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                            hasTwilioAccount === true
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/40"
+                          }`}
                         >
-                          Clear
-                        </Button>
-                      )}
+                          <p className="font-semibold text-sm">Yes</p>
+                          <p className="text-xs text-muted-foreground mt-1">I have a Twilio number</p>
+                        </button>
+                        <button
+                          onClick={() => setHasTwilioAccount(false)}
+                          className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                            hasTwilioAccount === false
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          <p className="font-semibold text-sm">No</p>
+                          <p className="text-xs text-muted-foreground mt-1">I need a new number</p>
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      Enter the phone number you want to monitor. We automatically format it for you.
-                    </p>
-                  </div>
 
-                  <div className="relative flex items-center gap-3 py-2">
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">or get a new number</span>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
+                    {hasTwilioAccount === true && (
+                      <div>
+                        <Label>Enter Your Twilio Phone Number</Label>
+                        <div className="flex gap-2 mt-1.5">
+                          <Input
+                            value={form.phone_number}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/\D/g, '');
+                              if (val && !val.startsWith('1') && val.length === 10) val = '1' + val;
+                              if (val && !val.startsWith('+')) val = '+' + val;
+                              setForm({ ...form, phone_number: val });
+                            }}
+                            placeholder="+1 (555) 123-4567"
+                            className="h-12 rounded-xl"
+                            autoFocus
+                          />
+                          {form.phone_number && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setForm({ ...form, phone_number: '' })}
+                              className="rounded-xl h-12 px-3"
+                            >
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          Make sure webhooks are configured in Twilio to capture missed calls.
+                        </p>
+                      </div>
+                    )}
 
-                  <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
-                    <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
-                    <p className="text-xs text-blue-800 mt-2">
-                      Provisioning a dedicated toll-free number is optional. One-time setup fee: $2.99 (billed separately). Monthly cost: ~$1-2/month plus SMS fees.
-                    </p>
+                    {hasTwilioAccount === false && (
+                      <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                        <PhoneProvision onSuccess={(num) => setForm({ ...form, phone_number: num })} />
+                        <p className="text-xs text-blue-800 mt-2">
+                          One-time setup fee: $2.99. Monthly cost: ~$1-2/month plus SMS fees.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
