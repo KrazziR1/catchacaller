@@ -37,10 +37,11 @@ export default function Dashboard() {
     staleTime: 5 * 60 * 1000, // 5 min cache
   });
 
-  const { data: subscriptions = [] } = useQuery({
+  const { data: subscriptions = [], isLoading: subscriptionLoading } = useQuery({
     queryKey: ["subscription", user?.email],
     queryFn: () => base44.entities.Subscription.filter({ user_email: user.email }),
     enabled: !!user?.email,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: calls = [] } = useQuery({
@@ -66,32 +67,29 @@ export default function Dashboard() {
     }
   }, [profileLoaded, profiles, navigate]);
 
-  // Gate: if subscription record exists and is not active/trialing, block access
-  // If no subscription record yet, use profile creation date as trial start (7-day grace)
   const subscription = subscriptions[0];
-  const subscriptionLoaded = user && profileLoaded;
   const profile = profiles[0];
 
+  // Wait for all required data to load
+  const allDataLoaded = user && profileLoaded && !subscriptionLoading;
+  
+  if (!allDataLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Check if trial/subscription is expired or invalid
   const trialExpired = subscription && subscription.trial_end_date && 
     new Date(subscription.trial_end_date) < new Date() &&
     subscription.status === 'trial';
 
-  const isSubscriptionBlocked = subscriptionLoaded && (
-    (subscription && !["active", "trial"].includes(subscription.status)) ||
-    trialExpired
-  );
+  const isSubscriptionBlocked = subscription && !["active", "trial"].includes(subscription.status) || trialExpired;
 
   if (isSubscriptionBlocked) {
     return <TrialExpiredPaywall />;
-  }
-
-  // Wait for subscription to load before rendering
-  if (!subscriptionLoaded) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
   }
 
   const totalCalls = calls.length;
