@@ -37,6 +37,7 @@ export default function ColdCallDashboard() {
   const [showBulkSMS, setShowBulkSMS] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [showTemplateList, setShowTemplateList] = useState(false);
   const [newTemplate, setNewTemplate] = useState({ name: "", message_body: "" });
   const [formData, setFormData] = useState({
     business_name: "",
@@ -114,6 +115,17 @@ export default function ColdCallDashboard() {
     },
   });
 
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id) => base44.entities.SMSTemplate.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cold-call-templates"] });
+      toast.success("Template deleted");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete template");
+    },
+  });
+
   const handleDNCCheck = async () => {
     if (!formData.phone_number || !formData.state) {
       toast.error("Enter phone number and state first");
@@ -150,14 +162,17 @@ export default function ColdCallDashboard() {
     <div className="p-6 lg:p-8 max-w-[1400px] mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-extrabold tracking-tight">Cold Call Tracking</h1>
           <p className="text-muted-foreground mt-1">Manage prospects, send SMS templates, and track conversions</p>
         </div>
+        <Button variant="outline" onClick={() => window.history.back()} className="gap-2 rounded-xl">
+          ← Back to Admin
+        </Button>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => setShowTemplateForm(true)}
+            onClick={() => setShowTemplateList(true)}
             className="gap-2 rounded-xl"
           >
             <Settings className="w-4 h-4" />
@@ -177,7 +192,7 @@ export default function ColdCallDashboard() {
             Add Prospect
           </Button>
         </div>
-      </div>
+        </div>
 
       {/* Filters */}
       <Card className="rounded-2xl">
@@ -397,13 +412,12 @@ export default function ColdCallDashboard() {
               </div>
             </div>
             <div>
-              <Label>Industry</Label>
+              <Label>Industry *</Label>
               <Select value={formData.industry} onValueChange={(v) => setFormData({ ...formData, industry: v })}>
                 <SelectTrigger className="mt-1.5 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
                   <SelectItem value="hvac">HVAC</SelectItem>
                   <SelectItem value="plumbing">Plumbing</SelectItem>
                   <SelectItem value="roofing">Roofing</SelectItem>
@@ -435,6 +449,50 @@ export default function ColdCallDashboard() {
               disabled={!formData.business_name || !formData.phone_number || !formData.city || !formData.state || (dncCheckResult?.isDNC)}
             >
               Add Prospect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template List Dialog */}
+      <Dialog open={showTemplateList} onOpenChange={setShowTemplateList}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Sales Templates</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
+            {templates.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No templates yet. Create one below.</p>
+            ) : (
+              templates.map((template) => (
+                <div key={template.id} className="p-3 border border-border rounded-lg space-y-2">
+                  <div className="flex items-start justify-between">
+                    <h4 className="font-medium text-sm">{template.name}</h4>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => deleteTemplateMutation.mutate(template.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">{template.message_body}</p>
+                  <p className="text-xs text-muted-foreground">{template.message_body.length} characters</p>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTemplateList(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              setShowTemplateList(false);
+              setShowTemplateForm(true);
+            }} className="gap-2">
+              <Plus className="w-4 h-4" />
+              New Template
             </Button>
           </DialogFooter>
         </DialogContent>

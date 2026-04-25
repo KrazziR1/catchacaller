@@ -23,12 +23,13 @@ export default function Admin() {
 
   useEffect(() => {
     base44.auth.me().then((u) => {
-      setUser(u);
       if (!u || u.role !== "admin") {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
+      } else {
+        setUser(u);
       }
     }).catch(() => {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     });
   }, [navigate]);
 
@@ -101,12 +102,8 @@ export default function Admin() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Don't wait for user, show page immediately
-  if (!user) {
-    return null;
-  }
-
-  if (user.role !== "admin") {
+  // Only show if we've confirmed they're admin
+  if (!user || user.role !== "admin") {
     return null;
   }
 
@@ -127,8 +124,8 @@ export default function Admin() {
     };
     return sum + (planPrices[s.plan_name] || 0);
   }, 0);
-  // Filter out demo calls (test phone numbers that start with +1-555-0)
-  const realCalls = missedCalls.filter(c => !c.caller_phone || !c.caller_phone.startsWith("+1-555-0"));
+  // Filter out demo calls (test phone numbers that start with +1-555 or are null)
+  const realCalls = missedCalls.filter(c => c.caller_phone && !c.caller_phone.includes("555"));
   const totalCalls = realCalls.length;
   const onboardingComplete = onboardingProgress.filter((p) => p.is_complete).length;
   const onboardingInProgress = onboardingProgress.filter((p) => !p.is_complete).length;

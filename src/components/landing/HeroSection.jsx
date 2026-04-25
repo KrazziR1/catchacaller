@@ -21,9 +21,6 @@ export default function HeroSection() {
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
               <span className="text-sm font-medium text-primary">Your Phone + AI Backup</span>
             </div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
-              <span className="text-sm font-medium text-accent">⚡ Live in 15 minutes</span>
-            </div>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
