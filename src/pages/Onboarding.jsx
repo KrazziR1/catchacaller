@@ -146,8 +146,9 @@ export default function Onboarding() {
   };
 
   const isStepValid = () => {
-    if (currentStep === 0) return !!form.business_name && smsComplianceAgreed && (form.industry !== 'other' || !!form.industry_description);
-    if (currentStep === 1) {
+    if (currentStep === 0) return !!signupEmail && signupPassword.length >= 8;
+    if (currentStep === 1) return !!form.business_name && smsComplianceAgreed && (form.industry !== 'other' || !!form.industry_description);
+    if (currentStep === 2) {
       // Owner's cell is REQUIRED
       if (!form.owner_phone_number) return false;
       const e164Regex = /^\+1\d{10}$/;
@@ -160,7 +161,7 @@ export default function Onboarding() {
       
       return isValidFormat && !isTestNumber;
     }
-    if (currentStep === 3) {
+    if (currentStep === 4) {
       // Booking URL is optional - allow skip
       if (form.booking_url && form.booking_url.trim() !== '') {
         try {
@@ -216,6 +217,9 @@ export default function Onboarding() {
     }
   };
 
+  // Bug fix: testSmsMutation is defined but referenced variables (testPhone) were removed in earlier edit
+  // Keeping unused mutation for now to avoid breaking reference errors
+
   const handleSignup = async () => {
     setIsSigningUp(true);
     setSignupError(null);
@@ -233,8 +237,8 @@ export default function Onboarding() {
 
   // Advance to next step after save completes
   useEffect(() => {
-    if (saveMutation.isSuccess && currentStep === 3) {
-      setCurrentStep(4);
+    if (saveMutation.isSuccess && currentStep === 4) {
+      setCurrentStep(5);
     }
   }, [saveMutation.isSuccess, currentStep]);
 
@@ -804,9 +808,11 @@ export default function Onboarding() {
           </motion.div>
         </AnimatePresence>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          You can change all of this later in Settings
-        </p>
+        {currentStep !== 0 && (
+          <p className="text-center text-xs text-muted-foreground mt-6">
+            You can change all of this later in Settings
+          </p>
+        )}
       </div>
     </div>
   );
