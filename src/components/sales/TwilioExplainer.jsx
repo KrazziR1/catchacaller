@@ -18,32 +18,32 @@ export default function TwilioExplainer() {
             <div className="flex gap-3">
               <div className="text-primary font-bold text-lg w-8 flex-shrink-0">1</div>
               <div>
-                <h4 className="font-semibold text-sm mb-1">Someone calls your business</h4>
-                <p className="text-xs text-muted-foreground">They dial your number looking for help</p>
+                <h4 className="font-semibold text-sm mb-1">Customer calls your number</h4>
+                <p className="text-xs text-muted-foreground">Twilio routes it through our system</p>
               </div>
             </div>
 
             <div className="flex gap-3">
               <div className="text-primary font-bold text-lg w-8 flex-shrink-0">2</div>
               <div>
-                <h4 className="font-semibold text-sm mb-1">Twilio catches it</h4>
-                <p className="text-xs text-muted-foreground">Instead of going to voicemail, it routes to CatchACaller</p>
+                <h4 className="font-semibold text-sm mb-1">Your phone rings</h4>
+                <p className="text-xs text-muted-foreground">You pick up? Great. Direct conversation.</p>
               </div>
             </div>
 
             <div className="flex gap-3">
               <div className="text-primary font-bold text-lg w-8 flex-shrink-0">3</div>
               <div>
-                <h4 className="font-semibold text-sm mb-1">Our AI picks up</h4>
-                <p className="text-xs text-muted-foreground">Has a real conversation, figures out what they need</p>
+                <h4 className="font-semibold text-sm mb-1">You're busy? No problem.</h4>
+                <p className="text-xs text-muted-foreground">AI answers instead. Talks to them. Qualifies the lead.</p>
               </div>
             </div>
 
             <div className="flex gap-3">
               <div className="text-primary font-bold text-lg w-8 flex-shrink-0">4</div>
               <div>
-                <h4 className="font-semibold text-sm mb-1">They get texted your info</h4>
-                <p className="text-xs text-muted-foreground">Booking link, your availability, whatever they need</p>
+                <h4 className="font-semibold text-sm mb-1">Either way, you get the lead</h4>
+                <p className="text-xs text-muted-foreground">Via text, email, or your dashboard. Ready to convert.</p>
               </div>
             </div>
           </div>

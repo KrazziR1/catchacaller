@@ -21,7 +21,7 @@ function normalizePhone(phone) {
 Deno.serve(async (req) => {
   try {
     const body = await parseFormBody(req);
-    const { CallStatus, From, To, CallerName } = body;
+    const { CallStatus, From, To, CallerName, DialCallStatus } = body;
 
     // Validate required fields
     if (!CallStatus || !From || !To) {
@@ -31,9 +31,14 @@ Deno.serve(async (req) => {
 
     console.log(`Call event: ${CallStatus} from ${From} to ${To}`);
 
-    // Only process missed/unanswered calls
+    // Handle initial call attempt (before Dial)
+    if (CallStatus === 'ringing' || CallStatus === 'in-progress') {
+      return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // Only process missed/unanswered calls (owner didn't pick up)
     const missedStatuses = ['no-answer', 'busy', 'failed'];
-    if (!missedStatuses.includes(CallStatus)) {
+    if (!missedStatuses.includes(DialCallStatus || CallStatus)) {
       return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
         headers: { 'Content-Type': 'text/xml' },
       });
@@ -70,6 +75,16 @@ Deno.serve(async (req) => {
     if (!profile.auto_response_enabled) {
       console.log(`Auto-response disabled for ${toPhone}`);
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
+    }
+
+    // Check if owner phone is configured — if not, return error TwiML
+    if (!profile.owner_phone_number) {
+      console.log(`No owner phone configured for ${toPhone}`);
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+          <Say>Sorry, we're unable to connect your call right now. Please try again later.</Say>
+        </Response>`;
+      return new Response(twiml, { headers: { 'Content-Type': 'text/xml' } });
     }
 
     const now = new Date();
@@ -138,7 +153,11 @@ Deno.serve(async (req) => {
       return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } });
     }
 
-    // --- For CA/NY: Send opt-in confirmation first instead of business message ---
+    // --- Only proceed if owner didn't answer (AI fallback) ---
+    // At this point, we know the call wasn't answered by the owner
+    // So we send AI SMS follow-up
+
+    // For CA/NY: Send opt-in confirmation first instead of business message
     const requiresExplicitConsent = ['CA', 'NY'].includes(callerState);
 
     if (requiresExplicitConsent && !consent.explicit_sms_consent) {

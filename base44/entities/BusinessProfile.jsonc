@@ -28,7 +28,11 @@
     },
     "phone_number": {
       "type": "string",
-      "description": "Business phone number to monitor"
+      "description": "Business Twilio phone number to monitor"
+    },
+    "owner_phone_number": {
+      "type": "string",
+      "description": "Owner's cell phone (E.164 format) for incoming calls"
     },
     "twilio_number_sid": {
       "type": "string",

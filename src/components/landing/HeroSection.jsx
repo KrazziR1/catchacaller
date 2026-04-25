@@ -19,22 +19,22 @@ export default function HeroSection() {
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-sm font-medium text-primary">AI-Powered Call Recovery</span>
+              <span className="text-sm font-medium text-primary">Your Phone + AI Backup</span>
             </div>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20">
-              <span className="text-sm font-medium text-accent">⚡ Connected in 15 minutes</span>
+              <span className="text-sm font-medium text-accent">⚡ Live in 15 minutes</span>
             </div>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]">
-            Never lose another{" "}
+            Your calls.{" "}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              missed call lead
+              Answered. Always.
             </span>
           </h1>
           
           <p className="mt-6 text-lg lg:text-xl text-muted-foreground max-w-xl leading-relaxed">
-            Your AI employee responds in under 3 seconds, holds real SMS conversations, and books appointments — 24/7, even while you're on another job.
+            When you're free, you pick up. When you're busy, AI answers and qualifies the lead. No missed calls. No voicemail walls. Just qualified leads in your inbox.
           </p>
           
           <div className="flex flex-wrap gap-4 mt-10">
@@ -82,32 +82,32 @@ export default function HeroSection() {
                   <div className="w-20 h-1 rounded-full bg-border" />
                 </div>
                 <div className="p-4 space-y-3">
-                  {/* Missed call notification */}
+                  {/* Incoming call notification */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1 }}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20"
                   >
-                    <PhoneMissed className="w-5 h-5 text-destructive" />
+                    <PhoneMissed className="w-5 h-5 text-blue-500" />
                     <div>
-                      <p className="text-xs font-semibold">Missed Call</p>
-                      <p className="text-xs text-muted-foreground">(555) 123-4567 • 2s ago</p>
+                      <p className="text-xs font-semibold">Incoming Call</p>
+                      <p className="text-xs text-muted-foreground">(555) 123-4567 • Now ringing</p>
                     </div>
                   </motion.div>
                   
-                  {/* AI Response */}
+                  {/* You didn't answer */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1.8 }}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20"
+                    className="flex items-start gap-3 p-3 rounded-xl bg-muted"
                   >
-                    <MessageSquare className="w-5 h-5 text-primary mt-0.5" />
+                    <MessageSquare className="w-5 h-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-xs font-semibold text-primary">AI Response Sent</p>
+                      <p className="text-xs font-semibold">AI Takes Over</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        "Hi! Sorry we missed your call. How can we help you today? We have availability this afternoon."
+                        "Hi! How can we help? We have availability this afternoon."
                       </p>
                     </div>
                   </motion.div>
