@@ -98,6 +98,9 @@ Deno.serve(async (req) => {
 
     const isFirstReply = recentMessages.length === 0;
 
+    // TCPA: Always include opt-out mechanism for first message from this conversation
+    const optOutLine = isFirstReply ? '\nReply STOP to opt out of future messages.' : '';
+    
     const prompt = `You are an AI assistant representing ${profile.business_name}, a ${profile.industry} business. Respond to an incoming SMS from a potential customer who previously called and was missed.
 
 ${personalityInstructions}
@@ -111,8 +114,8 @@ Rules:
 - If they mention urgency or emergency, prioritize speed.
 - Never pretend to be human if directly asked — say you're an AI assistant for ${profile.business_name}.
 - Always end with a question or clear next step.
-- ${isFirstReply ? 'Include "Reply STOP to opt out." at the end of this first message.' : 'Do NOT include opt-out instructions again.'}
 - Do NOT use excessive emojis.
+${isFirstReply ? `- IMPORTANT: Always include: "${optOutLine}"` : ''}
 
 ${historyText ? `Previous conversation:\n${historyText}\n` : ''}
 

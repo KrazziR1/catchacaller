@@ -77,9 +77,11 @@ Deno.serve(async (req) => {
     const personality = profile.ai_personality || 'friendly';
     const bookingLine = profile.booking_url ? ` Book here: ${profile.booking_url}` : '';
 
+    // TCPA Compliance: Always include clear opt-out mechanism in initial message
+    const stopInstruction = ' Reply STOP to opt out of future messages.';
     const smsBody = personality === 'professional'
-      ? `Hi, this is ${name}. We missed your call and want to make sure we help you. What can we assist you with today?${bookingLine} Reply STOP to opt out.`
-      : `Hi! 👋 Sorry we missed your call — we're ${name}. We'd love to help! What can we do for you?${bookingLine} Reply STOP to opt out.`;
+      ? `Hi, this is ${name}. We missed your call and want to make sure we help you. What can we assist you with today?${bookingLine}${stopInstruction}`
+      : `Hi! 👋 Sorry we missed your call — we're ${name}. We'd love to help! What can we do for you?${bookingLine}${stopInstruction}`;
 
     // --- Send SMS from the business's own Twilio number ---
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
@@ -135,12 +137,13 @@ Deno.serve(async (req) => {
     });
 
     // --- Send email notification to the OWNER of this business profile ---
+    // PRIVACY: Only send if they haven't explicitly disabled it (check settings later)
     try {
       // Find the user who created this profile
       const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
       const profileOwner = allUsers.find(u => u.email === profile.created_by);
 
-      if (profileOwner) {
+      if (profileOwner && profile.email_notifications_enabled !== false) {
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: profileOwner.email,
           subject: `📞 Missed Call from ${CallerName || callerPhone}`,

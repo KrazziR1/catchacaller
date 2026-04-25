@@ -23,11 +23,19 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get('origin') || 'https://catchacaller.com';
 
+    // Get or create Stripe customer object to link to trial subscription later
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId = customers.data[0]?.id;
+    if (!customerId) {
+      const newCustomer = await stripe.customers.create({ email: user.email });
+      customerId = newCustomer.id;
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: user.email,
+      customer: customerId,
       success_url: `${origin}/checkout-success`,
       cancel_url: `${origin}/#pricing`,
     });

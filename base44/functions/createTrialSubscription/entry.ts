@@ -9,6 +9,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if trial already exists (idempotency)
+    const existing = await base44.asServiceRole.entities.Subscription.filter({ 
+      user_email: user.email,
+      status: 'trial'
+    });
+
+    if (existing.length > 0) {
+      return Response.json({
+        success: true,
+        subscription_id: existing[0].id,
+        trial_end_date: existing[0].trial_end_date,
+        message: 'Trial already active',
+      });
+    }
+
     // Calculate trial end date (7 days from now)
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 7);
@@ -19,7 +34,7 @@ Deno.serve(async (req) => {
       status: 'trial',
       trial_end_date: trialEndDate.toISOString(),
       plan_name: null,
-      stripe_subscription_id: 'trial_' + Date.now(),
+      stripe_subscription_id: 'trial_' + user.email + '_' + Date.now(),
       current_period_end: trialEndDate.toISOString(),
     });
 
