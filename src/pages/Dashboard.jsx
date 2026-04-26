@@ -53,8 +53,8 @@ export default function Dashboard() {
     queryKey: ["business-profile", user?.email],
     queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
     enabled: !!user?.email && user?.role !== 'admin',
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
     retry: 2,
   });
 

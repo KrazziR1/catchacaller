@@ -132,7 +132,9 @@ export default function Onboarding() {
     },
     onSuccess: async (data) => {
       if (!profileId) setProfileId(data.id);
-      queryClient.invalidateQueries({ queryKey: ["business-profile"] });
+      // Refetch so the dashboard cache is warm before navigating
+      await queryClient.invalidateQueries({ queryKey: ["business-profile"] });
+      await queryClient.refetchQueries({ queryKey: ["business-profile"] });
       // Fire background tasks without blocking — non-critical
       configureWebhooksIfNeeded().catch(err => console.error('Webhook config failed:', err));
       createTrialSubscription().catch(err => console.error('Trial creation failed:', err));
@@ -360,16 +362,25 @@ export default function Onboarding() {
                   <div className="p-5 rounded-xl bg-primary/5 border border-primary/20 text-center">
                     <p className="text-sm font-semibold mb-1">Create your free account to get started</p>
                     <p className="text-xs text-muted-foreground">
-                      Click below — on the next screen, click <strong>"Need an account? Sign up"</strong> to create your account. You'll return here automatically after signing up.
+                      Takes 30 seconds. You'll return here automatically after signing up to finish your setup.
                     </p>
                   </div>
                   <Button
                     className="w-full h-12 rounded-xl font-semibold text-base"
-                    onClick={() => base44.auth.redirectToLogin("/onboarding")}
+                    onClick={() => base44.auth.redirectToLogin("/onboarding", { signup: true })}
                   >
-                    Create Account / Sign In
+                    Create Your Free Account
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Already have an account?{" "}
+                    <button
+                      className="text-primary underline font-medium"
+                      onClick={() => base44.auth.redirectToLogin("/onboarding")}
+                    >
+                      Sign in
+                    </button>
+                  </p>
                 </div>
               )}
 
