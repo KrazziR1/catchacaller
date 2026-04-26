@@ -51,9 +51,23 @@ function App() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Short defer to let CSS/fonts load before rendering routes
-    // This prevents the flash of raw Base44 schema content
-    const t = setTimeout(() => setReady(true), 50);
+    // Wait for Base44 SDK schema + CSS/fonts to load before rendering routes.
+    // The flash of raw schema content happens because the SDK populates route
+    // data asynchronously — a fixed 50ms is not long enough on slow connections.
+    // We listen for the SDK's own ready signal if available, then fall back to
+    // a document readyState check so we never show content before it's safe.
+    const tryReady = () => {
+      if (document.readyState === 'complete') {
+        setReady(true);
+      } else {
+        document.addEventListener('readystatechange', () => {
+          if (document.readyState === 'complete') setReady(true);
+        }, { once: true });
+      }
+    };
+
+    // Give the SDK a tick to register its schema, then check doc readiness
+    const t = setTimeout(tryReady, 0);
     return () => clearTimeout(t);
   }, []);
 
