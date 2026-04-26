@@ -8,7 +8,6 @@
     "industry": {
       "type": "string",
       "enum": [
-        "general",
         "hvac",
         "plumbing",
         "roofing",
@@ -24,7 +23,11 @@
         "political",
         "other"
       ],
-      "default": "general"
+      "default": "hvac"
+    },
+    "industry_description": {
+      "type": "string",
+      "description": "Description of services offered (required when industry is 'other')"
     },
     "phone_number": {
       "type": "string",
@@ -43,7 +46,20 @@
       "description": "Calendly or booking link"
     },
     "website": {
-      "type": "string"
+      "type": "string",
+      "description": "Business website URL"
+    },
+    "facebook_url": {
+      "type": "string",
+      "description": "Facebook page URL"
+    },
+    "instagram_url": {
+      "type": "string",
+      "description": "Instagram profile URL"
+    },
+    "google_business_url": {
+      "type": "string",
+      "description": "Google Business Profile URL"
     },
     "timezone": {
       "type": "string",

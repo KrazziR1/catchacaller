@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen, PhoneCall, UserPlus } from "lucide-react";
+import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen, PhoneCall, UserPlus, ListOrdered } from "lucide-react";
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
 import ColdCallDashboard from "@/components/coldcalls/ColdCallDashboard";
 import TopNav from "@/components/layout/TopNav";
@@ -166,6 +166,10 @@ export default function Admin() {
             <Button onClick={() => setShowAddClient(true)} className="gap-2">
               <UserPlus className="w-4 h-4" />
               Add New Client
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/waitlist")} className="gap-2">
+              <ListOrdered className="w-4 h-4" />
+              Waitlist Signups
             </Button>
             <Button variant="outline" onClick={() => navigate("/sales-resources")} className="gap-2">
               <BookOpen className="w-4 h-4" />
