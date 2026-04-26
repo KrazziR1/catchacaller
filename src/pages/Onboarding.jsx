@@ -59,6 +59,7 @@ export default function Onboarding() {
 
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupError, setSignupError] = useState(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
 
@@ -156,7 +157,7 @@ export default function Onboarding() {
 
 
   const isStepValid = () => {
-    if (currentStep === 0) return !!signupEmail && signupPassword.length >= 8;
+    if (currentStep === 0) return !!signupEmail && signupPassword.length >= 8 && signupPassword === signupConfirmPassword;
     if (currentStep === 1) return !!form.business_name && smsComplianceAgreed && (form.industry !== 'other' || !!form.industry_description);
     if (currentStep === 2) {
       // Owner's cell is REQUIRED
@@ -212,7 +213,6 @@ export default function Onboarding() {
 
   const next = () => {
     if (currentStep === 0) {
-      // Sign up
       handleSignup();
       return;
     }
@@ -230,21 +230,22 @@ export default function Onboarding() {
   // Bug fix: testSmsMutation is defined but referenced variables (testPhone) were removed in earlier edit
   // Keeping unused mutation for now to avoid breaking reference errors
 
-  const handleSignup = async () => {
-    setIsSigningUp(true);
+  const handleSignup = () => {
     setSignupError(null);
-    try {
-      if (!signupEmail || signupPassword.length < 8) {
-        setSignupError("Please enter a valid email and a password with at least 8 characters.");
-        setIsSigningUp(false);
-        return;
-      }
-      // redirectToLogin navigates away — this won't return to this code path
-      base44.auth.redirectToLogin("/onboarding", { signup: true });
-    } catch (err) {
-      setSignupError(err.message || "Signup failed. Try again.");
-      setIsSigningUp(false);
+    if (!signupEmail) {
+      setSignupError("Please enter your email address.");
+      return;
     }
+    if (signupPassword.length < 8) {
+      setSignupError("Password must be at least 8 characters.");
+      return;
+    }
+    if (signupPassword !== signupConfirmPassword) {
+      setSignupError("Passwords do not match.");
+      return;
+    }
+    // redirectToLogin navigates away — page will not continue executing after this
+    base44.auth.redirectToLogin("/onboarding", { signup: true });
   };
 
   // Advance to next step after save completes
@@ -377,6 +378,16 @@ export default function Onboarding() {
                       className="mt-1.5 h-12 rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground mt-1.5">At least 8 characters</p>
+                  </div>
+                  <div>
+                    <Label>Confirm Password</Label>
+                    <Input
+                      type="password"
+                      value={signupConfirmPassword}
+                      onChange={(e) => { setSignupConfirmPassword(e.target.value); setSignupError(null); }}
+                      placeholder="Re-enter your password"
+                      className="mt-1.5 h-12 rounded-xl"
+                    />
                   </div>
                   {signupError && (
                     <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex gap-3">
@@ -835,10 +846,10 @@ export default function Onboarding() {
               ) : (
                 <Button
                   onClick={next}
-                  disabled={!isStepValid() || saveMutation.isPending || isSigningUp || (currentStep === 0 && (!signupEmail || !signupPassword))}
+                  disabled={!isStepValid() || saveMutation.isPending}
                   className="rounded-xl h-11 px-6"
                 >
-                  {saveMutation.isPending || isSigningUp ? (
+                  {saveMutation.isPending ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
                   ) : (
                     <>Continue <ArrowRight className="ml-2 w-4 h-4" /></>

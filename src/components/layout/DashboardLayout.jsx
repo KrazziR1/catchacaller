@@ -1,8 +1,25 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
 import Sidebar from "./Sidebar";
 import TopNav from "./TopNav";
 
 export default function DashboardLayout() {
+  const navigate = useNavigate();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then((u) => {
+      if (u?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        setChecked(true);
+      }
+    }).catch(() => setChecked(true));
+  }, [navigate]);
+
+  if (!checked) return null;
+
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       <TopNav />
