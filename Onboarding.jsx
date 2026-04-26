@@ -246,12 +246,15 @@ export default function Onboarding() {
     }
     setIsSigningUp(true);
     try {
+      // Step 1: Create the account
       await base44.auth.register({ email: signupEmail, password: signupPassword });
-      // Registration succeeded — move to step 1 (business info)
+      // Step 2: Log in immediately (register does NOT auto-authenticate)
+      await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
+      // Authenticated — advance to business info
       setCurrentStep(1);
     } catch (e) {
       const msg = e?.message || "";
-      if (msg.toLowerCase().includes("already")) {
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
         setSignupError("An account with this email already exists. Sign in instead.");
       } else {
         setSignupError(msg || "Failed to create account. Please try again.");
