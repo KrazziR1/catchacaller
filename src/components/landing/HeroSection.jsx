@@ -2,8 +2,19 @@ import { motion } from "framer-motion";
 import { ArrowRight, PhoneMissed, MessageSquare, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { useEffect, useState } from "react";
 
 export default function HeroSection() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsLoggedIn).catch(() => {});
+  }, []);
+
+  const handleCTA = () => {
+    window.location.href = isLoggedIn ? '/dashboard' : '/onboarding';
+  };
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
       {/* Ambient glow */}
@@ -38,7 +49,7 @@ export default function HeroSection() {
             <Button
               size="lg"
               className="h-14 px-8 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
-              onClick={() => window.location.href = '/onboarding'}
+              onClick={handleCTA}
             >
               Start Your 7-Day Trial
               <ArrowRight className="ml-2 w-5 h-5" />

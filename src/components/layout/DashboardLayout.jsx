@@ -18,7 +18,11 @@ export default function DashboardLayout() {
     }).catch(() => setChecked(true));
   }, [navigate]);
 
-  if (!checked) return null;
+  if (!checked) return (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">

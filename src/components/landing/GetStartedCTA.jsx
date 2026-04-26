@@ -1,14 +1,20 @@
 import { motion } from "framer-motion";
-import { ArrowRight, PhoneCall } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useEffect, useState } from "react";
 
 export default function GetStartedCTA() {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsLoggedIn).catch(() => {});
+  }, []);
 
   const handleGetStarted = () => {
-    window.location.href = '/onboarding';
+    window.location.href = isLoggedIn ? '/dashboard' : '/onboarding';
   };
 
   return (

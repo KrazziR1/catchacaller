@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
+import { useEffect, useState } from "react";
 
 const plans = [
   {
@@ -59,8 +61,14 @@ const plans = [
 ];
 
 export default function Pricing() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsLoggedIn).catch(() => {});
+  }, []);
+
   const handleCheckout = (plan) => {
-    window.location.href = `/onboarding?plan=${encodeURIComponent(plan.name)}`;
+    window.location.href = isLoggedIn ? '/dashboard' : `/onboarding?plan=${encodeURIComponent(plan.name)}`;
   };
 
   return (
