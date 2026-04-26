@@ -55,122 +55,8 @@ export default function AddClientModal({ isOpen, onClose }) {
     mutationFn: async () => {
       setErrorMsg(null);
       if (!form.email || !form.business_name) throw new Error("Email and business name are required.");
-
-      // 1. Invite user — Base44 sends them a password-setup email
-      await base44.users.inviteUser(form.email, "user");
-
-      // 2. Create BusinessProfile
-      const trialDays = parseInt(form.trial_days) || 7;
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + trialDays);
-
-      await base44.asServiceRole.entities.BusinessProfile.create({
-        business_name: form.business_name,
-        industry: form.industry,
-        industry_description: form.industry === "other" ? form.industry_description : undefined,
-        phone_number: form.phone_number || null,
-        owner_phone_number: form.owner_phone_number || null,
-        booking_url: form.booking_url || null,
-        website: form.website || null,
-        facebook_url: form.facebook_url || null,
-        instagram_url: form.instagram_url || null,
-        google_business_url: form.google_business_url || null,
-        business_hours: form.business_hours,
-        ai_personality: form.ai_personality,
-        timezone: form.timezone,
-        auto_response_enabled: true,
-        email_notifications_enabled: true,
-        terms_accepted_at: new Date().toISOString(),
-        terms_version: "2026-04-25",
-        consent_acknowledged_at: new Date().toISOString(),
-        requires_manual_review: false,
-        is_high_risk_industry: false,
-      });
-
-      // 3. Create trial subscription — no Stripe, no credit card required
-      await base44.asServiceRole.entities.Subscription.create({
-        user_email: form.email,
-        stripe_subscription_id: `admin_provisioned_${Date.now()}`,
-        status: "trial",
-        plan_name: form.plan_name === "Trial" ? "Starter" : form.plan_name,
-        trial_end_date: trialEnd.toISOString(),
-        current_period_end: trialEnd.toISOString(),
-      });
-
-      // 4. Send branded welcome email
-      const planLabel = form.plan_name === "Trial"
-        ? `${trialDays}-Day Free Trial`
-        : `${form.plan_name} (${trialDays}-day trial)`;
-
-      await base44.integrations.Core.SendEmail({
-        to: form.email,
-        from_name: "CatchACaller",
-        subject: `Your CatchACaller account is ready — ${form.business_name}`,
-        body: `
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
-  <div style="background:linear-gradient(135deg,#3b82f6 0%,#10b981 100%);padding:40px 32px;text-align:center;">
-    <div style="font-size:40px;margin-bottom:12px;">📞</div>
-    <h1 style="color:white;margin:0;font-size:24px;font-weight:800;">Welcome to CatchACaller!</h1>
-    <p style="color:rgba(255,255,255,0.85);margin:8px 0 0 0;font-size:15px;">${form.business_name} is ready to capture missed calls</p>
-  </div>
-  <div style="padding:36px 32px;">
-    <p style="font-size:16px;color:#1e293b;margin:0 0 20px 0;">Hi there,</p>
-    <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px 0;">
-      Your CatchACaller account has been set up on the <strong>${planLabel}</strong>. Follow the two steps below to access your dashboard — no credit card needed until your trial ends.
-    </p>
-
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:24px;margin-bottom:28px;">
-      <p style="margin:0 0 16px 0;font-size:15px;font-weight:700;color:#1d4ed8;">⚡ How to get started:</p>
-      <div style="display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;">
-        <div style="background:#3b82f6;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">1</div>
-        <div>
-          <p style="margin:0 0 4px 0;font-weight:600;color:#1e3a8a;font-size:14px;">Check your inbox for a separate "You've been invited" email</p>
-          <p style="margin:0;color:#3b82f6;font-size:13px;">Click <strong>"Access app"</strong> in that email to set your password and create your account.</p>
-          <p style="margin:6px 0 0 0;color:#64748b;font-size:12px;">📌 Your username / login email is: <strong style="color:#1e293b;">${form.email}</strong></p>
-        </div>
-      </div>
-      <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="background:#3b82f6;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">2</div>
-        <div>
-          <p style="margin:0 0 4px 0;font-weight:600;color:#1e3a8a;font-size:14px;">Once logged in, go straight to your dashboard</p>
-          <p style="margin:0;color:#3b82f6;font-size:13px;">Everything is pre-configured and ready to go.</p>
-        </div>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-bottom:28px;">
-      <a href="https://catchacaller.com/dashboard" style="display:inline-block;background:#3b82f6;color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">Go to My Dashboard →</a>
-    </div>
-
-    <div style="background:#f8fafc;border-radius:10px;padding:16px 20px;margin-bottom:20px;font-size:13px;">
-      <strong style="color:#475569;">Your account details:</strong>
-      <div style="margin-top:8px;color:#64748b;">
-        <div>📧 Login email: <strong style="color:#1e293b;">${form.email}</strong></div>
-        <div style="margin-top:4px;">🏢 Business: <strong style="color:#1e293b;">${form.business_name}</strong></div>
-        <div style="margin-top:4px;">📋 Plan: <strong style="color:#1e293b;">${planLabel}</strong></div>
-        ${form.phone_number ? `<div style="margin-top:4px;">📞 Business phone: <strong style="color:#1e293b;">${form.phone_number}</strong></div>` : ""}
-      </div>
-    </div>
-
-    <p style="color:#94a3b8;font-size:13px;margin:0;">Questions? Reply to this email — we respond personally.</p>
-    <p style="color:#94a3b8;font-size:13px;margin:4px 0 0 0;">— The CatchACaller Team</p>
-  </div>
-  <div style="background:#f8fafc;padding:14px 32px;text-align:center;border-top:1px solid #e2e8f0;">
-    <p style="margin:0;color:#94a3b8;font-size:12px;">© 2026 CatchACaller · <a href="https://catchacaller.com/privacy" style="color:#94a3b8;">Privacy</a></p>
-  </div>
-</div>
-        `,
-      });
-
-      // 5. Log the action
-      const me = await base44.auth.me();
-      await base44.asServiceRole.entities.AdminAuditLog.create({
-        admin_email: me.email,
-        action: "account_approved",
-        target_email: form.email,
-        target_business: form.business_name,
-        reason: `Admin-provisioned. Plan: ${form.plan_name}, Trial: ${form.trial_days} days`,
-      });
+      const res = await base44.functions.invoke("adminProvisionClient", { ...form });
+      if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
@@ -191,6 +77,8 @@ export default function AddClientModal({ isOpen, onClose }) {
     onClose();
   };
 
+  const isValid = form.email && form.business_name && (form.industry !== "other" || form.industry_description);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -209,7 +97,7 @@ export default function AddClientModal({ isOpen, onClose }) {
             <div>
               <h3 className="text-lg font-bold">Client Provisioned!</h3>
               <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                <strong>{form.email}</strong> has been invited and their dashboard is pre-configured. They'll receive two emails: one to set their password, and one welcome email with their login details.
+                <strong>{form.email}</strong> has been invited and their dashboard is pre-configured. They'll receive two emails: one to set their password, and one branded welcome email from CatchACaller.
               </p>
             </div>
             <Button onClick={handleClose} className="w-full rounded-xl">Done</Button>
@@ -217,10 +105,9 @@ export default function AddClientModal({ isOpen, onClose }) {
         ) : (
           <div className="space-y-4 mt-2">
             <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
-              Fill in the client's info. They'll receive two emails: one from the platform to set their password, and one branded welcome email from CatchACaller.
+              Fill in the client's info. They'll receive <strong>two emails</strong>: one from the platform to set their password, and one branded welcome email from CatchACaller with login instructions.
             </div>
 
-            {/* Error message */}
             {errorMsg && (
               <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-2 text-sm">
                 <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
@@ -228,7 +115,7 @@ export default function AddClientModal({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* Required */}
+            {/* Required fields */}
             <div>
               <Label>Client Email *</Label>
               <Input value={form.email} onChange={e => set("email", e.target.value)}
@@ -240,7 +127,7 @@ export default function AddClientModal({ isOpen, onClose }) {
                 placeholder="Acme HVAC Services" className="mt-1.5 h-11 rounded-xl" />
             </div>
 
-            {/* Industry + Plan */}
+            {/* Industry + Plan side by side */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Industry</Label>
@@ -265,6 +152,16 @@ export default function AddClientModal({ isOpen, onClose }) {
               </div>
             </div>
 
+            {/* Industry description — directly below Industry/Plan when Other selected */}
+            {form.industry === "other" && (
+              <div>
+                <Label>Describe Their Services *</Label>
+                <Input value={form.industry_description} onChange={e => set("industry_description", e.target.value)}
+                  placeholder="e.g., Consulting, Home Renovation, Pet Grooming"
+                  className="mt-1.5 h-11 rounded-xl" />
+              </div>
+            )}
+
             {/* Trial days */}
             <div>
               <Label>Trial Duration (days)</Label>
@@ -275,16 +172,6 @@ export default function AddClientModal({ isOpen, onClose }) {
                 Full access free for this many days — no credit card required until trial expires.
               </p>
             </div>
-
-            {/* Other industry description */}
-            {form.industry === "other" && (
-              <div>
-                <Label>Describe Their Services *</Label>
-                <Input value={form.industry_description} onChange={e => set("industry_description", e.target.value)}
-                  placeholder="e.g., Consulting, Home Renovation, Pet Grooming"
-                  className="mt-1.5 h-11 rounded-xl" />
-              </div>
-            )}
 
             {/* Phone numbers */}
             <div className="grid grid-cols-2 gap-3">
@@ -334,7 +221,7 @@ export default function AddClientModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Hours + AI */}
+            {/* Hours + AI Personality */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Business Hours</Label>
@@ -357,7 +244,7 @@ export default function AddClientModal({ isOpen, onClose }) {
               <Button variant="outline" onClick={handleClose} className="flex-1 rounded-xl h-11">Cancel</Button>
               <Button
                 onClick={() => provisionMutation.mutate()}
-                disabled={provisionMutation.isPending || !form.email || !form.business_name || (form.industry === "other" && !form.industry_description)}
+                disabled={provisionMutation.isPending || !isValid}
                 className="flex-1 rounded-xl h-11"
               >
                 {provisionMutation.isPending ? (

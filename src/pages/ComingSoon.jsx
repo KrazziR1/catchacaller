@@ -8,11 +8,25 @@ import { base44 } from "@/api/base44Client";
 export default function ComingSoon() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [alreadyOnList, setAlreadyOnList] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleWaitlist = async () => {
-    if (!email || submitted) return;
-    // Save to waitlist (non-blocking)
+    if (!email || submitted || loading) return;
+    setLoading(true);
+
+    // Check for duplicate
+    const existing = await base44.entities.WaitlistEntry.filter({ email }).catch(() => []);
+    if (existing.length > 0) {
+      setAlreadyOnList(true);
+      setSubmitted(true);
+      setLoading(false);
+      return;
+    }
+
+    // Save to waitlist
     base44.entities.WaitlistEntry.create({ email }).catch(() => {});
+
     // Send confirmation email
     try {
       await base44.integrations.Core.SendEmail({
@@ -64,6 +78,7 @@ export default function ComingSoon() {
       // non-blocking
     }
     setSubmitted(true);
+    setLoading(false);
   };
 
   return (
@@ -90,31 +105,49 @@ export default function ComingSoon() {
         </p>
 
         {submitted ? (
-          <div className="p-5 rounded-2xl bg-accent/10 border border-accent/20">
-            <p className="font-semibold text-accent">You're on the list!</p>
-            <p className="text-sm text-muted-foreground mt-1">We'll be in touch shortly.</p>
+          <div className="p-5 rounded-2xl bg-accent/10 border border-accent/20 space-y-1">
+            {alreadyOnList ? (
+              <>
+                <p className="font-semibold text-accent">You're already on the list! 🎉</p>
+                <p className="text-sm text-muted-foreground">We already have your email — we'll be in touch personally when your spot is ready.</p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-accent">You're on the list!</p>
+                <p className="text-sm text-muted-foreground">Check your inbox — we just sent you a confirmation email. We'll reach out personally when your spot is ready.</p>
+              </>
+            )}
           </div>
         ) : (
-          <div className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleWaitlist()}
-              className="h-12 rounded-xl"
-            />
-            <Button onClick={handleWaitlist} className="h-12 px-6 rounded-xl font-semibold whitespace-nowrap">
-              Notify Me
-            </Button>
-          </div>
+          <>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleWaitlist()}
+                className="h-12 rounded-xl"
+                disabled={loading}
+              />
+              <Button onClick={handleWaitlist} disabled={loading} className="h-12 px-6 rounded-xl font-semibold whitespace-nowrap">
+                {loading ? "Saving..." : "Notify Me"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              You'll receive a confirmation email immediately, plus a personal follow-up from our team when your spot opens.
+            </p>
+          </>
         )}
 
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-2">
-          <Mail className="w-4 h-4" />
-          <a href="mailto:contact@catchacaller.com" className="hover:text-foreground transition-colors">
-            contact@catchacaller.com
-          </a>
+        <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground pt-2">
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            <a href="mailto:contact@catchacaller.com" className="hover:text-foreground transition-colors font-medium">
+              contact@catchacaller.com
+            </a>
+          </div>
+          <p className="text-xs text-center">Need help or have questions? Email us and we'll be in touch.</p>
         </div>
 
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
