@@ -360,27 +360,15 @@ export default function Onboarding() {
                   <div className="p-5 rounded-xl bg-primary/5 border border-primary/20 text-center">
                     <p className="text-sm font-semibold mb-1">Create your free account to get started</p>
                     <p className="text-xs text-muted-foreground">
-                      You'll be taken to a secure sign-up page, then returned here automatically to finish setup.
+                      Click below — on the next screen, click <strong>"Need an account? Sign up"</strong> to create your account. You'll return here automatically after signing up.
                     </p>
                   </div>
                   <Button
                     className="w-full h-12 rounded-xl font-semibold text-base"
-                    onClick={() => base44.auth.redirectToLogin("/onboarding", { signup: true })}
-                  >
-                    Create Account / Sign Up
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                  <div className="relative flex items-center gap-3">
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground">already have an account?</span>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full h-11 rounded-xl"
                     onClick={() => base44.auth.redirectToLogin("/onboarding")}
                   >
-                    Sign In
+                    Create Account / Sign In
+                    <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>
               )}

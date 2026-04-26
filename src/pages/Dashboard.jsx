@@ -42,13 +42,14 @@ export default function Dashboard() {
   useLeadNotifications();
 
   // Redirect to onboarding if no profile exists after loading
+  // Only redirect when: user is loaded, query has actually completed a fetch, and returned 0 results
   useEffect(() => {
-    if (user && !profileLoading && profiles.length === 0) {
+    if (user && user.role !== 'admin' && profileFetched && !profileLoading && profiles.length === 0) {
       navigate("/onboarding", { replace: true });
     }
-  }, [user, profileLoading, profiles.length, navigate]);
+  }, [user, profileLoading, profileFetched, profiles, navigate]);
 
-  const { data: profiles = [], isLoading: profileLoading } = useQuery({
+  const { data: profiles = [], isLoading: profileLoading, isFetched: profileFetched } = useQuery({
     queryKey: ["business-profile", user?.email],
     queryFn: () => base44.entities.BusinessProfile.list("-created_date", 1),
     enabled: !!user?.email && user?.role !== 'admin',
@@ -98,7 +99,16 @@ export default function Dashboard() {
     );
   }
 
-  // If no profile, redirect via useEffect (show loading)
+  // Show spinner while waiting for profile query to complete
+  if (!profileFetched || profileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If no profile found after query completed, show spinner while redirect fires
   if (profiles.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">

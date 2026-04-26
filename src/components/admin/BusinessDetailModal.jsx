@@ -93,25 +93,29 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
 
   const deleteBusinessMutation = useMutation({
     mutationFn: async (hardDelete) => {
-      try {
-        if (hardDelete) {
-          await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
-        } else {
-          await base44.asServiceRole.entities.AdminAuditLog.create({
-            admin_email: (await base44.auth.me()).email,
-            action: "account_rejected",
-            target_email: business.created_by,
-            target_business: business.business_name,
-            reason: "Soft deleted - disabled via admin panel",
-          });
-        }
-        queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
-        toast.success(hardDelete ? "Business deleted permanently" : "Business disabled");
-        setConfirmDelete(false);
-        onClose();
-      } catch (error) {
-        toast.error(error.message || "Failed to delete business");
+      if (hardDelete) {
+        // Delete business profile only — the user account remains so they can re-onboard if needed
+        await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
+      } else {
+        // Soft disable: just log it (no actual data deletion)
+        const me = await base44.auth.me();
+        await base44.asServiceRole.entities.AdminAuditLog.create({
+          admin_email: me.email,
+          action: "account_rejected",
+          target_email: business.created_by,
+          target_business: business.business_name,
+          reason: "Soft deleted - disabled via admin panel",
+        });
       }
+    },
+    onSuccess: (_, hardDelete) => {
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
+      toast.success(hardDelete ? "Business profile deleted. The user's login account still exists — they can re-onboard if needed." : "Business disabled (audit log created).");
+      setConfirmDelete(false);
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete business");
     },
   });
 
@@ -457,8 +461,8 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
             <div className="flex gap-2 items-start">
               <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-destructive">Delete Business Account</p>
-                <p className="text-xs text-destructive/80 mt-1">This action cannot be undone. Choose an option:</p>
+                <p className="text-sm font-semibold text-destructive">Delete Business Profile</p>
+                <p className="text-xs text-destructive/80 mt-1">This removes the business profile only. The user's login account remains — they can re-onboard if needed. Choose an option:</p>
               </div>
             </div>
             <div className="flex gap-2">
