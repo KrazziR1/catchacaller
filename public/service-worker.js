@@ -35,10 +35,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Cache API only supports GET — skip all other methods to avoid TypeError
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses
+        // Only cache valid, same-origin responses
+        if (!response || response.status !== 200 || response.type === 'opaque') {
+          return response;
+        }
         const cloned = response.clone();
         caches.open(CACHE_VERSION).then((cache) => {
           cache.put(event.request, cloned);
