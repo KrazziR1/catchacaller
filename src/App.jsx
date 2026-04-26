@@ -47,6 +47,7 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/compliance" element={<ComplianceDashboard />} />
           <Route path="/sales-resources" element={<SalesResources />} />
+          <Route path="/waitlist" element={<WaitlistAdmin />} />
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/missed-calls" element={<MissedCalls />} />
@@ -54,7 +55,7 @@ function App() {
             <Route path="/templates" element={<Templates />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/webhooks" element={<WebhookMonitor />} />
-            <Route path="/waitlist" element={<WaitlistAdmin />} />
+            
             <Route path="/reporting" element={<AdvancedReporting />} />
             <Route path="/calendar" element={<CalendarIntegration />} />
             <Route path="/compliance" element={<ComplianceAudit />} />

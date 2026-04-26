@@ -10,12 +10,9 @@ export default function ComingSoon() {
   const [submitted, setSubmitted] = useState(false);
 
   const handleWaitlist = async () => {
-    if (!email) return;
-    try {
-      await base44.entities.WaitlistEntry.create({ email });
-    } catch {
-      // still proceed
-    }
+    if (!email || submitted) return;
+    // Save to waitlist (non-blocking)
+    base44.entities.WaitlistEntry.create({ email }).catch(() => {});
     // Send confirmation email
     try {
       await base44.integrations.Core.SendEmail({
