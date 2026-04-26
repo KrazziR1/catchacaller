@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import LandingNav from "@/components/landing/LandingNav";
@@ -73,29 +73,60 @@ export default function Blog() {
     return (
       <div className="min-h-screen bg-background">
         <LandingNav />
-        <article className="max-w-3xl mx-auto px-6 py-12">
-          <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Blog
-          </Link>
 
-          <div className="space-y-6 mb-12">
-            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight">{post.title}</h1>
-
+        {/* Hero banner */}
+        <div className="bg-gradient-to-br from-primary/5 via-background to-accent/5 pt-28 pb-16 px-6">
+          <div className="max-w-3xl mx-auto">
+            <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Blog
+            </Link>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-4">
+              CatchACaller Blog
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight mb-6">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="w-3.5 h-3.5 text-primary" />
+                </div>
+                {post.author}
+              </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 {post.date}
               </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                {post.author}
-              </div>
             </div>
           </div>
+        </div>
 
-          <div className="prose prose-sm max-w-none mb-12 text-foreground">
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+        {/* Article body */}
+        <article className="max-w-3xl mx-auto px-6 py-12">
+          <div
+            className="space-y-6 text-foreground"
+            style={{
+              fontSize: '1.0625rem',
+              lineHeight: '1.8',
+            }}
+            dangerouslySetInnerHTML={{ __html: post.content
+              .replace(/<h2>/g, '<h2 class="text-2xl font-bold mt-10 mb-3 text-foreground">')
+              .replace(/<ul>/g, '<ul class="space-y-2 pl-5 list-none">')
+              .replace(/<li>/g, '<li class="flex gap-2 items-start"><span class="mt-2 w-1.5 h-1.5 rounded-full bg-accent shrink-0"></span><span>')
+              .replace(/<\/li>/g, '</span></li>')
+              .replace(/<p>/g, '<p class="text-muted-foreground leading-relaxed">')
+            }}
+          />
+
+          {/* CTA */}
+          <div className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/20 text-center">
+            <h3 className="text-2xl font-bold mb-2">Ready to stop losing leads?</h3>
+            <p className="text-muted-foreground mb-6">Start your 7-day trial for just $2.99. No commitment.</p>
+            <a
+              href="/onboarding"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition-opacity"
+            >
+              Start Free Trial <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
         </article>
         <Footer />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PhoneCall, Menu, X } from "lucide-react";
@@ -6,6 +6,11 @@ import { base44 } from "@/api/base44Client";
 
 export default function LandingNav() {
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => setUser(null));
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -24,10 +29,24 @@ export default function LandingNav() {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => base44.auth.redirectToLogin("/dashboard")}>Log In</Button>
-          <Link to="/onboarding">
-            <Button size="sm" className="rounded-lg font-semibold">Start Free Trial</Button>
-          </Link>
+          {user ? (
+            user.role === 'admin' ? (
+              <Link to="/admin">
+                <Button size="sm" className="rounded-lg font-semibold">Admin Panel</Button>
+              </Link>
+            ) : (
+              <Link to="/dashboard">
+                <Button size="sm" className="rounded-lg font-semibold">Dashboard</Button>
+              </Link>
+            )
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => base44.auth.redirectToLogin("/dashboard")}>Log In</Button>
+              <Link to="/onboarding">
+                <Button size="sm" className="rounded-lg font-semibold">Start Free Trial</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <button className="md:hidden" onClick={() => setOpen(!open)}>
@@ -40,9 +59,21 @@ export default function LandingNav() {
           <a href="#features" className="block text-sm" onClick={() => setOpen(false)}>Features</a>
           <a href="#pricing" className="block text-sm" onClick={() => setOpen(false)}>Pricing</a>
           <a href="#how-it-works" className="block text-sm" onClick={() => setOpen(false)}>How It Works</a>
-          <Link to="/onboarding" onClick={() => setOpen(false)}>
-            <Button className="w-full mt-2">Start Free Trial</Button>
-          </Link>
+          {user ? (
+            user.role === 'admin' ? (
+              <Link to="/admin" onClick={() => setOpen(false)}>
+                <Button className="w-full mt-2">Admin Panel</Button>
+              </Link>
+            ) : (
+              <Link to="/dashboard" onClick={() => setOpen(false)}>
+                <Button className="w-full mt-2">Dashboard</Button>
+              </Link>
+            )
+          ) : (
+            <Link to="/onboarding" onClick={() => setOpen(false)}>
+              <Button className="w-full mt-2">Start Free Trial</Button>
+            </Link>
+          )}
         </div>
       )}
     </nav>

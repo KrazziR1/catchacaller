@@ -8,13 +8,7 @@ export default function GetStartedCTA() {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    base44.auth.isAuthenticated().then((isAuthed) => {
-      if (isAuthed) {
-        navigate("/onboarding");
-      } else {
-        base44.auth.redirectToLogin("/onboarding");
-      }
-    });
+    window.location.href = '/onboarding';
   };
 
   return (

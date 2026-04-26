@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowRight, Loader2 } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
 
 const plans = [
   {
@@ -61,20 +59,8 @@ const plans = [
 ];
 
 export default function Pricing() {
-  const [loadingPlan, setLoadingPlan] = useState(null);
-
-  const handleCheckout = async (plan) => {
-    setLoadingPlan(plan.name);
-    const isAuthed = await base44.auth.isAuthenticated();
-    if (!isAuthed) {
-      base44.auth.redirectToLogin("/#pricing");
-      return;
-    }
-    const res = await base44.functions.invoke("createCheckoutSession", { priceId: plan.priceId });
-    if (res.data?.url) {
-      window.location.href = res.data.url;
-    }
-    setLoadingPlan(null);
+  const handleCheckout = (plan) => {
+    window.location.href = `/onboarding?plan=${encodeURIComponent(plan.name)}`;
   };
 
   return (
@@ -133,20 +119,13 @@ export default function Pricing() {
               </ul>
               <Button
                 onClick={() => handleCheckout(plan)}
-                disabled={loadingPlan !== null}
                 className={`w-full h-12 rounded-xl font-semibold ${
                   plan.highlighted ? "shadow-lg shadow-primary/25" : ""
                 }`}
                 variant={plan.highlighted ? "default" : "outline"}
               >
-                {loadingPlan === plan.name ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    {plan.cta}
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </>
-                )}
+                {plan.cta}
+                <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </motion.div>
           ))}

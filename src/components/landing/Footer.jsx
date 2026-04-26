@@ -1,5 +1,13 @@
 import { PhoneCall } from "lucide-react";
 
+const scrollTo = (id) => {
+  if (window.location.pathname !== '/') {
+    window.location.href = `/#${id}`;
+    return;
+  }
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+};
+
 export default function Footer() {
   return (
     <footer className="py-16 bg-card border-t border-border">
@@ -20,16 +28,16 @@ export default function Footer() {
             <div>
               <h4 className="font-semibold mb-3">Product</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#features" onClick={(e) => { e.preventDefault(); document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Features</a></li>
-                <li><a href="#pricing" onClick={(e) => { e.preventDefault(); document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Pricing</a></li>
-                <li><a href="#integrations" onClick={(e) => { e.preventDefault(); document.querySelector('#integrations')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Integrations</a></li>
+                <li><a href="/#features" onClick={(e) => { e.preventDefault(); scrollTo('features'); }} className="hover:text-foreground transition-colors cursor-pointer">Features</a></li>
+                <li><a href="/#pricing" onClick={(e) => { e.preventDefault(); scrollTo('pricing'); }} className="hover:text-foreground transition-colors cursor-pointer">Pricing</a></li>
+                <li><a href="/#integrations" onClick={(e) => { e.preventDefault(); scrollTo('integrations'); }} className="hover:text-foreground transition-colors cursor-pointer">Integrations</a></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-3">Company</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#contact" onClick={(e) => { e.preventDefault(); document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">Contact</a></li>
-                <li><a href="#faq" onClick={(e) => { e.preventDefault(); document.querySelector('#faq')?.scrollIntoView({ behavior: 'smooth' }); }} className="hover:text-foreground transition-colors cursor-pointer">FAQ</a></li>
+                <li><a href="/#contact" onClick={(e) => { e.preventDefault(); scrollTo('contact'); }} className="hover:text-foreground transition-colors cursor-pointer">Contact</a></li>
+                <li><a href="/#faq" onClick={(e) => { e.preventDefault(); scrollTo('faq'); }} className="hover:text-foreground transition-colors cursor-pointer">FAQ</a></li>
                 <li><a href="/blog" className="hover:text-foreground transition-colors">Blog</a></li>
               </ul>
             </div>
@@ -41,6 +49,7 @@ export default function Footer() {
                 <li><a href="/sms-policy" className="hover:text-foreground transition-colors">SMS Policy</a></li>
                 <li><a href="/dpa" className="hover:text-foreground transition-colors">Data Processing Agreement</a></li>
                 <li><a href="/unsubscribe" className="hover:text-foreground transition-colors">Email Unsubscribe</a></li>
+                <li><a href="/unsubscribe?tab=sms" className="hover:text-foreground transition-colors">SMS Opt-Out</a></li>
               </ul>
             </div>
           </div>

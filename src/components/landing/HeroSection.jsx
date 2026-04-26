@@ -38,7 +38,7 @@ export default function HeroSection() {
             <Button
               size="lg"
               className="h-14 px-8 text-base font-semibold rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
-              onClick={() => base44.auth.redirectToLogin("/onboarding")}
+              onClick={() => window.location.href = '/onboarding'}
             >
               Start Your 7-Day Trial
               <ArrowRight className="ml-2 w-5 h-5" />
