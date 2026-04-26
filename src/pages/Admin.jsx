@@ -14,6 +14,7 @@ import TopNav from "@/components/layout/TopNav";
 import PaginationControls from "@/components/admin/PaginationControls";
 import BulkAccountActions from "@/components/admin/BulkAccountActions";
 import ManualReviewQueue from "@/components/admin/ManualReviewQueue";
+import DeletedAccountsQueue from "@/components/admin/DeletedAccountsQueue";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -166,6 +167,9 @@ export default function Admin() {
             </Button>
           </div>
         </div>
+
+        {/* Deleted Account Reviews */}
+        <DeletedAccountsQueue />
 
         {/* Compliance Review Queue */}
         <ManualReviewQueue businesses={businesses} />

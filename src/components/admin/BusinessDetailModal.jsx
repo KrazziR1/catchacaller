@@ -7,13 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Phone, Globe, Calendar, Zap, Users, MessageSquare, Copy, Check, AlertCircle, PhoneCall, Shield, Mail, Trash2, AlertTriangle, Edit2, Save } from "lucide-react";
+import { Calendar, Zap, Users, MessageSquare, Check, AlertCircle, Shield, Trash2, AlertTriangle, Edit2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function BusinessDetailModal({ business, isOpen, onClose }) {
   const [copied, setCopied] = useState(null);
-  const [deleteMode, setDeleteMode] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [businessName, setBusinessName] = useState(business?.business_name || "");
   const [editData, setEditData] = useState({
@@ -92,26 +92,44 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
   });
 
   const deleteBusinessMutation = useMutation({
-    mutationFn: async (hardDelete) => {
-      if (hardDelete) {
-        // Delete business profile only — the user account remains so they can re-onboard if needed
-        await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
-      } else {
-        // Soft disable: just log it (no actual data deletion)
-        const me = await base44.auth.me();
-        await base44.asServiceRole.entities.AdminAuditLog.create({
-          admin_email: me.email,
-          action: "account_rejected",
-          target_email: business.created_by,
-          target_business: business.business_name,
-          reason: "Soft deleted - disabled via admin panel",
-        });
-      }
+    mutationFn: async () => {
+      const me = await base44.auth.me();
+      // Always log with full snapshot before deleting
+      await base44.asServiceRole.entities.AdminAuditLog.create({
+        admin_email: me.email,
+        action: "account_deleted",
+        target_email: business.created_by,
+        target_business: business.business_name,
+        reason: deleteReason.trim() || "No reason provided",
+        review_status: "pending",
+        original_business_snapshot: {
+          business_name: business.business_name,
+          industry: business.industry,
+          industry_description: business.industry_description || null,
+          phone_number: business.phone_number || null,
+          owner_phone_number: business.owner_phone_number || null,
+          booking_url: business.booking_url || null,
+          website: business.website || null,
+          timezone: business.timezone || null,
+          business_hours: business.business_hours || null,
+          ai_personality: business.ai_personality || null,
+          auto_response_enabled: business.auto_response_enabled ?? true,
+          is_high_risk_industry: business.is_high_risk_industry ?? false,
+          requires_manual_review: business.requires_manual_review ?? false,
+          terms_accepted_at: business.terms_accepted_at || null,
+          consent_acknowledged_at: business.consent_acknowledged_at || null,
+          created_date: business.created_date || null,
+        },
+      });
+      // Delete the profile — user account stays intact for re-review
+      await base44.asServiceRole.entities.BusinessProfile.delete(business.id);
     },
-    onSuccess: (_, hardDelete) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
-      toast.success(hardDelete ? "Business profile deleted. The user's login account still exists — they can re-onboard if needed." : "Business disabled (audit log created).");
+      queryClient.invalidateQueries({ queryKey: ["deleted-accounts-queue"] });
+      toast.success("Business profile deleted. User can request reinstatement — their login account is intact.");
       setConfirmDelete(false);
+      setDeleteReason("");
       onClose();
     },
     onError: (error) => {
@@ -462,38 +480,31 @@ export default function BusinessDetailModal({ business, isOpen, onClose }) {
               <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-destructive">Delete Business Profile</p>
-                <p className="text-xs text-destructive/80 mt-1">This removes the business profile only. The user's login account remains — they can re-onboard if needed. Choose an option:</p>
+                <p className="text-xs text-destructive/80 mt-1">
+                  This removes the business profile and logs a deletion record. The user's login account remains — they can request reinstatement via the dashboard.
+                </p>
               </div>
             </div>
+            <div>
+              <label className="text-xs font-semibold block mb-1.5 text-destructive">Reason for deletion (required)</label>
+              <textarea
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="e.g., Violated terms of service, high-risk industry, user requested cancellation..."
+                className="w-full h-20 px-3 py-2 text-sm rounded-lg border border-destructive/30 bg-background resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setConfirmDelete(false)}
-              >
+              <Button size="sm" variant="outline" onClick={() => { setConfirmDelete(false); setDeleteReason(""); }}>
                 Cancel
               </Button>
               <Button
                 size="sm"
-                className="bg-orange-600 hover:bg-orange-700"
-                onClick={() => {
-                  setDeleteMode("soft");
-                  deleteBusinessMutation.mutate(false);
-                }}
-                disabled={deleteBusinessMutation.isPending}
-              >
-                Disable Only (Keep Data)
-              </Button>
-              <Button
-                size="sm"
                 variant="destructive"
-                onClick={() => {
-                  setDeleteMode("hard");
-                  deleteBusinessMutation.mutate(true);
-                }}
-                disabled={deleteBusinessMutation.isPending}
+                onClick={() => deleteBusinessMutation.mutate()}
+                disabled={deleteBusinessMutation.isPending || !deleteReason.trim()}
               >
-                Delete Permanently
+                {deleteBusinessMutation.isPending ? "Deleting..." : "Confirm Delete"}
               </Button>
             </div>
           </div>

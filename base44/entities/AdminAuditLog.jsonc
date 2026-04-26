@@ -10,7 +10,9 @@
       "type": "string",
       "enum": [
         "account_approved",
-        "account_rejected"
+        "account_rejected",
+        "account_deleted",
+        "account_suspended"
       ],
       "description": "Type of action taken"
     },
@@ -24,12 +26,90 @@
     },
     "reason": {
       "type": "string",
-      "description": "Reason for the action"
+      "description": "Reason for the action (entered by admin)"
     },
     "refund_issued": {
       "type": "boolean",
       "default": false,
       "description": "Whether a refund was issued"
+    },
+    "original_business_snapshot": {
+      "type": "object",
+      "description": "Full snapshot of the BusinessProfile at time of deletion",
+      "properties": {
+        "business_name": {
+          "type": "string"
+        },
+        "industry": {
+          "type": "string"
+        },
+        "industry_description": {
+          "type": "string"
+        },
+        "phone_number": {
+          "type": "string"
+        },
+        "owner_phone_number": {
+          "type": "string"
+        },
+        "booking_url": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "business_hours": {
+          "type": "string"
+        },
+        "ai_personality": {
+          "type": "string"
+        },
+        "auto_response_enabled": {
+          "type": "boolean"
+        },
+        "is_high_risk_industry": {
+          "type": "boolean"
+        },
+        "requires_manual_review": {
+          "type": "boolean"
+        },
+        "terms_accepted_at": {
+          "type": "string"
+        },
+        "consent_acknowledged_at": {
+          "type": "string"
+        },
+        "created_date": {
+          "type": "string"
+        }
+      }
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "reviewed",
+        "reinstated",
+        "permanently_closed"
+      ],
+      "default": "pending",
+      "description": "Status of admin review for deleted accounts"
+    },
+    "review_note": {
+      "type": "string",
+      "description": "Internal note added during admin review"
+    },
+    "user_requested_review": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the affected user submitted a review request"
+    },
+    "user_review_message": {
+      "type": "string",
+      "description": "Optional message from the user when requesting review"
     }
   },
   "required": [

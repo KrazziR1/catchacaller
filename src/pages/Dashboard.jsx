@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import AccountUnderReview from "@/components/dashboard/AccountUnderReview";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import useLeadNotifications from "@/hooks/useLeadNotifications";
@@ -41,13 +42,12 @@ export default function Dashboard() {
   // Enable polling for new lead notifications
   useLeadNotifications();
 
-  // Redirect to onboarding if no profile exists after loading
-  // Only redirect when: user is loaded, query has actually completed a fetch, and returned 0 results
+  // Redirect to onboarding only if no profile AND no deletion audit log
   useEffect(() => {
-    if (user && user.role !== 'admin' && profileFetched && !profileLoading && profiles.length === 0) {
+    if (user && user.role !== 'admin' && profileFetched && !profileLoading && profiles.length === 0 && auditLogFetched && !auditLogLoading && deletionLog.length === 0) {
       navigate("/onboarding", { replace: true });
     }
-  }, [user, profileLoading, profileFetched, profiles, navigate]);
+  }, [user, profileLoading, profileFetched, profiles, auditLogFetched, auditLogLoading, deletionLog, navigate]);
 
   const { data: profiles = [], isLoading: profileLoading, isFetched: profileFetched } = useQuery({
     queryKey: ["business-profile", user?.email],
@@ -56,6 +56,19 @@ export default function Dashboard() {
     staleTime: 0,
     gcTime: 0,
     retry: 2,
+  });
+
+  // Check if account was deleted (so we can show review screen instead of redirecting to onboarding)
+  const { data: deletionLog = [], isLoading: auditLogLoading, isFetched: auditLogFetched } = useQuery({
+    queryKey: ["deletion-audit-log", user?.email],
+    queryFn: () =>
+      base44.asServiceRole.entities.AdminAuditLog.filter({
+        target_email: user.email,
+        action: "account_deleted",
+      }, "-created_date", 1),
+    enabled: !!user?.email && user?.role !== 'admin' && profileFetched && profiles.length === 0,
+    staleTime: 30 * 1000,
+    retry: 1,
   });
 
   const { data: subscriptions = [] } = useQuery({
@@ -108,8 +121,21 @@ export default function Dashboard() {
     );
   }
 
-  // If no profile found after query completed, show spinner while redirect fires
+  // No profile — check if this is a deleted account before redirecting
   if (profiles.length === 0) {
+    // Still loading deletion check
+    if (!auditLogFetched || auditLogLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        </div>
+      );
+    }
+    // Account was deleted — show review screen instead of redirecting
+    if (deletionLog.length > 0) {
+      return <AccountUnderReview user={user} auditLog={deletionLog[0]} />;
+    }
+    // No profile, no deletion log → redirect to onboarding (handled by useEffect, show spinner)
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
