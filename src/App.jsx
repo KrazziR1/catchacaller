@@ -4,7 +4,6 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import Landing from '@/pages/Landing';
 import Dashboard from '@/pages/Dashboard';
@@ -30,6 +29,7 @@ import CalendarIntegration from '@/pages/CalendarIntegration';
 import ComplianceAudit from '@/pages/ComplianceAudit';
 import ComplianceDashboard from '@/pages/ComplianceDashboard';
 import SalesResources from '@/pages/SalesResources';
+import ComingSoon from '@/pages/ComingSoon';
 
 
 function App() {
@@ -66,6 +66,7 @@ function App() {
           <Route path="/dpa" element={<DPA />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<Blog />} />
+          <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Router>

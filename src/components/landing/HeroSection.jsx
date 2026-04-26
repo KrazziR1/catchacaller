@@ -12,7 +12,7 @@ export default function HeroSection() {
   }, []);
 
   const handleCTA = () => {
-    window.location.href = isLoggedIn ? '/dashboard' : '/onboarding';
+    window.location.href = isLoggedIn ? '/dashboard' : '/coming-soon';
   };
 
   return (

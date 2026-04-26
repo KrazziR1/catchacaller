@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen, PhoneCall } from "lucide-react";
+import { BarChart3, Building2, Users, DollarSign, TrendingUp, Search, Loader2, CheckCircle2, Clock, Filter, ArrowLeft, BookOpen, PhoneCall, UserPlus } from "lucide-react";
 import BusinessDetailModal from "@/components/admin/BusinessDetailModal";
 import ColdCallDashboard from "@/components/coldcalls/ColdCallDashboard";
 import TopNav from "@/components/layout/TopNav";
@@ -15,6 +15,7 @@ import PaginationControls from "@/components/admin/PaginationControls";
 import BulkAccountActions from "@/components/admin/BulkAccountActions";
 import ManualReviewQueue from "@/components/admin/ManualReviewQueue";
 import DeletedAccountsQueue from "@/components/admin/DeletedAccountsQueue";
+import AddClientModal from "@/components/admin/AddClientModal";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function Admin() {
   const [adminView, setAdminView] = useState("businesses"); // businesses or coldcalls
   const [page, setPage] = useState(0);
   const [selectedAccounts, setSelectedAccounts] = useState(new Set());
+  const [showAddClient, setShowAddClient] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then((u) => {
@@ -160,6 +162,10 @@ export default function Admin() {
             >
               <PhoneCall className="w-4 h-4" />
               Cold Calls
+            </Button>
+            <Button onClick={() => setShowAddClient(true)} className="gap-2">
+              <UserPlus className="w-4 h-4" />
+              Add New Client
             </Button>
             <Button variant="outline" onClick={() => navigate("/sales-resources")} className="gap-2">
               <BookOpen className="w-4 h-4" />
@@ -450,6 +456,10 @@ export default function Admin() {
           business={selectedBusiness}
           isOpen={!!selectedBusiness}
           onClose={() => setSelectedBusiness(null)}
+        />
+        <AddClientModal
+          isOpen={showAddClient}
+          onClose={() => setShowAddClient(false)}
         />
       </div>
       </div>

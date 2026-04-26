@@ -48,8 +48,8 @@ export default function LandingNav() {
           ) : (
             <>
               <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => base44.auth.redirectToLogin("/dashboard")}>Log In</Button>
-              <Link to="/onboarding">
-                <Button size="sm" className="rounded-lg font-semibold">Start Free Trial</Button>
+              <Link to="/coming-soon">
+                <Button size="sm" className="rounded-lg font-semibold">Get Started</Button>
               </Link>
             </>
           )}
@@ -81,8 +81,8 @@ export default function LandingNav() {
               </Button>
             </>
           ) : (
-            <Link to="/onboarding" onClick={() => setOpen(false)}>
-              <Button className="w-full mt-2">Start Free Trial</Button>
+            <Link to="/coming-soon" onClick={() => setOpen(false)}>
+              <Button className="w-full mt-2">Get Started</Button>
             </Link>
           )}
         </div>

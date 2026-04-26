@@ -14,7 +14,7 @@ export default function GetStartedCTA() {
   }, []);
 
   const handleGetStarted = () => {
-    window.location.href = isLoggedIn ? '/dashboard' : '/onboarding';
+    window.location.href = isLoggedIn ? '/dashboard' : '/coming-soon';
   };
 
   return (

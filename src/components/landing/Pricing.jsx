@@ -68,7 +68,7 @@ export default function Pricing() {
   }, []);
 
   const handleCheckout = (plan) => {
-    window.location.href = isLoggedIn ? '/dashboard' : `/onboarding?plan=${encodeURIComponent(plan.name)}`;
+    window.location.href = isLoggedIn ? '/dashboard' : '/coming-soon';
   };
 
   return (

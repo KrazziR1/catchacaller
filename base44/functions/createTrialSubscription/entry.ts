@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       trial_end_date: trialEndDate.toISOString(),
     });
   } catch (error) {
-    console.error(`Trial creation error for ${user.email}:`, error.message);
+    console.error('Trial creation error:', error.message);
     return Response.json({ error: 'Failed to create trial subscription' }, { status: 500 });
   }
 });
