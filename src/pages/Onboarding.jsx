@@ -157,7 +157,7 @@ export default function Onboarding() {
 
 
   const isStepValid = () => {
-    if (currentStep === 0) return !!signupEmail && signupPassword.length >= 8 && signupPassword === signupConfirmPassword;
+    if (currentStep === 0) return true; // Step 0 is handled by direct redirect buttons
     if (currentStep === 1) return !!form.business_name && smsComplianceAgreed && (form.industry !== 'other' || !!form.industry_description);
     if (currentStep === 2) {
       // Owner's cell is REQUIRED
@@ -213,7 +213,7 @@ export default function Onboarding() {
 
   const next = () => {
     if (currentStep === 0) {
-      handleSignup();
+      base44.auth.redirectToLogin("/onboarding", { signup: true });
       return;
     }
     if (currentStep === 4) {
@@ -354,68 +354,35 @@ export default function Onboarding() {
             {/* Step content */}
             <div className="space-y-4">
 
-              {/* STEP 0: Sign Up */}
+              {/* STEP 0: Sign Up / Sign In */}
               {currentStep === 0 && (
-                <>
-                  <div>
-                    <Label>Email Address</Label>
-                    <Input
-                      type="email"
-                      value={signupEmail}
-                      onChange={(e) => { setSignupEmail(e.target.value); setSignupError(null); }}
-                      placeholder="you@company.com"
-                      className="mt-1.5 h-12 rounded-xl"
-                      autoFocus
-                    />
+                <div className="space-y-4">
+                  <div className="p-5 rounded-xl bg-primary/5 border border-primary/20 text-center">
+                    <p className="text-sm font-semibold mb-1">Create your free account to get started</p>
+                    <p className="text-xs text-muted-foreground">
+                      You'll be taken to a secure sign-up page, then returned here automatically to finish setup.
+                    </p>
                   </div>
-                  <div>
-                    <Label>Password</Label>
-                    <Input
-                      type="password"
-                      value={signupPassword}
-                      onChange={(e) => { setSignupPassword(e.target.value); setSignupError(null); }}
-                      placeholder="Create a strong password"
-                      className="mt-1.5 h-12 rounded-xl"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1.5">At least 8 characters</p>
+                  <Button
+                    className="w-full h-12 rounded-xl font-semibold text-base"
+                    onClick={() => base44.auth.redirectToLogin("/onboarding", { signup: true })}
+                  >
+                    Create Account / Sign Up
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground">already have an account?</span>
+                    <div className="flex-1 h-px bg-border" />
                   </div>
-                  <div>
-                    <Label>Confirm Password</Label>
-                    <Input
-                      type="password"
-                      value={signupConfirmPassword}
-                      onChange={(e) => { setSignupConfirmPassword(e.target.value); setSignupError(null); }}
-                      placeholder="Re-enter your password"
-                      className="mt-1.5 h-12 rounded-xl"
-                    />
-                  </div>
-                  {signupError && (
-                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex gap-3">
-                      <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-blue-900">Looks like you already have an account!</p>
-                        <p className="text-xs text-blue-800 mt-1">
-                          That email is already registered. Would you like to sign in instead?
-                        </p>
-                        <button
-                          onClick={() => base44.auth.redirectToLogin("/onboarding")}
-                          className="mt-2 text-xs font-semibold text-primary underline hover:opacity-80"
-                        >
-                          Sign in to continue →
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-xs text-center text-muted-foreground">
-                    Already have an account?{" "}
-                    <button
-                      onClick={() => base44.auth.redirectToLogin("/onboarding")}
-                      className="text-primary font-semibold underline hover:opacity-80"
-                    >
-                      Sign in
-                    </button>
-                  </p>
-                </>
+                  <Button
+                    variant="outline"
+                    className="w-full h-11 rounded-xl"
+                    onClick={() => base44.auth.redirectToLogin("/onboarding")}
+                  >
+                    Sign In
+                  </Button>
+                </div>
               )}
 
               {/* STEP 1: Business Info */}
@@ -824,8 +791,8 @@ export default function Onboarding() {
                 disabled={currentStep === 0}
                 className="rounded-xl"
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+                {currentStep > 0 && <ArrowLeft className="w-4 h-4 mr-2" />}
+                {currentStep > 0 ? "Back" : ""}
               </Button>
               {currentStep === 4 && (
                 <Button
@@ -843,6 +810,8 @@ export default function Onboarding() {
                 >
                   Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
+              ) : currentStep === 0 ? (
+                <div /> // Step 0 has inline action buttons
               ) : (
                 <Button
                   onClick={next}

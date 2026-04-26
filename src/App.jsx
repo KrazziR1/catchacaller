@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import PageNotFound from './lib/PageNotFound';
+import { PhoneCall } from 'lucide-react';
 
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -32,7 +34,31 @@ import ComplianceAudit from '@/pages/ComplianceAudit';
 import ComplianceDashboard from '@/pages/ComplianceDashboard';
 import SalesResources from '@/pages/SalesResources';
 
+function AppLoadingScreen() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center animate-pulse">
+          <PhoneCall className="w-6 h-6 text-white" />
+        </div>
+        <p className="text-sm text-muted-foreground">Loading CatchACaller...</p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // Short defer to let CSS/fonts load before rendering routes
+    // This prevents the flash of raw Base44 schema content
+    const t = setTimeout(() => setReady(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!ready) return <AppLoadingScreen />;
+
   return (
     <QueryClientProvider client={queryClientInstance}>
       <Router>

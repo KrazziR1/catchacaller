@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PhoneCall, Menu, X } from "lucide-react";
+import { PhoneCall, Menu, X, LogOut } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function LandingNav() {
@@ -30,15 +30,21 @@ export default function LandingNav() {
 
         <div className="hidden md:flex items-center gap-2">
           {user ? (
-            user.role === 'admin' ? (
-              <Link to="/admin">
-                <Button size="sm" className="rounded-lg font-semibold">Admin Panel</Button>
-              </Link>
-            ) : (
-              <Link to="/dashboard">
-                <Button size="sm" className="rounded-lg font-semibold">Dashboard</Button>
-              </Link>
-            )
+            <>
+              <span className="text-xs text-muted-foreground hidden lg:inline">{user.email}</span>
+              {user.role === 'admin' ? (
+                <Link to="/admin">
+                  <Button size="sm" className="rounded-lg font-semibold">Admin Panel</Button>
+                </Link>
+              ) : (
+                <Link to="/dashboard">
+                  <Button size="sm" className="rounded-lg font-semibold">Dashboard</Button>
+                </Link>
+              )}
+              <Button variant="ghost" size="sm" className="rounded-lg gap-1.5" onClick={() => base44.auth.logout("/")}>
+                <LogOut className="w-3.5 h-3.5" /> Sign Out
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => base44.auth.redirectToLogin("/dashboard")}>Log In</Button>
@@ -60,15 +66,20 @@ export default function LandingNav() {
           <a href="#pricing" className="block text-sm" onClick={() => setOpen(false)}>Pricing</a>
           <a href="#how-it-works" className="block text-sm" onClick={() => setOpen(false)}>How It Works</a>
           {user ? (
-            user.role === 'admin' ? (
-              <Link to="/admin" onClick={() => setOpen(false)}>
-                <Button className="w-full mt-2">Admin Panel</Button>
-              </Link>
-            ) : (
-              <Link to="/dashboard" onClick={() => setOpen(false)}>
-                <Button className="w-full mt-2">Dashboard</Button>
-              </Link>
-            )
+            <>
+              {user.role === 'admin' ? (
+                <Link to="/admin" onClick={() => setOpen(false)}>
+                  <Button className="w-full mt-2">Admin Panel</Button>
+                </Link>
+              ) : (
+                <Link to="/dashboard" onClick={() => setOpen(false)}>
+                  <Button className="w-full mt-2">Dashboard</Button>
+                </Link>
+              )}
+              <Button variant="outline" className="w-full gap-2" onClick={() => base44.auth.logout("/")}>
+                <LogOut className="w-4 h-4" /> Sign Out
+              </Button>
+            </>
           ) : (
             <Link to="/onboarding" onClick={() => setOpen(false)}>
               <Button className="w-full mt-2">Start Free Trial</Button>
