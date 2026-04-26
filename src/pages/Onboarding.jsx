@@ -132,9 +132,9 @@ export default function Onboarding() {
     },
     onSuccess: async (data) => {
       if (!profileId) setProfileId(data.id);
-      // Refetch so the dashboard cache is warm before navigating
-      await queryClient.invalidateQueries({ queryKey: ["business-profile"] });
-      await queryClient.refetchQueries({ queryKey: ["business-profile"] });
+      // Seed the query cache with the saved profile so dashboard loads instantly without re-fetching
+      // This covers all possible query key variants (with or without user email)
+      queryClient.setQueriesData({ queryKey: ["business-profile"] }, [data]);
       // Fire background tasks without blocking — non-critical
       configureWebhooksIfNeeded().catch(err => console.error('Webhook config failed:', err));
       createTrialSubscription().catch(err => console.error('Trial creation failed:', err));
@@ -359,17 +359,21 @@ export default function Onboarding() {
               {/* STEP 0: Sign Up / Sign In */}
               {currentStep === 0 && (
                 <div className="space-y-4">
-                  <div className="p-5 rounded-xl bg-primary/5 border border-primary/20 text-center">
-                    <p className="text-sm font-semibold mb-1">Create your free account to get started</p>
-                    <p className="text-xs text-muted-foreground">
-                      Takes 30 seconds. You'll return here automatically after signing up to finish your setup.
-                    </p>
+                  <div className="p-5 rounded-xl bg-primary/5 border border-primary/20">
+                    <p className="text-sm font-semibold mb-2 text-center">Create your free account to get started</p>
+                    <div className="bg-background rounded-lg p-3 border border-border/60">
+                      <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                        On the next screen, look for{" "}
+                        <span className="font-bold text-foreground">"Need an account? Sign up"</span>{" "}
+                        at the bottom to create your account. You'll return here automatically.
+                      </p>
+                    </div>
                   </div>
                   <Button
                     className="w-full h-12 rounded-xl font-semibold text-base"
-                    onClick={() => base44.auth.redirectToLogin("/onboarding", { signup: true })}
+                    onClick={() => base44.auth.redirectToLogin("/onboarding")}
                   >
-                    Create Your Free Account
+                    Continue to Create Account
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
@@ -378,7 +382,7 @@ export default function Onboarding() {
                       className="text-primary underline font-medium"
                       onClick={() => base44.auth.redirectToLogin("/onboarding")}
                     >
-                      Sign in
+                      Sign in here
                     </button>
                   </p>
                 </div>

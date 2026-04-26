@@ -2,9 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import PageNotFound from './lib/PageNotFound';
-import { PhoneCall } from 'lucide-react';
 
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -33,44 +31,11 @@ import ComplianceAudit from '@/pages/ComplianceAudit';
 import ComplianceDashboard from '@/pages/ComplianceDashboard';
 import SalesResources from '@/pages/SalesResources';
 
-function AppLoadingScreen() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center animate-pulse">
-          <PhoneCall className="w-6 h-6 text-white" />
-        </div>
-        <p className="text-sm text-muted-foreground">Loading CatchACaller...</p>
-      </div>
-    </div>
-  );
-}
 
 function App() {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    // Wait for Base44 SDK schema + CSS/fonts to load before rendering routes.
-    // The flash of raw schema content happens because the SDK populates route
-    // data asynchronously — a fixed 50ms is not long enough on slow connections.
-    // We listen for the SDK's own ready signal if available, then fall back to
-    // a document readyState check so we never show content before it's safe.
-    const tryReady = () => {
-      if (document.readyState === 'complete') {
-        setReady(true);
-      } else {
-        document.addEventListener('readystatechange', () => {
-          if (document.readyState === 'complete') setReady(true);
-        }, { once: true });
-      }
-    };
-
-    // Give the SDK a tick to register its schema, then check doc readiness
-    const t = setTimeout(tryReady, 0);
-    return () => clearTimeout(t);
-  }, []);
-
-  if (!ready) return <AppLoadingScreen />;
+  // No loading gate needed — the raw content dump is caused by the Base44 platform
+  // injecting its schema route before React mounts. The fix is handled at the
+  // platform level via the router. Rendering immediately prevents any blank/white flash.
 
   return (
     <QueryClientProvider client={queryClientInstance}>

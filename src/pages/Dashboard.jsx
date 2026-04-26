@@ -144,11 +144,15 @@ export default function Dashboard() {
   }
 
   // Check subscription status for regular users
+  // Only block if subscription exists AND is explicitly in a bad/expired state
+  // New users won't have a subscription yet (created async) — never block them
   const trialExpired = subscription && subscription.trial_end_date && 
     new Date(subscription.trial_end_date) < new Date() &&
     ['trial', 'incomplete'].includes(subscription.status);
 
-  const isSubscriptionBlocked = (subscription && !["active", "trial"].includes(subscription.status)) || trialExpired;
+  const isSubscriptionBlocked = subscription && (
+    !["active", "trial", "trialing", "incomplete"].includes(subscription.status) || trialExpired
+  );
 
   if (isSubscriptionBlocked) {
     return <TrialExpiredPaywall />;
