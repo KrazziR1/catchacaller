@@ -41,6 +41,7 @@ export default function Onboarding() {
   const [profileId, setProfileId] = useState(null);
   const [smsComplianceAgreed, setSmsComplianceAgreed] = useState(false);
   const [hasTwilioAccount, setHasTwilioAccount] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const [form, setForm] = useState({
     business_name: "",
@@ -62,6 +63,37 @@ export default function Onboarding() {
   const [isSigningUp, setIsSigningUp] = useState(false);
 
   const [savingError, setSavingError] = useState(null);
+
+  // On mount: check if user is already authenticated.
+  // If yes, skip step 0 (signup) and go directly to step 1 (business info).
+  // If admin, redirect to /admin. If they already have a profile, redirect to /dashboard.
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(async (isAuth) => {
+      if (isAuth) {
+        try {
+          const user = await base44.auth.me();
+          if (user?.role === 'admin') {
+            navigate('/admin', { replace: true });
+            return;
+          }
+          // Check if they already have a profile → send to dashboard
+          const profiles = await base44.entities.BusinessProfile.list('-created_date', 1);
+          if (profiles.length > 0) {
+            navigate('/dashboard', { replace: true });
+            return;
+          }
+          // Authenticated but no profile → skip to step 1 (business info)
+          setCurrentStep(1);
+          setAuthChecked(true);
+        } catch {
+          // Couldn't load user, stay on step 0
+          setAuthChecked(true);
+        }
+      } else {
+        setAuthChecked(true);
+      }
+    });
+  }, [navigate]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -202,15 +234,12 @@ export default function Onboarding() {
     setIsSigningUp(true);
     setSignupError(null);
     try {
-      // redirectToLogin navigates away — this won't return
-      // For now, just validate and move forward; Base44 handles auth
       if (!signupEmail || signupPassword.length < 8) {
-        setSignupError("Invalid email or password (min 8 chars)");
+        setSignupError("Please enter a valid email and a password with at least 8 characters.");
         setIsSigningUp(false);
         return;
       }
-      // TODO: Implement actual signup API call when available
-      // For now, assume user will complete signup via redirectToLogin
+      // redirectToLogin navigates away — this won't return to this code path
       base44.auth.redirectToLogin("/onboarding", { signup: true });
     } catch (err) {
       setSignupError(err.message || "Signup failed. Try again.");
@@ -248,6 +277,15 @@ export default function Onboarding() {
 
   const step = steps[currentStep];
   const StepIcon = step.icon;
+
+  // Show spinner while checking auth status on load
+  if (!authChecked && currentStep === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
@@ -323,7 +361,7 @@ export default function Onboarding() {
                     <Input
                       type="email"
                       value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
+                      onChange={(e) => { setSignupEmail(e.target.value); setSignupError(null); }}
                       placeholder="you@company.com"
                       className="mt-1.5 h-12 rounded-xl"
                       autoFocus
@@ -334,18 +372,38 @@ export default function Onboarding() {
                     <Input
                       type="password"
                       value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
+                      onChange={(e) => { setSignupPassword(e.target.value); setSignupError(null); }}
                       placeholder="Create a strong password"
                       className="mt-1.5 h-12 rounded-xl"
                     />
                     <p className="text-xs text-muted-foreground mt-1.5">At least 8 characters</p>
                   </div>
                   {signupError && (
-                    <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-3">
-                      <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                      <p className="text-xs text-destructive">{signupError}</p>
+                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex gap-3">
+                      <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-blue-900">Looks like you already have an account!</p>
+                        <p className="text-xs text-blue-800 mt-1">
+                          That email is already registered. Would you like to sign in instead?
+                        </p>
+                        <button
+                          onClick={() => base44.auth.redirectToLogin("/onboarding")}
+                          className="mt-2 text-xs font-semibold text-primary underline hover:opacity-80"
+                        >
+                          Sign in to continue →
+                        </button>
+                      </div>
                     </div>
                   )}
+                  <p className="text-xs text-center text-muted-foreground">
+                    Already have an account?{" "}
+                    <button
+                      onClick={() => base44.auth.redirectToLogin("/onboarding")}
+                      className="text-primary font-semibold underline hover:opacity-80"
+                    >
+                      Sign in
+                    </button>
+                  </p>
                 </>
               )}
 
