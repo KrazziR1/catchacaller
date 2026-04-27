@@ -215,7 +215,7 @@ export default function Onboarding() {
 
   const next = () => {
     if (currentStep === 0) {
-      base44.auth.redirectToLogin("/onboarding", { signup: true });
+      handleSignup();
       return;
     }
     if (currentStep === 4) {
@@ -232,7 +232,7 @@ export default function Onboarding() {
   // Bug fix: testSmsMutation is defined but referenced variables (testPhone) were removed in earlier edit
   // Keeping unused mutation for now to avoid breaking reference errors
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     setSignupError(null);
     if (!signupEmail) {
       setSignupError("Please enter your email address.");
@@ -246,8 +246,21 @@ export default function Onboarding() {
       setSignupError("Passwords do not match.");
       return;
     }
-    // redirectToLogin navigates away — page will not continue executing after this
-    base44.auth.redirectToLogin("/onboarding", { signup: true });
+    setIsSigningUp(true);
+    try {
+      await base44.auth.register({ email: signupEmail, password: signupPassword });
+      await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
+      setCurrentStep(1);
+    } catch (e) {
+      const msg = e?.message || "";
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
+        setSignupError("An account with this email already exists. Sign in instead.");
+      } else {
+        setSignupError(msg || "Failed to create account. Please try again.");
+      }
+    } finally {
+      setIsSigningUp(false);
+    }
   };
 
   // Advance to next step after save completes
@@ -282,7 +295,7 @@ export default function Onboarding() {
   const StepIcon = step.icon;
 
   // Show spinner while checking auth status on load
-  if (!authChecked && currentStep === 0) {
+  if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -356,25 +369,63 @@ export default function Onboarding() {
             {/* Step content */}
             <div className="space-y-4">
 
-              {/* STEP 0: Sign Up / Sign In */}
+              {/* STEP 0: Inline Sign Up */}
               {currentStep === 0 && (
                 <div className="space-y-4">
-                  <div className="p-5 rounded-xl bg-primary/5 border border-primary/20">
-                    <p className="text-sm font-semibold mb-2 text-center">Create your free account to get started</p>
-                    <div className="bg-background rounded-lg p-3 border border-border/60">
-                      <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                        On the next screen, look for{" "}
-                        <span className="font-bold text-foreground">"Need an account? Sign up"</span>{" "}
-                        at the bottom to create your account. You'll return here automatically.
-                      </p>
+                  {signupError && (
+                    <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-2">
+                      <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-xs text-destructive">{signupError}</p>
                     </div>
+                  )}
+                  <div>
+                    <Label htmlFor="signup-email">Email Address</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      placeholder="you@yourbusiness.com"
+                      className="mt-1.5 h-12 rounded-xl"
+                      autoFocus
+                      autoComplete="email"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      className="mt-1.5 h-12 rounded-xl"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-confirm">Confirm Password</Label>
+                    <Input
+                      id="signup-confirm"
+                      type="password"
+                      value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                      className="mt-1.5 h-12 rounded-xl"
+                      autoComplete="new-password"
+                      onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
+                    />
                   </div>
                   <Button
                     className="w-full h-12 rounded-xl font-semibold text-base"
-                    onClick={() => base44.auth.redirectToLogin("/onboarding")}
+                    onClick={handleSignup}
+                    disabled={isSigningUp}
                   >
-                    Continue to Create Account
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    {isSigningUp ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating Account...</>
+                    ) : (
+                      <>Create Account <ArrowRight className="ml-2 w-4 h-4" /></>
+                    )}
                   </Button>
                   <p className="text-center text-xs text-muted-foreground">
                     Already have an account?{" "}
@@ -382,7 +433,7 @@ export default function Onboarding() {
                       className="text-primary underline font-medium"
                       onClick={() => base44.auth.redirectToLogin("/onboarding")}
                     >
-                      Sign in here
+                      Sign in
                     </button>
                   </p>
                 </div>
