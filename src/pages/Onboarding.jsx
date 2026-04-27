@@ -286,18 +286,19 @@ export default function Onboarding() {
     setIsVerifying(true);
     setVerificationError(null);
     try {
-      // Try verifyEmail if it exists, otherwise attempt login directly
-      if (typeof base44.auth.verifyEmail === 'function') {
-        await base44.auth.verifyEmail(verificationCode);
+      // Call backend function which uses asServiceRole.auth.verifyEmail
+      const res = await base44.functions.invoke('verifyEmailCode', { code: verificationCode });
+      if (res.data?.error) {
+        setVerificationError(res.data.error);
+        return;
       }
+      // Verified — now log in
       await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
       setCurrentStep(1);
     } catch (e) {
       const msg = e?.message || "";
       if (msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")) {
         setVerificationError("Invalid or expired code. Please check your email and try again.");
-      } else if (msg.toLowerCase().includes("verify") || msg.toLowerCase().includes("verification")) {
-        setVerificationError("Please verify your email first using the code sent to your inbox.");
       } else {
         setVerificationError(msg || "Verification failed. Please try again.");
       }
