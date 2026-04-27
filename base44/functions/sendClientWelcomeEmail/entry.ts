@@ -44,6 +44,9 @@ Deno.serve(async (req) => {
       Your CatchACaller account has been created and your dashboard is fully pre-configured.
       Click the button below to set your password and access your dashboard — takes less than a minute.
     </p>
+    <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 28px 0;">
+      <em>Note: You may also receive a separate email titled "You're invited to join CatchACaller" — you can ignore that one.</em>
+    </p>
 
     <!-- Single CTA -->
     <div style="text-align:center;margin-bottom:28px;">
