@@ -2,6 +2,10 @@
   "name": "BusinessProfile",
   "type": "object",
   "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the business owner/user who owns this profile"
+    },
     "business_name": {
       "type": "string"
     },
