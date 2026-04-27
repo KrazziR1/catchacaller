@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Must be admin - v2
+    // Must be admin
     const user = await base44.auth.me();
     if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     // 1. Invite user
     try {
-      await base44.auth.inviteUser(email, 'user');
+      await base44.asServiceRole.auth.inviteUser(email, 'user');
     } catch (inviteErr) {
       return Response.json({ error: 'inviteUser failed: ' + inviteErr.message, step: 'invite' }, { status: 500 });
     }
