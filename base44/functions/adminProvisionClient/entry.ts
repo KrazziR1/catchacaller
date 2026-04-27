@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
     // 1. Invite user
     try {
       await base44.users.inviteUser(email, 'user');
+await base44.users.sendPasswordResetEmail(email);
     } catch (inviteErr) {
       return Response.json({ error: 'inviteUser failed: ' + inviteErr.message, step: 'invite' }, { status: 500 });
     }
