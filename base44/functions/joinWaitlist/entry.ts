@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'CatchACaller <contact@catchacaller.com>',
+            from: 'CatchACaller <contact@updates.catchacaller.com>',
             to: [email],
             subject: "You're on the CatchACaller waitlist 🎉",
             html: `<p>Hi ${business_name || 'there'}, thanks for joining the CatchACaller waitlist! We'll reach out personally when your spot is ready.</p>`,
