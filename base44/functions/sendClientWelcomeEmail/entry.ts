@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
 
     const html = `
 <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
-  
+
   <!-- Header -->
   <div style="background:linear-gradient(135deg,#3b82f6 0%,#10b981 100%);padding:40px 32px;text-align:center;">
     <div style="font-size:40px;margin-bottom:12px;">📞</div>
@@ -40,20 +40,17 @@ Deno.serve(async (req) => {
   <div style="padding:36px 32px;">
     <p style="font-size:16px;color:#1e293b;margin:0 0 16px 0;">Hi there,</p>
     <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 28px 0;">
-      Your CatchACaller account has been set up on the <strong>${planLabel}</strong>. 
-      You're one step away from accessing your dashboard — no credit card needed until your trial ends.
+      Your CatchACaller account has been set up on the <strong>${planLabel}</strong>.
+      One quick step to access your dashboard — check your inbox right now.
     </p>
 
-    <!-- Single CTA box -->
+    <!-- Single CTA -->
     <div style="background:#eff6ff;border:2px solid #3b82f6;border-radius:14px;padding:28px 24px;margin-bottom:28px;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">📬</div>
-      <p style="margin:0 0 8px 0;font-size:17px;font-weight:800;color:#1e3a8a;">Check your inbox right now</p>
-      <p style="margin:0 0 20px 0;color:#1d4ed8;font-size:14px;line-height:1.6;">
-        You received a separate email from <strong>no-reply@catchacaller.com</strong><br/>
-        with the subject: <strong>"You're invited to join CatchACaller"</strong>
-      </p>
-      <p style="margin:0 0 20px 0;color:#475569;font-size:13px;">
-        Click the <strong>"Access app"</strong> button in that email to set your password and log in to your dashboard.
+      <p style="margin:0 0 8px 0;font-size:17px;font-weight:800;color:#1e3a8a;">Check your inbox</p>
+      <p style="margin:0 0 16px 0;color:#1d4ed8;font-size:14px;line-height:1.6;">
+        We sent you a separate email to set your password.<br/>
+        Click the link in that email to create your password and access your dashboard.
       </p>
       <div style="background:#dbeafe;border-radius:8px;padding:10px 16px;display:inline-block;">
         <p style="margin:0;font-size:12px;color:#1e40af;">
@@ -62,13 +59,24 @@ Deno.serve(async (req) => {
       </div>
     </div>
 
-    <!-- Can't find it? -->
+    <!-- Can't find it -->
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin-bottom:28px;">
-      <p style="margin:0 0 8px 0;font-size:13px;font-weight:700;color:#475569;">Can't find the invite email?</p>
+      <p style="margin:0 0 8px 0;font-size:13px;font-weight:700;color:#475569;">Can't find the email?</p>
       <ul style="margin:0;padding-left:18px;color:#64748b;font-size:13px;line-height:1.9;">
         <li>Check your <strong>spam or junk folder</strong></li>
         <li>Search for <strong>no-reply@catchacaller.com</strong></li>
         <li>Still can't find it? Reply to this email and we'll resend it</li>
+      </ul>
+    </div>
+
+    <!-- What's waiting for you -->
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;margin-bottom:28px;">
+      <p style="margin:0 0 10px 0;font-size:13px;font-weight:700;color:#15803d;">✅ Already set up for you:</p>
+      <ul style="margin:0;padding-left:18px;color:#166534;font-size:13px;line-height:1.9;">
+        <li>Your business profile is configured</li>
+        <li>AI call answering is ready to activate</li>
+        <li>SMS templates are pre-loaded</li>
+        <li>${trialDaysNum}-day free trial — no credit card needed</li>
       </ul>
     </div>
 
