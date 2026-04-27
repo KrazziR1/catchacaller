@@ -19,12 +19,27 @@ export default function Landing() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is already logged in, send them straight to their dashboard
-    base44.auth.me().then(user => {
-      if (user) navigate('/dashboard', { replace: true });
-    }).catch(() => {
-      // Not logged in — stay on landing page
-    });
+    // Base44 sets the session cookie after redirect from invite email.
+    // We retry a few times with increasing delays to catch it.
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    const check = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (user) {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+      } catch (_) {}
+
+      attempts++;
+      if (attempts < maxAttempts) {
+        setTimeout(check, attempts * 300); // 300ms, 600ms, 900ms, 1200ms
+      }
+    };
+
+    check();
   }, []);
 
   return (
