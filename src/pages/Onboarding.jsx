@@ -62,6 +62,10 @@ export default function Onboarding() {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupError, setSignupError] = useState(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState(null);
 
   const [savingError, setSavingError] = useState(null);
 
@@ -249,8 +253,8 @@ export default function Onboarding() {
     setIsSigningUp(true);
     try {
       await base44.auth.register({ email: signupEmail, password: signupPassword });
-      await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
-      setCurrentStep(1);
+      // Show verification code input
+      setShowVerification(true);
     } catch (e) {
       const msg = e?.message || "";
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
@@ -260,6 +264,29 @@ export default function Onboarding() {
       }
     } finally {
       setIsSigningUp(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!verificationCode) {
+      setVerificationError("Please enter the verification code.");
+      return;
+    }
+    setIsVerifying(true);
+    setVerificationError(null);
+    try {
+      await base44.auth.verifyEmail(verificationCode);
+      await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
+      setCurrentStep(1);
+    } catch (e) {
+      const msg = e?.message || "";
+      if (msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")) {
+        setVerificationError("Invalid or expired code. Please check your email and try again.");
+      } else {
+        setVerificationError(msg || "Verification failed. Please try again.");
+      }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -369,8 +396,60 @@ export default function Onboarding() {
             {/* Step content */}
             <div className="space-y-4">
 
+              {/* STEP 0: Verification Code */}
+              {currentStep === 0 && showVerification && (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-center">
+                    <div className="text-2xl mb-2">📬</div>
+                    <p className="text-sm font-semibold text-blue-900">Check your email</p>
+                    <p className="text-xs text-blue-700 mt-1">
+                      We sent a verification code to <strong>{signupEmail}</strong>
+                    </p>
+                  </div>
+                  {verificationError && (
+                    <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-2">
+                      <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-xs text-destructive">{verificationError}</p>
+                    </div>
+                  )}
+                  <div>
+                    <Label htmlFor="verify-code">Verification Code</Label>
+                    <Input
+                      id="verify-code"
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="Enter the code from your email"
+                      className="mt-1.5 h-12 rounded-xl text-center text-lg tracking-widest"
+                      autoFocus
+                      onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+                    />
+                  </div>
+                  <Button
+                    className="w-full h-12 rounded-xl font-semibold text-base"
+                    onClick={handleVerify}
+                    disabled={isVerifying}
+                  >
+                    {isVerifying ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</>
+                    ) : (
+                      <>Verify & Continue <ArrowRight className="ml-2 w-4 h-4" /></>
+                    )}
+                  </Button>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Didn't get it?{" "}
+                    <button
+                      className="text-primary underline font-medium"
+                      onClick={() => handleSignup()}
+                    >
+                      Resend code
+                    </button>
+                  </p>
+                </div>
+              )}
+
               {/* STEP 0: Inline Sign Up */}
-              {currentStep === 0 && (
+              {currentStep === 0 && !showVerification && (
                 <div className="space-y-4">
                   {signupError && (
                     <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-2">
