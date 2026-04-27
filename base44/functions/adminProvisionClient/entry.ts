@@ -29,8 +29,10 @@ Deno.serve(async (req) => {
     // 1. Invite user — Base44 sends them a password-setup email automatically
     await base44.users.inviteUser(email, 'user');
 
-    // 2. Create BusinessProfile (owned by the client's email)
+    // 2. Create BusinessProfile — store owner_email explicitly since asServiceRole
+    //    sets created_by to the service account, not the client's email.
     await base44.asServiceRole.entities.BusinessProfile.create({
+      owner_email: email,
       business_name,
       industry: industry || 'hvac',
       industry_description: industry === 'other' ? (industry_description || null) : null,
@@ -51,7 +53,6 @@ Deno.serve(async (req) => {
       consent_acknowledged_at: new Date().toISOString(),
       requires_manual_review: false,
       is_high_risk_industry: false,
-      created_by: email,
     });
 
     // 3. Create trial subscription
@@ -72,9 +73,6 @@ Deno.serve(async (req) => {
       target_business: business_name,
       reason: `Admin-provisioned. Plan: ${resolvedPlan}, Trial: ${trialDaysNum} days`,
     });
-
-    // NOTE: Welcome email is sent from the frontend after this succeeds,
-    // because SendEmail in backend functions can only reach users already registered in the app.
 
     return Response.json({ success: true, plan: resolvedPlan, trial_days: trialDaysNum });
   } catch (error) {

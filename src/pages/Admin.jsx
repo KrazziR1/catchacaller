@@ -104,7 +104,7 @@ export default function Admin() {
   const realCalls = missedCalls.filter(c => c.caller_phone && !c.caller_phone.includes("555"));
   const totalCalls = realCalls.length;
   // Only count onboarding progress for users with active subscriptions
-  const activeEmails = new Set(subscriptions.filter(s => ["active", "trialing"].includes(s.status)).map(s => s.user_email));
+  const activeEmails = new Set(subscriptions.filter(s => ["active", "trialing", "trial"].includes(s.status)).map(s => s.user_email));
   const onboardingComplete = onboardingProgress.filter((p) => p.is_complete && activeEmails.has(p.user_email)).length;
   const onboardingInProgress = onboardingProgress.filter((p) => !p.is_complete && activeEmails.has(p.user_email)).length;
 
@@ -353,17 +353,19 @@ export default function Admin() {
                       const matchesSearch =
                         b.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         b.industry.toLowerCase().includes(searchQuery.toLowerCase());
-                      const sub = subscriptions.find((s) => s.user_email === b.created_by);
+                      const ownerEmail = b.owner_email || b.created_by;
+                      const sub = subscriptions.find((s) => s.user_email === ownerEmail);
                       const matchesPlan = filterPlan === "all" || sub?.plan_name === filterPlan;
                       const matchesStatus =
                         filterStatus === "all" ||
-                        (filterStatus === "active" && ["active", "trialing"].includes(sub?.status)) ||
-                        (filterStatus === "inactive" && !["active", "trialing"].includes(sub?.status));
+                        (filterStatus === "active" && ["active", "trialing", "trial"].includes(sub?.status)) ||
+                        (filterStatus === "inactive" && !["active", "trialing", "trial"].includes(sub?.status));
                       return matchesSearch && matchesPlan && matchesStatus;
                     }).map((business) => {
-                      const sub = subscriptions.find((s) => s.user_email === business.created_by);
+                      const ownerEmail = business.owner_email || business.created_by;
+                      const sub = subscriptions.find((s) => s.user_email === ownerEmail);
                       const subStatus = sub?.status || "inactive";
-                      const progress = onboardingProgress.find((p) => p.user_email === business.created_by);
+                      const progress = onboardingProgress.find((p) => p.user_email === ownerEmail);
 
                       return (
                         <tr

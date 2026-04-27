@@ -60,13 +60,17 @@ export default function AddClientModal({ isOpen, onClose }) {
       const res = await base44.functions.invoke("adminProvisionClient", { ...form });
       if (res.data?.error) throw new Error(res.data.error);
 
-      // Step 2: Attempt branded welcome email (non-blocking — only works once user accepts invite)
-      base44.functions.invoke("sendClientWelcomeEmail", {
-        email: form.email,
-        business_name: form.business_name,
-        plan_name: form.plan_name,
-        trial_days: form.trial_days,
-      }).catch(e => console.warn("Welcome email (non-fatal):", e.message));
+      // Step 2: Send branded welcome email via Resend (non-fatal if domain not yet verified)
+      try {
+        await base44.functions.invoke("sendClientWelcomeEmail", {
+          email: form.email,
+          business_name: form.business_name,
+          plan_name: form.plan_name,
+          trial_days: form.trial_days,
+        });
+      } catch (emailErr) {
+        console.warn("Welcome email failed (non-fatal):", emailErr.message);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
@@ -107,7 +111,7 @@ export default function AddClientModal({ isOpen, onClose }) {
             <div>
               <h3 className="text-lg font-bold">Client Provisioned!</h3>
               <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                <strong>{form.email}</strong> has been invited and their dashboard is pre-configured. They'll receive two emails: one to set their password, and one branded welcome email from CatchACaller.
+                <strong>{form.email}</strong> has been invited and their dashboard is pre-configured. They'll receive a platform invite email to set their password. A branded CatchACaller welcome email will also be sent once <strong>catchacaller.com</strong> is verified at <a href="https://resend.com/domains" target="_blank" className="text-primary underline">resend.com/domains</a>.
               </p>
             </div>
             <Button onClick={handleClose} className="w-full rounded-xl">Done</Button>
@@ -115,9 +119,7 @@ export default function AddClientModal({ isOpen, onClose }) {
         ) : (
           <div className="space-y-4 mt-2">
             <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground space-y-1">
-              <p>The client will receive <strong>two emails</strong>:</p>
-              <p>① A platform invite email with a link to set their password.</p>
-              <p>② A branded CatchACaller welcome email with their account details and next steps.</p>
+              <p>The client will receive a <strong>platform invite email</strong> to set their password. A branded welcome email will also be attempted via Resend (requires domain verification at resend.com/domains).</p>
             </div>
 
             {errorMsg && (
