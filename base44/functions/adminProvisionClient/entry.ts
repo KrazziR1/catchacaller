@@ -26,12 +26,13 @@ Deno.serve(async (req) => {
     trialEnd.setDate(trialEnd.getDate() + trialDaysNum);
     const resolvedPlan = plan_name === 'Trial' ? 'Starter' : (plan_name || 'Starter');
 
-    // 1. Invite user
-    try {
-      await base44.users.inviteUser(email, 'user');
-    } catch (inviteErr) {
-      return Response.json({ error: 'inviteUser failed: ' + inviteErr.message, step: 'invite' }, { status: 500 });
-    }
+    // 1. Create account + send password setup email
+try {
+  await base44.users.inviteUser(email, 'user');
+  await base44.auth.resetPasswordRequest(email);
+} catch (inviteErr) {
+  return Response.json({ error: 'inviteUser failed: ' + inviteErr.message, step: 'invite' }, { status: 500 });
+}
 
     // 2. Create BusinessProfile
     try {
