@@ -4,7 +4,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { code } = await req.json();
+    const body = await req.json();
+console.log('body received:', JSON.stringify(body));
+const { code } = body;
 
     if (!code) {
       return Response.json({ error: 'Verification code is required.' }, { status: 400 });
