@@ -15,68 +15,12 @@ export default function ComingSoon() {
     if (!email || submitted || loading) return;
     setLoading(true);
 
-    // Check for duplicate
-    const existing = await base44.entities.WaitlistEntry.filter({ email }).catch(() => []);
-    if (existing.length > 0) {
+    const res = await base44.functions.invoke("joinWaitlist", { email });
+
+    if (res.data?.already_exists) {
       setAlreadyOnList(true);
-      setSubmitted(true);
-      setLoading(false);
-      return;
     }
-
-    // Save to waitlist
-    base44.entities.WaitlistEntry.create({ email }).catch(() => {});
-
-    // Send confirmation email
-    try {
-      await base44.integrations.Core.SendEmail({
-        to: email,
-        from_name: "CatchACaller",
-        subject: "You're on the list — CatchACaller",
-        body: `
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;">
-            <div style="background:linear-gradient(135deg,#3b82f6 0%,#10b981 100%);padding:40px 32px;text-align:center;">
-              <div style="width:56px;height:56px;background:rgba(255,255,255,0.2);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
-                <span style="font-size:28px;">📞</span>
-              </div>
-              <h1 style="color:white;margin:0;font-size:26px;font-weight:800;letter-spacing:-0.5px;">You're on the list!</h1>
-              <p style="color:rgba(255,255,255,0.85);margin:8px 0 0 0;font-size:15px;">CatchACaller — Private Early Access</p>
-            </div>
-            <div style="padding:36px 32px;">
-              <p style="font-size:16px;color:#1e293b;margin:0 0 16px 0;font-weight:600;">Hey there 👋</p>
-              <p style="color:#475569;font-size:15px;line-height:1.6;margin:0 0 24px 0;">
-                Thanks for signing up — you're now in line for early access to CatchACaller. We're onboarding businesses personally right now, so expect to hear from us soon.
-              </p>
-              <div style="background:#f8fafc;border-radius:12px;padding:20px 24px;margin-bottom:24px;border-left:4px solid #3b82f6;">
-                <p style="margin:0;font-size:14px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">What CatchACaller does</p>
-                <p style="margin:0;color:#334155;font-size:14px;line-height:1.6;">When you miss a call, our AI instantly texts the lead, qualifies them, and books them into your calendar — all while you're busy doing what you do best.</p>
-              </div>
-              <div style="display:grid;gap:12px;margin-bottom:28px;">
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <span style="font-size:18px;">⚡</span>
-                  <span style="color:#334155;font-size:14px;">Responds to missed calls in under 3 seconds</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <span style="font-size:18px;">📅</span>
-                  <span style="color:#334155;font-size:14px;">AI qualifies leads and books appointments automatically</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <span style="font-size:18px;">💰</span>
-                  <span style="color:#334155;font-size:14px;">Average business recovers $2,000+ in the first month</span>
-                </div>
-              </div>
-              <p style="color:#64748b;font-size:14px;margin:0 0 4px 0;">We'll personally reach out when your spot is ready. In the meantime, feel free to reply to this email with any questions.</p>
-              <p style="color:#64748b;font-size:14px;margin:0;">— The CatchACaller Team</p>
-            </div>
-            <div style="background:#f8fafc;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;color:#94a3b8;font-size:12px;">© 2026 CatchACaller · <a href="https://catchacaller.com/privacy" style="color:#94a3b8;">Privacy</a> · <a href="https://catchacaller.com/unsubscribe" style="color:#94a3b8;">Unsubscribe</a></p>
-            </div>
-          </div>
-        `,
-      });
-    } catch {
-      // non-blocking
-    }
+    // success or already_exists both show submitted state
     setSubmitted(true);
     setLoading(false);
   };
@@ -114,7 +58,7 @@ export default function ComingSoon() {
             ) : (
               <>
                 <p className="font-semibold text-accent">You're on the list!</p>
-                <p className="text-sm text-muted-foreground">Check your inbox — we just sent you a confirmation email. We'll reach out personally when your spot is ready.</p>
+                <p className="text-sm text-muted-foreground">We've saved your spot. Our team will personally reach out when you're ready to be onboarded.</p>
               </>
             )}
           </div>
@@ -135,7 +79,7 @@ export default function ComingSoon() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground -mt-2">
-              You'll receive a confirmation email immediately, plus a personal follow-up from our team when your spot opens.
+              Our team will personally reach out when your spot is ready.
             </p>
           </>
         )}
