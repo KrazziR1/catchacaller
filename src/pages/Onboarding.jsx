@@ -253,8 +253,19 @@ export default function Onboarding() {
     setIsSigningUp(true);
     try {
       await base44.auth.register({ email: signupEmail, password: signupPassword });
-      // Show verification code input
-      setShowVerification(true);
+      // Try logging in immediately after registration
+      try {
+        await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
+        setCurrentStep(1);
+      } catch (loginErr) {
+        const loginMsg = loginErr?.message?.toLowerCase() || "";
+        if (loginMsg.includes("verify") || loginMsg.includes("verification") || loginMsg.includes("confirm")) {
+          // Email verification required — show code input
+          setShowVerification(true);
+        } else {
+          throw loginErr;
+        }
+      }
     } catch (e) {
       const msg = e?.message || "";
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("exists")) {
@@ -275,13 +286,18 @@ export default function Onboarding() {
     setIsVerifying(true);
     setVerificationError(null);
     try {
-      await base44.auth.verifyEmail(verificationCode);
+      // Try verifyEmail if it exists, otherwise attempt login directly
+      if (typeof base44.auth.verifyEmail === 'function') {
+        await base44.auth.verifyEmail(verificationCode);
+      }
       await base44.auth.loginViaEmailPassword(signupEmail, signupPassword);
       setCurrentStep(1);
     } catch (e) {
       const msg = e?.message || "";
       if (msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("expired")) {
         setVerificationError("Invalid or expired code. Please check your email and try again.");
+      } else if (msg.toLowerCase().includes("verify") || msg.toLowerCase().includes("verification")) {
+        setVerificationError("Please verify your email first using the code sent to your inbox.");
       } else {
         setVerificationError(msg || "Verification failed. Please try again.");
       }
@@ -398,37 +414,42 @@ export default function Onboarding() {
 
               {/* STEP 0: Verification Code */}
               {currentStep === 0 && showVerification && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-center">
-                    <div className="text-2xl mb-2">📬</div>
+                <div className="space-y-5 text-center">
+                  <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
+                    <div className="text-3xl mb-2">📬</div>
                     <p className="text-sm font-semibold text-blue-900">Check your email</p>
                     <p className="text-xs text-blue-700 mt-1">
-                      We sent a verification code to <strong>{signupEmail}</strong>
+                      We sent a 6-digit code to <strong>{signupEmail}</strong>
                     </p>
                   </div>
                   {verificationError && (
-                    <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-2">
+                    <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 flex gap-2 text-left">
                       <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
                       <p className="text-xs text-destructive">{verificationError}</p>
                     </div>
                   )}
-                  <div>
-                    <Label htmlFor="verify-code">Verification Code</Label>
+                  <div className="flex justify-center">
                     <Input
-                      id="verify-code"
                       type="text"
+                      inputMode="numeric"
+                      maxLength={6}
                       value={verificationCode}
-                      onChange={(e) => setVerificationCode(e.target.value)}
-                      placeholder="Enter the code from your email"
-                      className="mt-1.5 h-12 rounded-xl text-center text-lg tracking-widest"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setVerificationCode(val);
+                        if (val.length === 6) {
+                          setTimeout(() => handleVerify(), 100);
+                        }
+                      }}
+                      placeholder="000000"
+                      className="h-14 w-48 rounded-xl text-center text-2xl font-bold tracking-widest"
                       autoFocus
-                      onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
                     />
                   </div>
                   <Button
                     className="w-full h-12 rounded-xl font-semibold text-base"
                     onClick={handleVerify}
-                    disabled={isVerifying}
+                    disabled={isVerifying || verificationCode.length < 6}
                   >
                     {isVerifying ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</>
@@ -436,8 +457,15 @@ export default function Onboarding() {
                       <>Verify & Continue <ArrowRight className="ml-2 w-4 h-4" /></>
                     )}
                   </Button>
-                  <p className="text-center text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Didn't get it?{" "}
+                    <button
+                      className="text-primary underline font-medium"
+                      onClick={() => { setShowVerification(false); setVerificationCode(""); }}
+                    >
+                      Go back
+                    </button>
+                    {" · "}
                     <button
                       className="text-primary underline font-medium"
                       onClick={() => handleSignup()}
