@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Public endpoint — verifies email code for newly registered users
+// Public endpoint — verifies email code for newly registered users v1
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
