@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Public endpoint — no auth required. Saves a waitlist entry and sends confirmation email via Resend.
+// Public endpoint — no auth required. Saves a waitlist entry and sends confirmation email via Resend. V2
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
