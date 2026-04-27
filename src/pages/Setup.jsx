@@ -1,25 +1,27 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PhoneCall, Loader2, CheckCircle2, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { PhoneCall, Loader2, AlertTriangle } from "lucide-react";
 
 export default function Setup() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const emailParam = searchParams.get("email") || "";
 
-  const [stage, setStage] = useState("request"); // request | sent | done | error
+  const [stage, setStage] = useState("loading");
   const [email, setEmail] = useState(emailParam);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const hasSent = useRef(false);
 
-  // If email is in URL, auto-trigger the reset request immediately
   useEffect(() => {
-    if (emailParam) {
+    if (emailParam && !hasSent.current) {
+      hasSent.current = true;
       handleSendLink(emailParam);
+    } else if (!emailParam) {
+      setStage("request");
     }
   }, []);
 
@@ -33,14 +35,33 @@ export default function Setup() {
       setStage("sent");
     } catch (e) {
       setError(e?.message || "Something went wrong. Please try again.");
+      setStage("request");
     } finally {
       setLoading(false);
     }
   };
 
+  // Loading state while auto-sending
+  if (stage === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex flex-col items-center justify-center px-4">
+        <div className="flex items-center gap-2.5 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <PhoneCall className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-xl font-bold tracking-tight">CatchACaller</span>
+        </div>
+        <div className="w-full max-w-md bg-white rounded-2xl border border-border shadow-lg p-8 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground text-sm">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex flex-col items-center justify-center px-4">
-      
+
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-8">
         <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
@@ -51,7 +72,7 @@ export default function Setup() {
 
       <div className="w-full max-w-md bg-white rounded-2xl border border-border shadow-lg overflow-hidden">
 
-        {/* Stage: Request / Auto-sending */}
+        {/* Stage: Manual entry */}
         {stage === "request" && (
           <div className="p-8 space-y-6">
             <div className="text-center space-y-2">
@@ -105,7 +126,8 @@ export default function Setup() {
             <div className="space-y-2">
               <h1 className="text-2xl font-extrabold tracking-tight">Check your inbox</h1>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                We sent a password setup link to <strong className="text-foreground">{email || emailParam}</strong>.
+                We sent a password setup link to{" "}
+                <strong className="text-foreground">{email || emailParam}</strong>.
                 Click the link in that email to create your password.
               </p>
             </div>
@@ -113,7 +135,7 @@ export default function Setup() {
             <div className="bg-muted/50 rounded-xl p-4 text-left space-y-2">
               <p className="text-xs font-semibold text-muted-foreground">Can't find it?</p>
               <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Check your spam or junk folder</li>
+                <li>Check your <strong>spam or junk folder</strong></li>
                 <li>Search for <strong>no-reply@catchacaller.com</strong></li>
                 <li>
                   <button
