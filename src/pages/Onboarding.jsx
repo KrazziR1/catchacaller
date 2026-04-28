@@ -116,27 +116,18 @@ export default function Onboarding() {
             industry: form.industry,
           });
           if (keywordCheck.data?.requires_manual_review) {
-            form = { ...form, is_high_risk_industry: true };
+            form.is_high_risk_industry = true;
           }
         } catch (e) {
           console.warn('Compliance check failed (non-critical):', e.message);
         }
       }
 
-      // Get current user email to explicitly set owner_email
-      let ownerEmail = '';
-      try {
-        const currentUser = await base44.auth.me();
-        ownerEmail = currentUser?.email || '';
-      } catch (_) {}
-
       const dataToSave = {
         ...form,
-        owner_email: ownerEmail,
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-04-25",
         consent_acknowledged_at: smsComplianceAgreed ? new Date().toISOString() : null,
-        requires_manual_review: form.is_high_risk_industry === true || form.industry === 'other',
       };
       if (profileId) {
         return base44.entities.BusinessProfile.update(profileId, dataToSave);
@@ -237,7 +228,7 @@ export default function Onboarding() {
       handleSignup();
       return;
     }
-    if (currentStep === 4) {
+    if (currentStep === 1 || currentStep === 4) {
       saveMutation.mutate();
       return;
     }
@@ -327,6 +318,9 @@ export default function Onboarding() {
   useEffect(() => {
     if (saveMutation.isSuccess && currentStep === 4) {
       setCurrentStep(5);
+    }
+    if (saveMutation.isSuccess && currentStep === 1) {
+      setCurrentStep(2);
     }
   }, [saveMutation.isSuccess, currentStep]);
 
@@ -975,10 +969,15 @@ export default function Onboarding() {
               {currentStep === 4 && (
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentStep(currentStep + 1)}
+                  onClick={() => saveMutation.mutate()}
+                  disabled={saveMutation.isPending}
                   className="rounded-xl h-11 px-6"
                 >
-                  {form.booking_url ? 'Continue' : 'Skip'} <ArrowRight className="ml-2 w-4 h-4" />
+                  {saveMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                  ) : (
+                    <>{form.booking_url ? 'Continue' : 'Skip'} <ArrowRight className="ml-2 w-4 h-4" /></>
+                  )}
                 </Button>
               )}
               {currentStep === 6 ? (
