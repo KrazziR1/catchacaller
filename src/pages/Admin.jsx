@@ -46,9 +46,9 @@ export default function Admin() {
   const { data: businesses = [] } = useQuery({
    queryKey: ["all-businesses"],
    queryFn: () => base44.asServiceRole.entities.BusinessProfile.list("-created_date", 10000),
-   enabled: !!user && user.role === "admin",
+   enabled: !!user?.email,
    staleTime: 5 * 60 * 1000,
-   retry: 1,
+   retry: 2,
   });
 
   // Paginate results
@@ -57,7 +57,7 @@ export default function Admin() {
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["all-subscriptions"],
     queryFn: () => base44.asServiceRole.entities.Subscription.list("-created_date", 50),
-    enabled: !!user && user.role === "admin",
+    enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
@@ -65,7 +65,7 @@ export default function Admin() {
   const { data: missedCalls = [] } = useQuery({
     queryKey: ["all-missed-calls"],
     queryFn: () => base44.asServiceRole.entities.MissedCall.list("-call_time", 50),
-    enabled: !!user && user.role === "admin",
+    enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
@@ -73,7 +73,7 @@ export default function Admin() {
   const { data: onboardingProgress = [] } = useQuery({
     queryKey: ["all-onboarding"],
     queryFn: () => base44.asServiceRole.entities.OnboardingProgress.list("-updated_date", 50).catch(() => []),
-    enabled: !!user && user.role === "admin",
+    enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
