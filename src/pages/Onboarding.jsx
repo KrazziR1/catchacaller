@@ -123,8 +123,16 @@ export default function Onboarding() {
         }
       }
 
+      // Get current user email to explicitly set owner_email
+      let ownerEmail = '';
+      try {
+        const currentUser = await base44.auth.me();
+        ownerEmail = currentUser?.email || '';
+      } catch (_) {}
+
       const dataToSave = {
         ...form,
+        owner_email: ownerEmail,
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-04-25",
         consent_acknowledged_at: smsComplianceAgreed ? new Date().toISOString() : null,
