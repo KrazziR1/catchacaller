@@ -116,7 +116,7 @@ export default function Onboarding() {
             industry: form.industry,
           });
           if (keywordCheck.data?.requires_manual_review) {
-            form.is_high_risk_industry = true;
+            form = { ...form, is_high_risk_industry: true };
           }
         } catch (e) {
           console.warn('Compliance check failed (non-critical):', e.message);
@@ -128,7 +128,7 @@ export default function Onboarding() {
         terms_accepted_at: new Date().toISOString(),
         terms_version: "2026-04-25",
         consent_acknowledged_at: smsComplianceAgreed ? new Date().toISOString() : null,
-        requires_manual_review: form.is_high_risk_industry === true,
+        requires_manual_review: form.is_high_risk_industry === true || form.industry === 'other',
       };
       if (profileId) {
         return base44.entities.BusinessProfile.update(profileId, dataToSave);
