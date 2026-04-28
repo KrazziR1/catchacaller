@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 
-export default function SMSMetrics({ conversations }) {
+export default function SMSMetrics({ conversations = [] }) {
   const totalConversations = conversations.length;
   const withResponses = conversations.filter((c) => c.messages?.some((m) => m.sender === "lead")).length;
   const responseRate = totalConversations > 0 ? ((withResponses / totalConversations) * 100).toFixed(1) : 0;
