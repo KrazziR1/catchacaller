@@ -27,13 +27,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     base44.auth.me().then((u) => {
-      if (u?.role === 'admin') {
-        navigate("/admin", { replace: true });
-        return;
-      }
       setUser(u);
     }).catch(() => {
-      setUser(null);
       navigate("/", { replace: true });
     });
   }, [navigate]);
