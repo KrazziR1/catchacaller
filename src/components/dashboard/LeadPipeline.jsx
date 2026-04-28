@@ -17,6 +17,9 @@ const stages = [
 export default function LeadPipeline({ user, subscription }) {
   const [stageCounts, setStageCounts] = useState({});
 
+  // Define isPlanAllowed BEFORE using it in useQuery
+  const isPlanAllowed = subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name);
+
   const { data: conversations = [] } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => base44.entities.Conversation.list('-created_date', 100),
@@ -32,8 +35,6 @@ export default function LeadPipeline({ user, subscription }) {
     });
     setStageCounts(counts);
   }, [conversations]);
-
-  const isPlanAllowed = subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name);
 
   if (!isPlanAllowed) {
     return (
