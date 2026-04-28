@@ -1,12 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Public endpoint — verifies email code for newly registered users v1
+// Public endpoint — verifies email code for newly registered users
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-console.log('body received:', JSON.stringify(body));
-const { code } = body;
+    const { code } = await req.json();
 
     if (!code) {
       return Response.json({ error: 'Verification code is required.' }, { status: 400 });
