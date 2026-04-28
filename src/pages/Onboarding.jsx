@@ -140,10 +140,11 @@ export default function Onboarding() {
       // This covers all possible query key variants (with or without user email)
       queryClient.setQueriesData({ queryKey: ["business-profile"] }, [data]);
       // Also seed with email-keyed query that Dashboard uses
-      const currentUser = await base44.auth.me().catch(() => null);
-      if (currentUser?.email) {
-        queryClient.setQueryData(["business-profile", currentUser.email], [data]);
-      }
+      base44.auth.me().then(currentUser => {
+        if (currentUser?.email) {
+          queryClient.setQueryData(["business-profile", currentUser.email], [data]);
+        }
+      }).catch(() => {});
       // Fire background tasks without blocking — non-critical
       configureWebhooksIfNeeded().catch(err => console.error('Webhook config failed:', err));
       createTrialSubscription().catch(err => console.error('Trial creation failed:', err));
