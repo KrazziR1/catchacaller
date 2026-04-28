@@ -18,64 +18,57 @@ export default function ManualReviewQueue({ businesses }) {
   const approveMutation = useMutation({
     mutationFn: async (businessId) => {
       const business = businesses.find((b) => b.id === businessId);
-      await base44.asServiceRole.entities.BusinessProfile.update(businessId, {
-        requires_manual_review: false,
+      // Use backend function to update with service role
+      await base44.functions.invoke("adminUpdateBusiness", {
+        businessId,
+        updates: { requires_manual_review: false },
+        auditAction: "account_approved",
+        auditTarget: business.owner_email || business.created_by,
+        auditBusiness: business.business_name,
+        auditReason: notes || "Account approved",
       });
-      // Log approval action
-      try {
-        await base44.asServiceRole.entities.AdminAuditLog.create({
-          admin_email: (await base44.auth.me()).email,
-          action: 'account_approved',
-          target_email: business.created_by,
-          target_business: business.business_name,
-          reason: notes || 'Account approved',
-        });
-      } catch (e) {
-        console.warn('Audit logging failed (non-critical):', e);
-      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-businesses"] });
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
       setReviewingId(null);
       setNotes("");
       setRefundSelected(false);
       toast.success("Account approved");
     },
-    onError: (error) => {
-      toast.error("Failed to approve account");
-    },
+    onError: () => toast.error("Failed to approve account"),
   });
 
   const rejectMutation = useMutation({
     mutationFn: async (businessId) => {
       const business = businesses.find((b) => b.id === businessId);
-      // First mark as rejected in profile
-      await base44.asServiceRole.entities.BusinessProfile.update(businessId, {
-        requires_manual_review: false,
+      await base44.functions.invoke("adminUpdateBusiness", {
+        businessId,
+        updates: { requires_manual_review: false },
+        auditAction: "account_rejected",
+        auditTarget: business.owner_email || business.created_by,
+        auditBusiness: business.business_name,
+        auditReason: notes || "Account does not meet compliance requirements",
       });
-      // Then send rejection email with optional refund (non-critical)
       try {
         await base44.functions.invoke("sendReviewRejectionEmail", {
-          email: business.created_by,
+          email: business.owner_email || business.created_by,
           business_name: business.business_name,
           reason: notes || "Account does not meet compliance requirements",
           issueRefund: refundSelected && !!business.twilio_number_sid,
-          stripeCustomerId: business.created_by, // We'll lookup the customer by email in the function
+          stripeCustomerId: business.owner_email || business.created_by,
         });
       } catch (e) {
         console.warn("Email notification failed (non-critical):", e);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-businesses"] });
+      queryClient.invalidateQueries({ queryKey: ["all-businesses"] });
       setReviewingId(null);
       setNotes("");
       setRefundSelected(false);
       toast.success("Account rejected and user notified");
     },
-    onError: (error) => {
-      toast.error("Failed to reject account");
-    },
+    onError: () => toast.error("Failed to reject account"),
   });
 
   if (flaggedBusinesses.length === 0) {
@@ -115,26 +108,28 @@ export default function ManualReviewQueue({ businesses }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {flaggedBusinesses.map((business) => (
-          <div
-            key={business.id}
-            className="p-4 rounded-xl border border-orange-200 bg-white space-y-3"
-          >
+          <div key={business.id} className="p-4 rounded-xl border border-orange-200 bg-white space-y-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <p className="font-semibold text-sm">{business.business_name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{business.created_by}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {business.owner_email || business.created_by}
+                </p>
+                {business.industry_description && (
+                  <p className="text-xs text-orange-700 mt-1">
+                    <strong>Services:</strong> {business.industry_description}
+                  </p>
+                )}
               </div>
-              <Badge className="bg-red-100 text-red-800">
-                {business.industry === "debt_collection" ? "Debt Collection" : "Political"}
+              <Badge className="bg-orange-100 text-orange-800 capitalize">
+                {business.industry === "other" ? "Other Industry" : business.industry}
               </Badge>
             </div>
 
             {reviewingId === business.id ? (
               <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
                 <div>
-                  <label className="text-xs font-semibold block mb-1.5">
-                    Review Notes (optional)
-                  </label>
+                  <label className="text-xs font-semibold block mb-1.5">Review Notes (optional)</label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -158,54 +153,22 @@ export default function ManualReviewQueue({ businesses }) {
                   </div>
                 )}
                 <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setReviewingId(null);
-                      setNotes("");
-                    }}
-                    className="rounded-lg h-8"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => { setReviewingId(null); setNotes(""); }} className="rounded-lg h-8">
                     Cancel
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => rejectMutation.mutate(business.id)}
-                    disabled={rejectMutation.isPending}
-                    className="rounded-lg h-8"
-                  >
-                    {rejectMutation.isPending ? (
-                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                    ) : (
-                      <XCircle className="w-3 h-3 mr-1" />
-                    )}
+                  <Button variant="destructive" size="sm" onClick={() => rejectMutation.mutate(business.id)} disabled={rejectMutation.isPending} className="rounded-lg h-8">
+                    {rejectMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <XCircle className="w-3 h-3 mr-1" />}
                     Reject
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => approveMutation.mutate(business.id)}
-                    disabled={approveMutation.isPending}
-                    className="rounded-lg h-8 bg-accent hover:bg-accent/90"
-                  >
-                    {approveMutation.isPending ? (
-                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                    ) : (
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                    )}
+                  <Button size="sm" onClick={() => approveMutation.mutate(business.id)} disabled={approveMutation.isPending} className="rounded-lg h-8 bg-accent hover:bg-accent/90">
+                    {approveMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <CheckCircle2 className="w-3 h-3 mr-1" />}
                     Approve
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setReviewingId(business.id)}
-                  className="flex-1 rounded-lg h-8"
-                >
+                <Button variant="outline" size="sm" onClick={() => setReviewingId(business.id)} className="flex-1 rounded-lg h-8">
                   <MessageSquare className="w-3 h-3 mr-1" /> Review
                 </Button>
               </div>
