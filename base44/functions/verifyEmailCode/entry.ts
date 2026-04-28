@@ -5,11 +5,16 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { code, email } = await req.json();
 
+    console.log('email received:', JSON.stringify(email));
+    console.log('code received:', JSON.stringify(code));
+    console.log('email type:', typeof email);
+    console.log('code type:', typeof code);
+
     if (!code || !email) {
       return Response.json({ error: 'Code and email are required.' }, { status: 400 });
     }
 
-    await base44.auth.verifyOtp({ email, otpCode: code });
+    await base44.auth.verifyOtp({ email: email.trim().toLowerCase(), otpCode: code.trim() });
     return Response.json({ success: true });
 
   } catch (error) {
