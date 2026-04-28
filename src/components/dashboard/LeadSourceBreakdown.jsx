@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
-export default function LeadSourceBreakdown({ missedCalls }) {
+export default function LeadSourceBreakdown({ missedCalls = [] }) {
   const sourceData = [
     { name: "Google Ads", value: missedCalls.filter((c) => c.source === "google_ads").length },
     { name: "Organic", value: missedCalls.filter((c) => c.source === "organic").length },
