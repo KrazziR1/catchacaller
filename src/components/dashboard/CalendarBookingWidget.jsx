@@ -8,6 +8,8 @@ import { format } from 'date-fns';
 export default function CalendarBookingWidget({ user, subscription }) {
   const [upcomingCount, setUpcomingCount] = useState(0);
 
+  const isPlanAllowed = subscription?.plan_name === 'Pro';
+
   const { data: bookings = [] } = useQuery({
     queryKey: ['calendar-bookings'],
     queryFn: () => base44.entities.CalendarBooking.filter({ status: 'scheduled' }),
@@ -18,8 +20,6 @@ export default function CalendarBookingWidget({ user, subscription }) {
     const upcoming = bookings.filter(b => new Date(b.scheduled_time) > new Date()).length;
     setUpcomingCount(upcoming);
   }, [bookings]);
-
-  const isPlanAllowed = subscription?.plan_name === 'Pro';
 
   if (!isPlanAllowed) {
     return (
