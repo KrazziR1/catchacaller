@@ -68,6 +68,7 @@ export default function Dashboard() {
   const { data: calls = [] } = useQuery({
     queryKey: ["missed-calls"],
     queryFn: () => base44.entities.MissedCall.list("-call_time", 50),
+    enabled: !!user?.email,
     staleTime: 2 * 60 * 1000,
     retry: 1,
   });
@@ -75,6 +76,7 @@ export default function Dashboard() {
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => base44.entities.Conversation.list("-created_date", 50),
+    enabled: !!user?.email,
     staleTime: 2 * 60 * 1000,
     retry: 1,
   });
@@ -82,6 +84,7 @@ export default function Dashboard() {
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
     queryFn: () => base44.entities.SMSTemplate.list("-created_date", 100),
+    enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
