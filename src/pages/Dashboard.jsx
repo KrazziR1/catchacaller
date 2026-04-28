@@ -24,8 +24,15 @@ import LeadScoringDistribution from "@/components/dashboard/LeadScoringDistribut
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [profileGracePeriod, setProfileGracePeriod] = useState(true);
 
-  // Fetch real user on mount and handle redirects
+  // Give profile query a short grace period before showing 'no profile' screen
+  // This prevents flash when navigating from onboarding where profile was just saved
+  useEffect(() => {
+    const t = setTimeout(() => setProfileGracePeriod(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     base44.auth.me().then((u) => {
       if (u?.role === 'admin') {
@@ -39,13 +46,11 @@ export default function Dashboard() {
     });
   }, [navigate]);
 
-  // Enable polling for new lead notifications
   useLeadNotifications();
 
-  // Redirect to onboarding only if no profile AND no deletion audit log
   useEffect(() => {
     if (user && user.role !== 'admin' && profileFetched && !profileLoading && profiles.length === 0 && auditLogFetched && !auditLogLoading && deletionLog.length === 0) {
-      navigate("/onboarding", { replace: true });
+      // Don't auto-redirect — show the "Complete Setup" prompt instead
     }
   }, [user, profileLoading, profileFetched, profiles, auditLogFetched, auditLogLoading, deletionLog, navigate]);
 
@@ -58,7 +63,6 @@ export default function Dashboard() {
     retry: 2,
   });
 
-  // Check if account was deleted (so we can show review screen instead of redirecting to onboarding)
   const { data: deletionLog = [], isLoading: auditLogLoading, isFetched: auditLogFetched } = useQuery({
     queryKey: ["deletion-audit-log", user?.email],
     queryFn: () =>
@@ -103,7 +107,6 @@ export default function Dashboard() {
   const subscription = subscriptions[0];
   const profile = profiles[0];
 
-  // Block rendering while loading user or waiting for redirect
   if (!user || user.role === 'admin') {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -112,7 +115,6 @@ export default function Dashboard() {
     );
   }
 
-  // Show spinner while waiting for profile query to complete
   if (!profileFetched || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -121,9 +123,7 @@ export default function Dashboard() {
     );
   }
 
-  // No profile — check if this is a deleted account before redirecting
   if (profiles.length === 0) {
-    // Still loading deletion check
     if (!auditLogFetched || auditLogLoading) {
       return (
         <div className="flex items-center justify-center min-h-screen">
@@ -131,22 +131,42 @@ export default function Dashboard() {
         </div>
       );
     }
-    // Account was deleted — show review screen instead of redirecting
     if (deletionLog.length > 0) {
       return <AccountUnderReview user={user} auditLog={deletionLog[0]} />;
     }
-    // No profile, no deletion log → redirect to onboarding (handled by useEffect, show spinner)
+    // New user — no profile yet — wait for grace period before showing prompt
+    // (prevents flash when coming from onboarding where profile was just saved)
+    if (profileGracePeriod) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        </div>
+      );
+    }
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="max-w-md w-full mx-4 p-8 rounded-2xl border border-border bg-card text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight mb-2">Almost there!</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Your account is ready. Complete your setup to start capturing missed calls and recovering leads.
+            </p>
+          </div>
+          <Button
+            className="w-full h-12 rounded-xl font-semibold"
+            onClick={() => navigate("/onboarding")}
+          >
+            Complete Setup →
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // Check subscription status for regular users
-  // Only block if subscription exists AND is explicitly in a bad/expired state
-  // New users won't have a subscription yet (created async) — never block them
-  const trialExpired = subscription && subscription.trial_end_date && 
+  const trialExpired = subscription && subscription.trial_end_date &&
     new Date(subscription.trial_end_date) < new Date() &&
     ['trial', 'incomplete'].includes(subscription.status);
 
@@ -177,7 +197,6 @@ export default function Dashboard() {
         <StatCard title="Revenue Recovered" value={`$${totalRevenue.toLocaleString()}`} icon={DollarSign} delay={0.15} />
       </div>
 
-      {/* Check if onboarding incomplete - prompt to start */}
       {!profile?.phone_number && (
         <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200 flex items-start gap-4 mb-8">
           <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
