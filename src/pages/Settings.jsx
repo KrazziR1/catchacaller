@@ -15,6 +15,10 @@ import CRMSettings from "@/components/crm/CRMSettings";
 import NotificationPreferences from "@/components/settings/NotificationPreferences";
 import TrialStatus from "@/components/TrialStatus";
 import { toast } from "sonner";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe("pk_live_51TQ7e0FsxP0HXZ0AL4xFM0tGvmqLkCEPVCO4PVW5VrGxnbV2cKmHZpFXHNZTv6Y3mzGJCK6KRvFt2P3rEWL5I67n00dxEm3n3r");
 
 export default function Settings() {
   const queryClient = useQueryClient();
@@ -211,7 +215,9 @@ export default function Settings() {
                     </div>
                   ) : (
                     <div className="mt-1.5 space-y-3">
+                      <Elements stripe={stripePromise}>
                       <PhoneProvision onSuccess={(num) => setFormData({ ...formData, phone_number: num })} />
+                    </Elements>
                       <Input
                         value={formData.phone_number}
                         onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
