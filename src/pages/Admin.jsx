@@ -78,6 +78,9 @@ export default function Admin() {
     retry: 1,
   });
 
+  // Debug logging
+  console.log('Admin debug - user:', user?.email, 'role:', user?.role, 'businesses count:', businesses.length);
+
   // Only show if we've confirmed they're admin
   if (!user || user.role !== "admin") {
     return null;
