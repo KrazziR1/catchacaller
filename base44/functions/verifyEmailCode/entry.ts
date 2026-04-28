@@ -3,23 +3,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    
-    // Note: user may not be authenticated yet (email verification flow)
-    // so we don't check auth here
-    
     const payload = await req.json();
-    console.log('payload:', JSON.stringify(payload));
     const code = payload?.code;
 
-    if (!code) {
-      return Response.json({ error: 'Verification code is required.' }, { status: 400 });
-    }
+    // Log what actually exists on asServiceRole
+    console.log('asServiceRole keys:', JSON.stringify(Object.keys(base44.asServiceRole || {})));
+    console.log('asServiceRole.auth:', JSON.stringify(typeof base44.asServiceRole?.auth));
+    console.log('code:', code);
 
-    await base44.asServiceRole.auth.verifyEmail(code);
-    return Response.json({ success: true });
-
+    return Response.json({ 
+      asServiceRole_keys: Object.keys(base44.asServiceRole || {}),
+      asServiceRole_auth: typeof base44.asServiceRole?.auth,
+      code_received: code 
+    });
   } catch (error) {
-    console.error('verifyEmailCode error:', error.message);
+    console.error('error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
