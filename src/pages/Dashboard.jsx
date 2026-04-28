@@ -195,7 +195,7 @@ export default function Dashboard() {
         <RecentCallsTable calls={calls} />
         <ConversionChart conversations={conversations} calls={calls} />
         <LeadSourceBreakdown missedCalls={calls} />
-        <SMSMetrics />
+        <SMSMetrics conversations={conversations} />
         <LeadScoringDistribution conversations={conversations} />
         <LeadPipeline conversations={conversations} subscription={subscription} profile={profile} user={user} />
         {subscription?.plan_name && ['Growth', 'Pro'].includes(subscription.plan_name) && (
