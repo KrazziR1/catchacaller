@@ -40,11 +40,6 @@ export default function Dashboard() {
 
   useLeadNotifications();
 
-  useEffect(() => {
-    if (user && user.role !== 'admin' && profileFetched && !profileLoading && profiles.length === 0 && auditLogFetched && !auditLogLoading && deletionLog.length === 0) {
-      // Don't auto-redirect — show the "Complete Setup" prompt instead
-    }
-  }, [user, profileLoading, profileFetched, profiles, auditLogFetched, auditLogLoading, deletionLog, navigate]);
 
   const { data: profiles = [], isLoading: profileLoading, isFetched: profileFetched } = useQuery({
     queryKey: ["business-profile", user?.email],
