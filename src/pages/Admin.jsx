@@ -45,10 +45,11 @@ export default function Admin() {
   const pageSize = 20;
   const { data: businesses = [] } = useQuery({
    queryKey: ["all-businesses"],
-   queryFn: () => base44.asServiceRole.entities.BusinessProfile.list("-created_date", 10000),
+   queryFn: () => base44.functions.invoke("adminGetBusinesses", {}),
    enabled: !!user?.email,
    staleTime: 5 * 60 * 1000,
    retry: 2,
+   select: (res) => res?.data?.businesses || [],
   });
 
   // Paginate results
@@ -56,10 +57,11 @@ export default function Admin() {
 
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["all-subscriptions"],
-    queryFn: () => base44.asServiceRole.entities.Subscription.list("-created_date", 50),
+    queryFn: () => base44.functions.invoke("adminGetSubscriptions", {}),
     enabled: !!user?.email,
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    select: (res) => res?.data?.subscriptions || [],
   });
 
   const { data: missedCalls = [] } = useQuery({
