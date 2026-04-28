@@ -80,9 +80,6 @@ export default function Admin() {
     retry: 1,
   });
 
-  // Debug logging
-  console.log('Admin debug - user:', user?.email, 'role:', user?.role, 'businesses count:', businesses.length);
-
   // Only show if we've confirmed they're admin
   if (!user || user.role !== "admin") {
     return null;
@@ -413,7 +410,7 @@ export default function Admin() {
                             <p className="font-mono text-xs">{business.phone_number || "—"}</p>
                           </td>
                           <td className="py-3 px-4">
-                            <p className="text-xs text-muted-foreground">{business.created_by}</p>
+                            <p className="text-xs text-muted-foreground">{business.owner_email || ownerEmail}</p>
                           </td>
                           <td className="py-3 px-4">
                             {progress ? (
