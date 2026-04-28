@@ -287,7 +287,7 @@ export default function Onboarding() {
     setVerificationError(null);
     try {
       // Call backend function which uses asServiceRole.auth.verifyEmail
-      const res = await base44.functions.invoke('verifyEmailCode', { code: verificationCode });
+      const res = await base44.functions.invoke('verifyEmailCode', { code: verificationCode, email: signupEmail });
       if (res.data?.error) {
         setVerificationError(res.data.error);
         return;
