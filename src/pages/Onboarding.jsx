@@ -278,7 +278,7 @@ export default function Onboarding() {
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerify = async (codeOverride) => {
     if (!verificationCode) {
       setVerificationError("Please enter the verification code.");
       return;
@@ -287,7 +287,8 @@ export default function Onboarding() {
     setVerificationError(null);
     try {
       // Call backend function which uses asServiceRole.auth.verifyEmail
-      const res = await base44.functions.invoke('verifyEmailCode', { code: verificationCode, email: signupEmail });
+      const codeToUse = codeOverride || verificationCode;
+      const res = await base44.functions.invoke('verifyEmailCode', { code: codeToUse, email: signupEmail });
       if (res.data?.error) {
         setVerificationError(res.data.error);
         return;
@@ -439,7 +440,7 @@ export default function Onboarding() {
                         const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                         setVerificationCode(val);
                         if (val.length === 6) {
-                          setTimeout(() => handleVerify(), 100);
+                          setTimeout(() => handleVerify(val), 100);
                         }
                       }}
                       placeholder="000000"
