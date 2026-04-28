@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function ExportReports({ conversations, missedCalls }) {
+export default function ExportReports({ conversations = [], missedCalls = [] }) {
   const [exporting, setExporting] = useState(false);
 
   const exportCSV = (data, filename) => {
