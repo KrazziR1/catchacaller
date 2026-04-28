@@ -24,14 +24,6 @@ import LeadScoringDistribution from "@/components/dashboard/LeadScoringDistribut
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [profileGracePeriod, setProfileGracePeriod] = useState(true);
-
-  // Give profile query a short grace period before showing 'no profile' screen
-  // This prevents flash when navigating from onboarding where profile was just saved
-  useEffect(() => {
-    const t = setTimeout(() => setProfileGracePeriod(false), 2000);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     base44.auth.me().then((u) => {
@@ -133,15 +125,6 @@ export default function Dashboard() {
     }
     if (deletionLog.length > 0) {
       return <AccountUnderReview user={user} auditLog={deletionLog[0]} />;
-    }
-    // New user — no profile yet — wait for grace period before showing prompt
-    // (prevents flash when coming from onboarding where profile was just saved)
-    if (profileGracePeriod) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        </div>
-      );
     }
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
