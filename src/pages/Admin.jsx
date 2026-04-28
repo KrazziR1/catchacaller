@@ -125,7 +125,11 @@ export default function Admin() {
       (b.business_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (b.industry || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-    const sub = subscriptions.find((s) => s.user_email === b.owner_email || s.user_email === b.created_by);
+    const sub = subscriptions.find((s) => 
+      s.user_email === b.owner_email || 
+      s.user_email === b.created_by ||
+      (b.owner_email === '' && s.user_email === b.created_by)
+    );
     const matchesPlan = filterPlan === "all" || sub?.plan_name === filterPlan;
     const matchesStatus =
       filterStatus === "all" ||
